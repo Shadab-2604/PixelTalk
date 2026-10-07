@@ -47,12 +47,22 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (payload) => {
     const data = await authService.login(payload);
+    if (data.token && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('pixeltalk_token', data.token);
+      } catch {}
+    }
     setUser(data.user);
     return data.user;
   }, []);
 
   const register = useCallback(async (payload) => {
     const data = await authService.register(payload);
+    if (data.token && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('pixeltalk_token', data.token);
+      } catch {}
+    }
     setUser(data.user);
     return data.user;
   }, []);
@@ -61,6 +71,11 @@ export function AuthProvider({ children }) {
     try {
       await authService.logout();
     } finally {
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('pixeltalk_token');
+        } catch {}
+      }
       setUser(null);
       router.push('/');
     }

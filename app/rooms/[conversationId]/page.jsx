@@ -22,7 +22,7 @@
 
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AppShell, SidebarFooter } from '@/components/AppShell';
 import { ConversationSidebar } from '@/features/conversations/ConversationSidebar';

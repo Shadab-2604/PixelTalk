@@ -56,24 +56,34 @@ const MOBILE_NAV = [
  * - Tablet (md): sidebar collapses to slide-over drawer.
  * - Mobile: drawer + fixed bottom navigation.
  */
-export function AppShell({ children, sidebar = null, rightPanel = null, wide = false }) {
+export function AppShell({
+  children,
+  sidebar = null,
+  rightPanel = null,
+  rightDrawerOpen = false,
+  onCloseRightDrawer = null,
+  wide = false,
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
   const online = useConnectionStatus();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  useEffect(() => setDrawerOpen(false), [pathname]);
+  useEffect(() => {
+    setDrawerOpen(false);
+    onCloseRightDrawer?.();
+  }, [pathname, onCloseRightDrawer]);
 
   // Lock body scroll when mobile drawer is open
   useEffect(() => {
-    if (!drawerOpen) return undefined;
+    if (!drawerOpen && !rightDrawerOpen) return undefined;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = prev;
     };
-  }, [drawerOpen]);
+  }, [drawerOpen, rightDrawerOpen]);
 
   const activeConversationId = useMemo(() => {
     const match = pathname ? pathname.match(/^\/(?:chat|rooms)\/([^/?#]+)/) : null;
@@ -139,7 +149,7 @@ export function AppShell({ children, sidebar = null, rightPanel = null, wide = f
                 <aside className="relative w-72 max-w-[85vw] h-full bg-surface-container-low border-r-2 border-tertiary pixel-dither-pattern flex flex-col overflow-y-auto">
                   <button
                     onClick={() => setDrawerOpen(false)}
-                    className="self-end m-2 w-8 h-8 rounded-lg bg-surface-container border border-tertiary/30 text-tertiary flex items-center justify-center"
+                    className="self-end m-2 w-8 h-8 rounded-lg bg-surface-container border border-tertiary/30 text-tertiary flex items-center justify-center cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[18px]">close</span>
                   </button>
@@ -153,11 +163,29 @@ export function AppShell({ children, sidebar = null, rightPanel = null, wide = f
         {/* Main */}
         <main className="flex-1 min-w-0 h-[calc(100dvh-4rem)] sticky top-16 overflow-y-auto">{children}</main>
 
-        {/* Optional right inspector (xl only) */}
+        {/* Optional right inspector (xl only desktop) */}
         {rightPanel && (
-          <aside className="hidden xl:flex w-72 flex-shrink-0 border-l border-tertiary/20 bg-surface/70 sticky top-16 h-[calc(100dvh-4rem)] overflow-y-auto p-4">
+          <aside className="hidden xl:flex w-80 xl:w-[330px] flex-shrink-0 border-l border-tertiary/20 bg-surface/80 sticky top-16 h-[calc(100dvh-4rem)] overflow-y-auto p-3.5">
             {rightPanel}
           </aside>
+        )}
+
+        {/* Mobile / Tablet Right Inspector Drawer */}
+        {rightPanel && rightDrawerOpen && (
+          <div className="xl:hidden fixed inset-0 z-40 flex justify-end">
+            <div className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm" onClick={() => onCloseRightDrawer?.()} />
+            <aside className="relative w-80 max-w-[88vw] h-full bg-surface-container-low border-l-2 border-tertiary pixel-dither-pattern flex flex-col overflow-y-auto p-3.5 z-50">
+              <button
+                onClick={() => onCloseRightDrawer?.()}
+                className="self-end mb-2 w-8 h-8 rounded-lg bg-surface-container border border-tertiary/30 text-tertiary flex items-center justify-center cursor-pointer"
+                title="Close Inspector"
+                aria-label="Close Inspector"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+              {rightPanel}
+            </aside>
+          </div>
         )}
       </div>
 

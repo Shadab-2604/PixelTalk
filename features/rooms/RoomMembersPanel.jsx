@@ -1,18 +1,15 @@
 /**
- * File: RoomMembersPanel.jsx
+ * ============================================================
+ * PIXELTALK — ROOM MEMBERS & INSPECTOR PANEL (RoomMembersPanel.jsx)
+ * ============================================================
  *
- * Responsibility:
- * Right inspector panel displaying conversation details, membership roster,
- * member role assignments, and personal conversation actions (pin, mute, vibrate).
- *
- * Layer:
- * Frontend / Rooms Feature UI
- *
- * Connected to:
- * - frontend/app/rooms/[conversationId]/page.jsx
- * - frontend/features/rooms/RoomSettingsModal.jsx
- * - frontend/services/conversationService.js
- * - frontend/services/userService.js
+ * WHAT:
+ * Responsive right inspector panel for Community Rooms and Direct Chats:
+ * - Room identity hero, avatar, description, live roster metrics
+ * - Group settings, invite system, role management (Owner/Admin/Mod/Member)
+ * - Searchable member roster with online status and canonical profile links
+ * - Collapsible room management actions (Export JSON, Clear, Leave, Delete)
+ * ============================================================
  */
 
 'use client';
@@ -21,7 +18,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { conversationService } from '@/services/conversationService';
 import { userService } from '@/services/userService';
-import { Avatar, Badge, Input, ErrorText, PrimaryButton, GhostButton } from '@/components/ui';
+import { Avatar, Badge, Input, ErrorText, PrimaryButton, SecondaryButton, GhostButton, DestructiveButton, Spinner } from '@/components/ui';
 import { otherMember } from '@/features/conversations/conversationUtils';
 import { avatarSrc } from '@/lib/avatars';
 import { usePresence } from '@/hooks/usePresence';
@@ -32,6 +29,7 @@ import { RoomSettingsModal } from './RoomSettingsModal';
 import { ConversationActionsMenu } from '@/features/conversations/ConversationActionsMenu';
 
 const ROLES = ['Owner', 'Admin', 'Moderator', 'Member'];
+
 export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
   const { user, setUser } = useAuth();
   const effectiveUser = user || currentUser;
@@ -43,6 +41,7 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
   const [copied, setCopied] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [editingRoleUserId, setEditingRoleUserId] = useState(null);
+  const [managementOpen, setManagementOpen] = useState(false);
 
   const currentUserId = effectiveUser?._id || effectiveUser?.id;
   const convoIdStr = String(conversation?._id || conversation?.id);
@@ -96,21 +95,23 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
     }
   };
 
+  // ------------------------------------------------------------
   // DIRECT CHAT VIEW
+  // ------------------------------------------------------------
   if (conversation?.type === 'direct') {
     const other = otherMember(conversation, currentUser);
     const online = other ? isOnline(other._id || other.id) : false;
 
     return (
-      <div className="space-y-4">
-        <div className="bg-surface rounded-xl p-5 border border-tertiary/20 shadow-pixel-sm text-center">
-          <div className="w-16 h-16 mx-auto rounded-xl bg-surface-container border-2 border-tertiary flex items-center justify-center shadow-pixel-sm-solid relative mb-3 overflow-hidden">
+      <div className="space-y-3.5">
+        <div className="bg-surface-container-lowest rounded-xl p-4 border border-tertiary/20 shadow-pixel-sm text-center">
+          <div className="w-16 h-16 mx-auto rounded-xl bg-surface-container border-2 border-tertiary flex items-center justify-center shadow-pixel-sm-solid relative mb-2.5 overflow-hidden">
             <Avatar src={avatarSrc(other?.avatarId || 'avatar-01')} alt="" size={60} online={online} />
           </div>
-          <h2 className="font-display text-headline-sm font-bold text-on-surface">
+          <h2 className="font-display text-headline-sm font-bold text-on-surface truncate">
             {other?.displayName || other?.username || 'Player'}
           </h2>
-          <p className="font-mono text-label-sm text-primary font-bold mt-0.5">
+          <p className="font-mono text-label-sm text-primary font-bold mt-0.5 truncate">
             @{other?.username || 'player'}
           </p>
 
@@ -122,26 +123,26 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
           </div>
 
           {other?.bio && (
-            <p className="font-body-sm text-[12px] text-on-surface-variant mt-2.5 bg-surface-container/60 p-2.5 rounded-lg border border-tertiary/10 italic">
+            <p className="font-body-sm text-[12px] text-on-surface-variant mt-2.5 bg-surface-container/60 p-2.5 rounded-lg border border-tertiary/10 italic text-left break-words">
               &ldquo;{other.bio}&rdquo;
             </p>
           )}
 
           {other?.customStatus && (
-            <div className="mt-2 inline-flex items-center gap-1.5 font-mono text-label-xs bg-secondary-container text-on-secondary-container px-2.5 py-1 rounded border border-tertiary/20">
-              <span className="material-symbols-outlined text-[12px]">chat_bubble_outline</span>
-              <span>{other.customStatus}</span>
+            <div className="mt-2 inline-flex items-center gap-1.5 font-mono text-label-xs bg-secondary-container text-on-secondary-container px-2.5 py-1 rounded border border-tertiary/20 max-w-full truncate">
+              <span className="material-symbols-outlined text-[12px] shrink-0">chat_bubble_outline</span>
+              <span className="truncate">{other.customStatus}</span>
             </div>
           )}
 
-          {/* Direct Chat Quick Controls */}
-          <div className="mt-4 pt-3 border-t border-tertiary/10 space-y-2">
-            <div className="grid grid-cols-2 gap-2">
+          {/* Quick Controls */}
+          <div className="mt-3.5 pt-3 border-t border-tertiary/15 space-y-2">
+            <div className="grid grid-cols-2 gap-1.5">
               <button
                 type="button"
                 onClick={toggleMute}
                 aria-label={isMuted ? 'Unmute chat' : 'Mute chat'}
-                className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border font-mono text-label-xs transition-colors ${
+                className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg border font-mono text-label-xs transition-colors cursor-pointer ${
                   isMuted
                     ? 'bg-error-container text-error border-error/30'
                     : 'bg-surface-container border-tertiary/20 hover:bg-secondary-container/40 text-on-surface'
@@ -157,7 +158,7 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
                 type="button"
                 onClick={toggleVibrate}
                 aria-label={isVibrate ? 'Disable vibration' : 'Enable vibration'}
-                className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border font-mono text-label-xs transition-colors ${
+                className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg border font-mono text-label-xs transition-colors cursor-pointer ${
                   isVibrate
                     ? 'bg-secondary-container text-on-secondary-container font-bold border-tertiary/30'
                     : 'bg-surface-container border-tertiary/20 hover:bg-secondary-container/40 text-on-surface'
@@ -166,14 +167,14 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
                 <span className="material-symbols-outlined text-[14px]">
                   {isVibrate ? 'vibration' : 'mobile_off'}
                 </span>
-                <span>{isVibrate ? 'Vibrate: On' : 'Vibrate: Off'}</span>
+                <span>{isVibrate ? 'Vibrate' : 'No Vibe'}</span>
               </button>
             </div>
 
             <button
               type="button"
               onClick={togglePin}
-              className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-surface-container border border-tertiary/20 hover:bg-secondary-container/40 text-on-surface font-mono text-label-xs transition-colors"
+              className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-surface-container border border-tertiary/20 hover:bg-secondary-container/40 text-on-surface font-mono text-label-xs transition-colors cursor-pointer"
             >
               <span className="material-symbols-outlined text-[14px]">
                 {isPinned ? 'keep_off' : 'keep'}
@@ -181,40 +182,33 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
               <span>{isPinned ? 'Unpin Conversation' : 'Pin Conversation'}</span>
             </button>
 
-            {other?._id && (
-              <Link href={`/profile/${other.username || other._id}`} className="block">
+            {other?.username && (
+              <Link href={`/profile/${other.username}`} className="block">
                 <GhostButton className="w-full py-1.5 text-label-xs">
                   <span className="material-symbols-outlined text-[14px]">person</span> View Player Profile
                 </GhostButton>
               </Link>
             )}
-
-            <ConversationActionsMenu
-              conversation={conversation}
-              currentUser={effectiveUser}
-              buttonStyle="panel"
-              onCleared={() => onChanged?.({ cleared: true })}
-              onDeleted={() => onChanged?.({ deleted: true })}
-            />
           </div>
         </div>
       </div>
     );
   }
 
+  // ------------------------------------------------------------
   // GROUP ROOM VIEW
+  // ------------------------------------------------------------
   const isOwner =
     conversation.createdBy &&
-    (conversation.createdBy._id || conversation.createdBy) === currentUserId;
+    String(conversation.createdBy._id || conversation.createdBy) === String(currentUserId);
   const isAdmin =
     isOwner ||
     (Array.isArray(conversation.admins) &&
-      conversation.admins.some((a) => (a._id || a) === currentUserId));
+      conversation.admins.some((a) => String(a._id || a) === String(currentUserId)));
 
   const members = conversation.members || [];
   const pastMembers = Array.isArray(conversation.pastMembers) ? conversation.pastMembers : [];
   const online = members.filter((m) => isOnline(m._id || m.id));
-  const offline = members.filter((m) => !isOnline(m._id || m.id));
 
   const getMemberRole = (memberId) => {
     const mIdStr = String(memberId);
@@ -321,7 +315,7 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
 
   // Filter state for member search & role chips
   const [memberSearch, setMemberSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('ALL'); // 'ALL' | 'ADMINS' | 'MODS' | 'MEMBERS' | 'ONLINE'
+  const [roleFilter, setRoleFilter] = useState('ALL'); // 'ALL' | 'ADMINS' | 'ONLINE' | 'PAST'
 
   const filteredMembers = members.filter((m) => {
     const dName = (m.displayName || '').toLowerCase();
@@ -347,32 +341,27 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3.5">
       {/*
-       * ============================================================
-       * 1. GROUP HEADER & HERO (Stitch Group Profile Hero)
-       * ============================================================
-       * WHAT: Group avatar with pixel border, name, description,
-       * live member count, and current user role badge.
-       * WHY: Establishes clear visual hierarchy and role context.
-       */}
-      <div className="bg-surface-container-lowest border-2 border-tertiary/30 rounded-xl overflow-hidden shadow-[2px_2px_0_0_#6E3511]">
-        {/* Decorative Top Accent Bar */}
-        <div className="h-16 w-full bg-surface-container relative overflow-hidden bg-pixel-grid border-b-2 border-tertiary/20 flex items-center justify-between px-3">
-          <div className="flex items-center gap-1.5 bg-surface/90 border border-tertiary/30 px-2 py-0.5 rounded text-[10px] font-mono text-tertiary font-bold uppercase">
-            <span className="w-2 h-2 bg-primary-container inline-block" />
-            <span>ROOM #{conversation.name?.slice(0, 12)}</span>
+        * 1. ROOM HERO CARD
+        * Compact pixel header, room avatar, name, description, active count, and action buttons.
+        */}
+      <div className="bg-surface-container-lowest border-2 border-tertiary/30 rounded-xl overflow-hidden shadow-pixel-xs">
+        {/* Accent Bar */}
+        <div className="h-10 w-full bg-surface-container relative overflow-hidden bg-pixel-grid border-b border-tertiary/20 flex items-center justify-between px-3">
+          <div className="flex items-center gap-1.5 bg-surface/90 border border-tertiary/30 px-2 py-0.5 rounded text-[10px] font-mono text-tertiary font-bold uppercase truncate max-w-[65%]">
+            <span className="w-1.5 h-1.5 bg-primary-container inline-block shrink-0" />
+            <span className="truncate">#{conversation.name}</span>
           </div>
-          <span className="font-mono text-[10px] bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded border border-tertiary/20 font-bold uppercase">
-            YOUR ROLE: {myRole.toUpperCase()}
+          <span className="font-mono text-[9px] bg-secondary-container text-on-secondary-container px-1.5 py-0.5 rounded border border-tertiary/20 font-bold uppercase shrink-0">
+            {myRole.toUpperCase()}
           </span>
         </div>
 
-        {/* Identity Row: Avatar crossing boundary & Titles */}
-        <div className="px-4 pb-4 pt-1">
-          <div className="flex items-end gap-3 -mt-9">
-            {/* 64x64 Avatar with Pixel Border & Online Beacon */}
-            <div className="relative w-16 h-16 bg-surface border-2 border-[#6E3511] rounded-xl shadow-[2px_2px_0_0_#6E3511] p-0.5 shrink-0 overflow-hidden">
+        {/* Identity & Details */}
+        <div className="p-3 pt-2">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-surface border-2 border-[#6E3511] shadow-pixel-xs p-0.5 shrink-0 overflow-hidden relative">
               {conversation.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={conversation.avatarUrl} alt="" className="w-full h-full object-cover rounded-lg" />
@@ -380,15 +369,15 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={avatarSrc(conversation.avatarId || 'avatar-06')} alt="" className="w-full h-full object-cover rounded-lg pixelated" />
               )}
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-primary-container border-2 border-surface-container-lowest" />
+              <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 bg-primary-container border border-surface rounded-none" />
             </div>
 
             <div className="min-w-0 flex-1">
-              <h2 className="font-display text-headline-sm font-bold text-on-surface truncate">
+              <h2 className="font-display text-body-lg font-bold text-on-surface truncate">
                 #{conversation.name}
               </h2>
-              <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10px] text-tertiary">
-                <span className="font-bold">{members.length} members</span>
+              <div className="flex items-center gap-1.5 font-mono text-[10px] text-tertiary mt-0.5">
+                <span className="font-bold text-on-surface">{members.length} members</span>
                 <span>•</span>
                 <span className="text-primary font-bold">{online.length} online</span>
               </div>
@@ -396,162 +385,152 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
           </div>
 
           {conversation.description && (
-            <p className="font-body-sm text-[12px] text-on-surface-variant mt-2.5 leading-snug">
+            <p className="font-body-sm text-[12px] text-on-surface-variant mt-2 leading-relaxed bg-surface-container/50 p-2 rounded-lg border border-tertiary/15 break-words">
               {conversation.description}
             </p>
           )}
 
-          {/* Group Header Actions */}
-          <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-tertiary/15 flex-wrap">
+          {/* Quick Action Grid */}
+          <div className="grid grid-cols-4 gap-1.5 mt-2.5 pt-2.5 border-t border-tertiary/15">
             <button
               type="button"
               onClick={handleShare}
+              title="Share room link"
               aria-label="Share room link"
-              className="flex-1 min-w-[100px] flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-lg bg-surface-container border border-tertiary/30 hover:bg-secondary-container/40 text-on-surface font-mono text-[11px] font-bold shadow-[1px_1px_0_0_#6E3511] active:translate-x-0.5 active:translate-y-0.5 transition-all"
+              className="flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-lg bg-surface-container border border-tertiary/20 hover:bg-secondary-container/40 text-on-surface font-mono text-[10px] font-bold shadow-pixel-xs active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[14px]">{copied ? 'check' : 'share'}</span>
-              <span>{copied ? 'Copied!' : 'Share'}</span>
+              <span className="material-symbols-outlined text-[15px]">{copied ? 'check' : 'share'}</span>
+              <span>{copied ? 'Copied' : 'Share'}</span>
             </button>
 
             <button
               type="button"
               onClick={togglePin}
+              title={isPinned ? 'Unpin room' : 'Pin room'}
               aria-label={isPinned ? 'Unpin room' : 'Pin room'}
-              className="flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-lg bg-surface-container border border-tertiary/30 hover:bg-secondary-container/40 text-on-surface font-mono text-[11px] font-bold shadow-[1px_1px_0_0_#6E3511] active:translate-x-0.5 active:translate-y-0.5 transition-all"
+              className="flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-lg bg-surface-container border border-tertiary/20 hover:bg-secondary-container/40 text-on-surface font-mono text-[10px] font-bold shadow-pixel-xs active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[14px]">{isPinned ? 'keep_off' : 'keep'}</span>
+              <span className="material-symbols-outlined text-[15px]">{isPinned ? 'keep_off' : 'keep'}</span>
               <span>{isPinned ? 'Unpin' : 'Pin'}</span>
             </button>
 
             <button
               type="button"
               onClick={toggleMute}
+              title={isMuted ? 'Unmute room' : 'Mute room'}
               aria-label={isMuted ? 'Unmute room' : 'Mute room'}
-              className={`flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-lg border font-mono text-[11px] font-bold shadow-[1px_1px_0_0_#6E3511] active:translate-x-0.5 active:translate-y-0.5 transition-all ${
+              className={`flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-lg border font-mono text-[10px] font-bold shadow-pixel-xs active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer ${
                 isMuted
-                  ? 'bg-error-container text-error border-error/40'
-                  : 'bg-surface-container border-tertiary/30 text-on-surface hover:bg-secondary-container/40'
+                  ? 'bg-error-container text-error border-error/30'
+                  : 'bg-surface-container border-tertiary/20 text-on-surface hover:bg-secondary-container/40'
               }`}
             >
-              <span className="material-symbols-outlined text-[14px]">
+              <span className="material-symbols-outlined text-[15px]">
                 {isMuted ? 'notifications_off' : 'notifications'}
               </span>
               <span>{isMuted ? 'Muted' : 'Mute'}</span>
             </button>
 
-            {canEditRoom && (
+            {canEditRoom ? (
               <button
                 type="button"
                 onClick={() => {
                   sfx.click();
                   setSettingsOpen(true);
                 }}
-                aria-label="Open room settings"
-                className="flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-lg bg-secondary-container text-on-secondary-container border border-tertiary/30 font-mono text-[11px] font-bold shadow-[1px_1px_0_0_#6E3511] active:translate-x-0.5 active:translate-y-0.5 transition-all"
+                title="Room settings"
+                aria-label="Room settings"
+                className="flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-lg bg-secondary-container text-on-secondary-container border border-tertiary/25 font-mono text-[10px] font-bold shadow-pixel-xs active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[14px]">settings</span>
+                <span className="material-symbols-outlined text-[15px]">settings</span>
                 <span>Settings</span>
               </button>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 rounded-lg bg-surface-container/40 border border-tertiary/10 text-outline font-mono text-[10px]">
+                <span className="material-symbols-outlined text-[15px]">lock</span>
+                <span>Room</span>
+              </div>
             )}
           </div>
-
-          <ConversationActionsMenu
-            conversation={conversation}
-            currentUser={effectiveUser}
-            buttonStyle="panel"
-            className="mt-3"
-            onCleared={() => onChanged?.({ cleared: true })}
-            onDeleted={() => onChanged?.({ deleted: true })}
-          />
         </div>
       </div>
 
       {/*
-       * ============================================================
-       * 2. GROUP INFORMATION SECTION (Stitch 4-Card Strip)
-       * ============================================================
-       * WHAT: Owner card, Messaging rule, Invitation rule, Total members.
-       */}
-      <div className="grid grid-cols-2 gap-2 text-left">
-        {/* Card 1: Owner */}
-        <div className="bg-surface-container-low border border-tertiary/30 p-2.5 rounded-lg shadow-[1px_1px_0_0_#6E3511] flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-mono text-[9px] text-outline uppercase font-bold tracking-wider">Group Owner</span>
-            <span className="material-symbols-outlined text-xs text-tertiary">workspace_premium</span>
+        * 2. GROUP METRICS / INFO 2x2 STRIP
+        */}
+      <div className="grid grid-cols-2 gap-1.5 text-left">
+        {/* Owner */}
+        <div className="bg-surface-container-low border border-tertiary/25 p-2 rounded-lg shadow-pixel-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-0.5">
+            <span className="font-mono text-[9px] text-tertiary uppercase font-bold tracking-wider">Owner</span>
+            <span className="material-symbols-outlined text-[12px] text-primary">workspace_premium</span>
           </div>
           <div className="flex items-center gap-1.5 min-w-0">
-            <Avatar src={avatarSrc(ownerMember?.avatarId || 'avatar-01')} size={20} ring={false} />
-            <div className="min-w-0">
-              <p className="font-mono text-[11px] font-bold text-on-surface truncate leading-tight">
-                {ownerMember?.displayName || 'Owner'}
-              </p>
-              <p className="font-mono text-[9px] text-tertiary truncate">@{ownerMember?.username || 'user'}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 2: Messaging Rule */}
-        <div className="bg-surface-container-low border border-tertiary/30 p-2.5 rounded-lg shadow-[1px_1px_0_0_#6E3511] flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-mono text-[9px] text-outline uppercase font-bold tracking-wider">Messaging</span>
-            <span className="material-symbols-outlined text-xs text-primary">chat</span>
-          </div>
-          <div>
-            <p className="font-mono text-[11px] font-bold text-on-surface leading-tight">
-              {conversation.settings?.adminOnlyChat ? 'Admins only' : 'Everyone'}
-            </p>
-            <p className="font-mono text-[9px] text-outline">
-              {conversation.settings?.adminOnlyChat ? 'Broadcast stage' : 'Open chat'}
+            <Avatar src={avatarSrc(ownerMember?.avatarId || 'avatar-01')} size={18} ring={false} />
+            <p className="font-mono text-[10px] font-bold text-on-surface truncate">
+              {ownerMember?.displayName || 'Owner'}
             </p>
           </div>
         </div>
 
-        {/* Card 3: Invitation Rule */}
-        <div className="bg-surface-container-low border border-tertiary/30 p-2.5 rounded-lg shadow-[1px_1px_0_0_#6E3511] flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-mono text-[9px] text-outline uppercase font-bold tracking-wider">Invites</span>
-            <span className="material-symbols-outlined text-xs text-tertiary">badge</span>
+        {/* Messaging Access */}
+        <div className="bg-surface-container-low border border-tertiary/25 p-2 rounded-lg shadow-pixel-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-0.5">
+            <span className="font-mono text-[9px] text-tertiary uppercase font-bold tracking-wider">Chat</span>
+            <span className="material-symbols-outlined text-[12px] text-primary">chat</span>
           </div>
-          <div>
-            <p className="font-mono text-[11px] font-bold text-on-surface leading-tight">
-              {conversation.settings?.invitePermission === 'ADMINS_ONLY' ? 'Admins only' : 'Anyone'}
-            </p>
-            <p className="font-mono text-[9px] text-outline">Must accept invite</p>
-          </div>
+          <p className="font-mono text-[10px] font-bold text-on-surface truncate">
+            {conversation.settings?.adminOnlyChat ? 'Admins only' : 'Everyone'}
+          </p>
         </div>
 
-        {/* Card 4: Total Members & Past Members */}
-        <div className="bg-surface-container-low border border-tertiary/30 p-2.5 rounded-lg shadow-[1px_1px_0_0_#6E3511] flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-mono text-[9px] text-outline uppercase font-bold tracking-wider">Roster</span>
-            <span className="material-symbols-outlined text-xs text-primary-container">groups</span>
+        {/* Invite Rule */}
+        <div className="bg-surface-container-low border border-tertiary/25 p-2 rounded-lg shadow-pixel-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-0.5">
+            <span className="font-mono text-[9px] text-tertiary uppercase font-bold tracking-wider">Invites</span>
+            <span className="material-symbols-outlined text-[12px] text-primary">badge</span>
           </div>
-          <div>
-            <p className="font-mono text-[11px] font-bold text-on-surface leading-tight">{members.length} Active</p>
-            <p className="font-mono text-[9px] text-outline">{pastMembers.length} Past • {online.length} Online</p>
+          <p className="font-mono text-[10px] font-bold text-on-surface truncate">
+            {conversation.settings?.invitePermission === 'ADMINS_ONLY' ? 'Admins only' : 'Anyone'}
+          </p>
+        </div>
+
+        {/* Roster counts */}
+        <div className="bg-surface-container-low border border-tertiary/25 p-2 rounded-lg shadow-pixel-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-0.5">
+            <span className="font-mono text-[9px] text-tertiary uppercase font-bold tracking-wider">Roster</span>
+            <span className="material-symbols-outlined text-[12px] text-primary">groups</span>
           </div>
+          <p className="font-mono text-[10px] font-bold text-on-surface truncate">
+            {members.length} Players ({online.length} live)
+          </p>
         </div>
       </div>
 
       {/*
-       * ============================================================
-       * 3. MEMBERS SECTION (Search, Filter Chips & Member List)
-       * ============================================================
-       * WHAT: Search field, filter chips (All, Admins, Mods, Members, Online, Past),
-       * and list of active members or past members with role badges.
-       */}
-      <div className="bg-surface-container-lowest border-2 border-tertiary/30 rounded-xl p-3 shadow-[2px_2px_0_0_#6E3511] space-y-3">
+        * 3. MEMBERS SECTION (Search, Filter Chips & Member List)
+        */}
+      <div className="bg-surface-container-lowest border-2 border-tertiary/30 rounded-xl p-3 shadow-pixel-xs space-y-2.5">
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-[11px] font-bold uppercase text-tertiary tracking-wider">
+            Members ({members.length})
+          </span>
+          <span className="font-mono text-[10px] text-primary font-bold">
+            {online.length} Online
+          </span>
+        </div>
+
         {/* Search Input */}
         <div className="relative">
-          <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-tertiary/50 text-[16px]">
+          <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-tertiary/50 text-[15px]">
             search
           </span>
           <input
             type="text"
-            placeholder="Search members by name or @..."
+            placeholder="Search roster..."
             value={memberSearch}
             onChange={(e) => setMemberSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 bg-surface border border-tertiary/30 rounded-lg font-mono text-[11px] text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:shadow-[1px_1px_0_0_#426010]"
+            className="w-full pl-8 pr-2.5 py-1 bg-surface border border-tertiary/25 rounded-lg font-mono text-[11px] text-on-surface placeholder:text-outline focus:outline-none focus:border-primary"
           />
         </div>
 
@@ -560,8 +539,6 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
           {[
             { id: 'ALL', label: `All (${members.length})` },
             { id: 'ADMINS', label: 'Admins' },
-            { id: 'MODS', label: 'Mods' },
-            { id: 'MEMBERS', label: 'Members' },
             { id: 'ONLINE', label: `Online (${online.length})` },
             { id: 'PAST', label: `Past (${pastMembers.length})` },
           ].map((f) => (
@@ -569,9 +546,9 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
               key={f.id}
               type="button"
               onClick={() => setRoleFilter(f.id)}
-              className={`px-2 py-0.5 rounded border transition-all ${
+              className={`px-2 py-0.5 rounded border transition-all cursor-pointer ${
                 roleFilter === f.id
-                  ? 'bg-primary text-surface-container font-bold border-primary shadow-[1px_1px_0_0_#426010]'
+                  ? 'bg-primary text-surface-container font-bold border-primary shadow-pixel-xs'
                   : 'bg-surface-container text-tertiary border-tertiary/20 hover:bg-surface-variant'
               }`}
             >
@@ -580,120 +557,108 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
           ))}
         </div>
 
-        {/* Invite Bar - Respects invitePermission */}
+        {/* Invite Bar */}
         {(isAdmin || conversation.settings?.invitePermission !== 'ADMINS_ONLY') && (
           <div className="pt-1 border-t border-tertiary/15">
             {adding ? (
               <div className="space-y-1.5">
                 <div className="relative">
-                  <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-primary text-[15px]">
+                  <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-primary text-[14px]">
                     person_add
                   </span>
                   <input
                     placeholder="Search username to invite…"
                     value={query}
                     onChange={(e) => search(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 bg-surface border border-tertiary/30 rounded-lg font-mono text-[11px] text-on-surface focus:outline-none focus:border-primary"
+                    className="w-full pl-7 pr-2.5 py-1 bg-surface border border-tertiary/30 rounded-lg font-mono text-[11px] text-on-surface focus:outline-none focus:border-primary"
                   />
                 </div>
                 {inviteSuccess && (
                   <p className="font-mono text-[10px] text-primary font-bold">{inviteSuccess}</p>
                 )}
-                {results.map((u) => (
-                  <button
-                    key={u.id}
-                    type="button"
-                    onClick={() => addMember(u.id)}
-                    className="w-full flex items-center justify-between p-2 rounded-lg border border-tertiary/20 bg-surface hover:bg-secondary-container/30 text-left transition-colors"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Avatar src={avatarSrc(u.avatarId)} size={22} ring={false} />
-                      <div className="min-w-0">
-                        <span className="font-body-sm text-[12px] font-bold block truncate">{u.displayName}</span>
-                        <span className="font-mono text-[10px] text-outline block">@{u.username}</span>
+                {results.length > 0 && (
+                  <div className="max-h-36 overflow-y-auto space-y-1 p-1 bg-surface-container-low rounded-lg border border-tertiary/20">
+                    {results.map((u) => (
+                      <div key={u.id} className="flex items-center justify-between p-1.5 bg-surface rounded">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <Avatar src={avatarSrc(u.avatarId)} size={22} />
+                          <div className="min-w-0">
+                            <p className="font-mono text-[10px] font-bold text-on-surface truncate">{u.displayName}</p>
+                            <p className="font-mono text-[9px] text-tertiary truncate">@{u.username}</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => addMember(u.id)}
+                          className="font-mono text-[10px] bg-primary text-surface-container px-2 py-0.5 rounded font-bold hover:brightness-110 press"
+                        >
+                          Invite
+                        </button>
                       </div>
-                    </div>
-                    <span className="font-mono text-[10px] font-bold bg-primary text-surface-container px-2 py-0.5 rounded border border-primary/40 shrink-0">
-                      INVITE
-                    </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAdding(false);
+                      setQuery('');
+                      setResults([]);
+                    }}
+                    className="font-mono text-[10px] text-outline hover:text-tertiary underline cursor-pointer"
+                  >
+                    Done
                   </button>
-                ))}
-                <GhostButton
-                  onClick={() => {
-                    setAdding(false);
-                    setQuery('');
-                    setResults([]);
-                    setInviteSuccess('');
-                  }}
-                  className="w-full py-1 text-xs"
-                >
-                  Done
-                </GhostButton>
+                </div>
               </div>
             ) : (
               <button
                 type="button"
                 onClick={() => setAdding(true)}
-                className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-surface text-tertiary border border-tertiary/30 hover:bg-secondary-container/30 font-mono text-[11px] font-bold shadow-[1px_1px_0_0_#6E3511] active:translate-x-0.5 active:translate-y-0.5 transition-all"
+                className="w-full py-1 text-center font-mono text-[11px] font-bold text-primary hover:text-primary-container bg-surface-container hover:bg-surface-variant border border-tertiary/20 rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[15px]">person_add</span>
-                <span>+ Invite Members</span>
+                <span className="material-symbols-outlined text-[14px]">person_add</span>
+                <span>+ Invite Players</span>
               </button>
             )}
           </div>
         )}
 
-        {/* Member Rows or Past Member Rows */}
+        {/* Member Rows */}
         {roleFilter === 'PAST' ? (
-          <div className="divide-y divide-tertiary/15 max-h-72 overflow-y-auto pr-1">
+          <div className="divide-y divide-tertiary/15 max-h-60 overflow-y-auto pr-1">
             {pastMembers.length === 0 ? (
-              <p className="font-mono text-[11px] text-outline text-center py-4">No past members found for this room.</p>
+              <p className="font-mono text-[11px] text-outline text-center py-3">No past members found.</p>
             ) : (
               pastMembers.map((pm, idx) => {
                 const u = pm.userId || {};
                 const uId = u._id || u.id || pm._id || idx;
                 const isRemoved = pm.action === 'REMOVED';
                 return (
-                  <div key={uId} className="p-2 rounded-lg bg-surface-container-low/40 hover:bg-surface/50 transition-colors">
-                    <div className="flex items-center justify-between gap-2">
+                  <div key={uId} className="p-1.5 rounded-lg bg-surface-container-low/40 hover:bg-surface/50 transition-colors">
+                    <div className="flex items-center justify-between gap-1.5">
                       <div className="flex items-center gap-2 min-w-0">
-                        <Avatar src={avatarSrc(u.avatarId)} alt={u.displayName || 'Player'} size={28} ring={false} />
+                        <Avatar src={avatarSrc(u.avatarId)} alt={u.displayName || 'Player'} size={24} ring={false} />
                         <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-body-sm text-[12px] font-bold text-on-surface/80 truncate">
-                              {u.displayName || u.username || 'Former Player'}
-                            </span>
-                            <span className="font-mono text-[9px] px-1.5 py-0.5 rounded border uppercase font-bold text-outline border-outline/30">
-                              PAST
-                            </span>
-                          </div>
-                          <span className="font-mono text-[10px] text-tertiary block truncate">
-                            @{u.username || 'player'} • {isRemoved ? 'Removed' : 'Left'} {pm.leftAt ? new Date(pm.leftAt).toLocaleDateString() : ''}
+                          <span className="font-body-sm text-[11px] font-bold text-on-surface truncate block">
+                            {u.displayName || u.username || 'Former Player'}
+                          </span>
+                          <span className="font-mono text-[9px] text-tertiary block truncate">
+                            @{u.username || 'player'} • {isRemoved ? 'Removed' : 'Left'}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span
-                          className={`font-mono text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase ${
-                            isRemoved
-                              ? 'bg-error-container/40 text-error border-error/30'
-                              : 'bg-surface-variant text-tertiary border-tertiary/20'
-                          }`}
+                      {(isAdmin || conversation.settings?.invitePermission !== 'ADMINS_ONLY') && u._id && (
+                        <button
+                          type="button"
+                          onClick={() => addMember(u._id)}
+                          className="font-mono text-[9px] font-bold bg-primary text-surface-container px-2 py-0.5 rounded border border-primary/40 hover:brightness-110 press cursor-pointer shrink-0"
                         >
-                          {isRemoved ? 'Removed' : 'Left Room'}
-                        </span>
-                        {(isAdmin || conversation.settings?.invitePermission !== 'ADMINS_ONLY') && u._id && (
-                          <button
-                            type="button"
-                            onClick={() => addMember(u._id)}
-                            className="font-mono text-[9px] font-bold bg-primary text-surface-container px-2 py-0.5 rounded border border-primary/40 hover:brightness-110 press cursor-pointer"
-                            title="Invite back to room"
-                          >
-                            + Re-invite
-                          </button>
-                        )}
-                      </div>
+                          + Invite
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -701,9 +666,9 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
             )}
           </div>
         ) : (
-          <div className="divide-y divide-tertiary/15 max-h-72 overflow-y-auto pr-1">
+          <div className="divide-y divide-tertiary/15 max-h-60 overflow-y-auto pr-1">
             {filteredMembers.length === 0 ? (
-              <p className="font-mono text-[11px] text-outline text-center py-4">No matching members found.</p>
+              <p className="font-mono text-[11px] text-outline text-center py-3">No matching members found.</p>
             ) : (
               filteredMembers.map((m) => {
                 const mId = m._id || m.id;
@@ -735,28 +700,87 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
 
       {error && <ErrorText>{error}</ErrorText>}
 
-      {/* Danger Zone: Leave / Delete room */}
-      <div className="pt-2 space-y-1.5">
-        {!isOwner && (
-          <GhostButton onClick={leave} className="w-full py-1.5 text-error border-error/30 hover:bg-error-container/30 text-xs font-mono">
-            <span className="material-symbols-outlined text-[16px]">logout</span> Leave Room
-          </GhostButton>
-        )}
-        {isOwner && (
-          <GhostButton
-            onClick={async () => {
-              if (!window.confirm('Permanently delete this room for all players?')) return;
-              try {
-                await conversationService.remove(conversation._id);
-                onChanged?.({ deleted: true });
-              } catch (err) {
-                setError(err.message);
-              }
-            }}
-            className="w-full py-1.5 text-error border-error/30 hover:bg-error-container/30 text-xs font-mono"
-          >
-            <span className="material-symbols-outlined text-[16px]">delete</span> Delete Room
-          </GhostButton>
+      {/*
+        * 4. COLLAPSIBLE ROOM OPTIONS & DANGER ZONE
+        */}
+      <div className="bg-surface-container-lowest border border-tertiary/20 rounded-xl overflow-hidden shadow-pixel-xs">
+        <button
+          type="button"
+          onClick={() => setManagementOpen((o) => !o)}
+          className="w-full p-2.5 flex items-center justify-between font-mono text-[10px] font-bold uppercase text-tertiary hover:bg-surface-container/50 transition-colors cursor-pointer"
+        >
+          <span className="flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[14px]">tune</span>
+            <span>Room Options & Danger Zone</span>
+          </span>
+          <span className="material-symbols-outlined text-[14px] transition-transform">
+            {managementOpen ? 'expand_less' : 'expand_more'}
+          </span>
+        </button>
+
+        {managementOpen && (
+          <div className="p-2.5 pt-0 border-t border-tertiary/15 space-y-1.5 mt-1">
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const data = await conversationService.exportChat(conversation._id);
+                  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `PixelTalk-${conversation.name || 'room'}.json`;
+                  a.click();
+                  sfx.success();
+                } catch (err) {
+                  setError(err.message);
+                }
+              }}
+              className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface font-mono text-[11px] border border-tertiary/20 transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[14px]">download</span> Export Chat (JSON)
+            </button>
+
+            <button
+              type="button"
+              onClick={async () => {
+                if (!window.confirm('Clear all messages in this room for yourself?')) return;
+                try {
+                  await conversationService.clear(conversation._id);
+                  sfx.click();
+                  onChanged?.({ cleared: true });
+                } catch (err) {
+                  setError(err.message);
+                }
+              }}
+              className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface font-mono text-[11px] border border-tertiary/20 transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[14px]">cleaning_services</span> Clear My Messages
+            </button>
+
+            {!isOwner && (
+              <GhostButton onClick={leave} className="w-full py-1.5 text-error border-error/30 hover:bg-error-container/30 text-xs font-mono">
+                <span className="material-symbols-outlined text-[14px]">logout</span> Leave Room
+              </GhostButton>
+            )}
+
+            {isOwner && (
+              <GhostButton
+                onClick={async () => {
+                  if (!window.confirm('Permanently delete this room for all players?')) return;
+                  try {
+                    await conversationService.remove(conversation._id);
+                    onChanged?.({ deleted: true });
+                  } catch (err) {
+                    setError(err.message);
+                  }
+                }}
+                className="w-full py-1.5 text-error border-error/30 hover:bg-error-container/30 text-xs font-mono"
+              >
+                <span className="material-symbols-outlined text-[14px]">delete</span> Delete Room
+              </GhostButton>
+            )}
+          </div>
         )}
       </div>
 
@@ -792,15 +816,15 @@ function MemberItem({
 
   const roleBadgeStyle = {
     Owner: {
-      cls: 'bg-[#844721] text-[#FCECD8] border-[#331100] shadow-[1px_1px_0_0_#331100]',
+      cls: 'bg-[#844721] text-[#FCECD8] border-[#331100]',
       icon: 'star',
     },
     Admin: {
-      cls: 'bg-secondary-container text-on-secondary-container border-secondary/40 shadow-[1px_1px_0_0_#426010]',
+      cls: 'bg-secondary-container text-on-secondary-container border-secondary/40',
       icon: 'shield_person',
     },
     Moderator: {
-      cls: 'bg-surface-variant text-tertiary border-tertiary/40 shadow-[1px_1px_0_0_#6E3511]',
+      cls: 'bg-surface-variant text-tertiary border-tertiary/40',
       icon: 'gavel',
     },
     Member: {
@@ -813,8 +837,8 @@ function MemberItem({
   };
 
   return (
-    <div className={`p-2 rounded-lg transition-colors ${online ? 'bg-surface/80 hover:bg-surface-container-low/50' : 'bg-transparent hover:bg-surface/40'}`}>
-      <div className="flex items-center justify-between gap-2">
+    <div className={`p-1.5 rounded-lg transition-colors ${online ? 'bg-surface/80 hover:bg-surface-container-low/50' : 'bg-transparent hover:bg-surface/40'}`}>
+      <div className="flex items-center justify-between gap-1.5">
         {/* User Info Brief */}
         <Link
           href={`/profile/${m.username}`}
@@ -822,28 +846,26 @@ function MemberItem({
           className="flex items-center gap-2 min-w-0 flex-1 hover:opacity-80 transition-opacity cursor-pointer"
         >
           <div className="relative shrink-0">
-            <Avatar src={avatarSrc(m.avatarId)} alt={m.displayName} size={28} online={online} ring={false} />
+            <Avatar src={avatarSrc(m.avatarId)} alt={m.displayName} size={26} online={online} ring={false} />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-1">
-              <span className={`font-body-sm text-[12px] truncate ${online ? 'font-bold text-on-surface' : 'text-on-surface/80'}`}>
-                {m.displayName || m.username}
-              </span>
-            </div>
-            <span className="font-mono text-[10px] text-tertiary block truncate">@{m.username}</span>
+            <span className={`font-body-sm text-[11px] truncate block leading-tight ${online ? 'font-bold text-on-surface' : 'text-on-surface/80'}`}>
+              {m.displayName || m.username}
+            </span>
+            <span className="font-mono text-[9px] text-tertiary block truncate">@{m.username}</span>
           </div>
         </Link>
 
-        {/* Role Badge & Contextual Actions */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        {/* Role Badge & Actions */}
+        <div className="flex items-center gap-1 shrink-0">
           <span
             onClick={canManageRoles ? onToggleRoleEdit : undefined}
-            className={`inline-flex items-center gap-1 font-mono text-[9px] font-bold px-2 py-0.5 rounded border uppercase transition-all ${roleBadgeStyle.cls} ${
-              canManageRoles ? 'cursor-pointer hover:brightness-105 active:scale-95' : ''
+            className={`inline-flex items-center gap-0.5 font-mono text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase transition-all ${roleBadgeStyle.cls} ${
+              canManageRoles ? 'cursor-pointer hover:brightness-105' : ''
             }`}
             title={canManageRoles ? 'Click to change role' : role}
           >
-            <span className="material-symbols-outlined text-[11px]">{roleBadgeStyle.icon}</span>
+            <span className="material-symbols-outlined text-[10px]">{roleBadgeStyle.icon}</span>
             <span>{role}</span>
           </span>
 
@@ -851,10 +873,10 @@ function MemberItem({
             <button
               type="button"
               onClick={onToggleRoleEdit}
-              title="Assign role (Admin or Member)"
-              className="p-1 rounded text-tertiary hover:text-primary hover:bg-secondary-container/30 transition-colors"
+              title="Assign role"
+              className="p-0.5 rounded text-tertiary hover:text-primary transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[14px]">edit_note</span>
+              <span className="material-symbols-outlined text-[13px]">edit_note</span>
             </button>
           )}
 
@@ -863,46 +885,33 @@ function MemberItem({
               onClick={() => onRemove(mId)}
               title="Remove player"
               aria-label="Remove member"
-              className="p-1 rounded text-on-surface-variant hover:text-error hover:bg-error-container/20 transition-colors"
+              className="p-0.5 rounded text-on-surface-variant hover:text-error transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[15px]">person_remove</span>
+              <span className="material-symbols-outlined text-[13px]">person_remove</span>
             </button>
           )}
-
-          <span
-            className={`w-2 h-2 rounded-none inline-block border ${
-              online ? 'bg-primary-container border-surface' : 'bg-outline/30 border-transparent'
-            }`}
-            title={online ? 'Online' : 'Offline'}
-          />
         </div>
       </div>
 
-      {/* Role Assignment Bar */}
+      {/* Role Picker In-Place Drawer */}
       {isEditingRole && (
-        <div className="mt-2 pt-2 border-t border-tertiary/15 flex flex-wrap items-center justify-between gap-1.5 bg-surface-container/70 p-2 rounded-lg border border-tertiary/20">
-          <span className="font-mono text-[10px] text-tertiary font-bold uppercase flex items-center gap-1">
-            <span className="material-symbols-outlined text-[13px]">manage_accounts</span>
-            <span>Assign Role:</span>
-          </span>
-          <div className="flex items-center gap-1.5">
-            {[
-              { id: 'Admin', label: '🛡️ Admin', desc: 'Can manage members & settings' },
-              { id: 'Member', label: '👤 Member', desc: 'Standard room participant' },
-              { id: 'Moderator', label: '⚖️ Mod', desc: 'Can remove members' },
-            ].map((r) => (
+        <div className="mt-1.5 p-2 bg-surface-container border border-tertiary/30 rounded-lg space-y-1.5 animate-fadeIn">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[9px] font-bold text-tertiary uppercase">Assign Role:</span>
+            <button onClick={onToggleRoleEdit} className="text-outline text-[10px] font-mono hover:text-tertiary">✕</button>
+          </div>
+          <div className="grid grid-cols-2 gap-1">
+            {['Admin', 'Member'].map((r) => (
               <button
-                key={r.id}
-                type="button"
-                onClick={() => onRoleChange(r.id)}
-                title={r.desc}
-                className={`font-mono text-[10px] font-bold px-2.5 py-1 rounded border transition-all cursor-pointer press ${
-                  role === r.id
-                    ? 'bg-primary text-surface-container border-primary shadow-[1px_1px_0_0_#426010]'
-                    : 'bg-surface hover:bg-secondary-container/40 text-on-surface border-tertiary/20'
+                key={r}
+                onClick={() => onRoleChange(r)}
+                className={`py-1 px-1.5 rounded font-mono text-[10px] font-bold border text-center transition-all ${
+                  role === r
+                    ? 'bg-primary text-surface-container border-primary'
+                    : 'bg-surface text-on-surface border-tertiary/20 hover:bg-secondary-container/30'
                 }`}
               >
-                {r.label}
+                {r}
               </button>
             ))}
           </div>

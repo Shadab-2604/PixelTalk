@@ -62,6 +62,7 @@ export default function RoomPage() {
   const [error, setError] = useState('');
   const [replyToMessage, setReplyToMessage] = useState(null);
   const [editingMessage, setEditingMessage] = useState(null);
+  const [infoDrawerOpen, setInfoDrawerOpen] = useState(false);
   const socketRef = useRef(null);
 
   const activeTypingMembers = useMemo(() => {
@@ -264,7 +265,10 @@ export default function RoomPage() {
 
   return (
     <AppShell
+      wide
       sidebar={<><ConversationSidebar /><SidebarFooter /></>}
+      rightDrawerOpen={infoDrawerOpen}
+      onCloseRightDrawer={() => setInfoDrawerOpen(false)}
       rightPanel={
         conversation && (
           <RoomMembersPanel
@@ -331,7 +335,11 @@ export default function RoomPage() {
                 onDeleted={() => router.push('/rooms')}
               />
             )}
-            <IconButton icon="info" title="Room info" className="hidden xl:inline-flex" onClick={() => {}} />
+            <IconButton
+              icon="info"
+              title="Room info"
+              onClick={() => setInfoDrawerOpen((o) => !o)}
+            />
           </div>
         </div>
 

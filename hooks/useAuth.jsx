@@ -20,6 +20,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/services/authService';
+import { syncSocketAuth, disconnectSocket } from '@/lib/socket';
 
 const AuthContext = createContext(null);
 
@@ -32,6 +33,7 @@ export function AuthProvider({ children }) {
     try {
       const data = await authService.me();
       setUser(data.user);
+      syncSocketAuth();
       return data.user;
     } catch {
       setUser(null);
@@ -53,6 +55,7 @@ export function AuthProvider({ children }) {
       } catch {}
     }
     setUser(data.user);
+    syncSocketAuth(data.token);
     return data.user;
   }, []);
 
@@ -64,6 +67,7 @@ export function AuthProvider({ children }) {
       } catch {}
     }
     setUser(data.user);
+    syncSocketAuth(data.token);
     return data.user;
   }, []);
 
@@ -76,6 +80,7 @@ export function AuthProvider({ children }) {
           localStorage.removeItem('pixeltalk_token');
         } catch {}
       }
+      disconnectSocket();
       setUser(null);
       router.push('/');
     }

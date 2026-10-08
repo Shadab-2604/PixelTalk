@@ -75,8 +75,6 @@ export function CallProvider({ children }) {
   const [remoteStream, setRemoteStream] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
-  const [isRemoteVideoOff, setIsRemoteVideoOff] = useState(false);
-  const [isRemoteMuted, setIsRemoteMuted] = useState(false);
   const [facingMode, setFacingMode] = useState('user');
   const [canSwitchCamera, setCanSwitchCamera] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -227,8 +225,6 @@ export function CallProvider({ children }) {
     setRemoteStream(null);
     setIsMuted(false);
     setIsVideoOff(false);
-    setIsRemoteVideoOff(false);
-    setIsRemoteMuted(false);
     setIsMinimized(false);
     iceCandidateQueueRef.current = [];
   }, [stopRingtone, clearCallTimeout]);
@@ -551,63 +547,15 @@ export function CallProvider({ children }) {
   };
 
   // -------------------------------------------------------------
-  // Remote Stream Track State Sync
-  // -------------------------------------------------------------
-  useEffect(() => {
-    if (!remoteStream) {
-      setIsRemoteVideoOff(false);
-      setIsRemoteMuted(false);
-      return undefined;
-    }
-
-    const videoTrack = remoteStream.getVideoTracks()[0];
-    const audioTrack = remoteStream.getAudioTracks()[0];
-
-    if (videoTrack) {
-      setIsRemoteVideoOff(!videoTrack.enabled || videoTrack.muted);
-      const onMute = () => setIsRemoteVideoOff(true);
-      const onUnmute = () => setIsRemoteVideoOff(false);
-      const onEnded = () => setIsRemoteVideoOff(true);
-
-      videoTrack.addEventListener('mute', onMute);
-      videoTrack.addEventListener('unmute', onUnmute);
-      videoTrack.addEventListener('ended', onEnded);
-
-      return () => {
-        videoTrack.removeEventListener('mute', onMute);
-        videoTrack.removeEventListener('unmute', onUnmute);
-        videoTrack.removeEventListener('ended', onEnded);
-      };
-    }
-    return undefined;
-  }, [remoteStream]);
-
-  // -------------------------------------------------------------
-  // Audio Mute & Video Toggle (Local + Realtime Socket Broadcast)
+  // Audio Mute & Video Toggle
   // -------------------------------------------------------------
   const toggleMute = () => {
     if (localStreamRef.current) {
       const audioTrack = localStreamRef.current.getAudioTracks()[0];
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
-        const newMuted = !audioTrack.enabled;
-        setIsMuted(newMuted);
+        setIsMuted(!audioTrack.enabled);
         sfx.click();
-
-        const socket = getSocket();
-        const currentCall = callDataRef.current;
-        if (socket && currentCall?.callId) {
-          const partnerId = String(currentCall.partnerUser?._id || currentCall.partnerUser?.id || '');
-          if (partnerId) {
-            socket.emit('call:media_state', {
-              callId: currentCall.callId,
-              targetUserId: partnerId,
-              toUserId: partnerId,
-              isVideoOff,
-              isMuted: newMuted,
-            });
-          }
-        }
       }
     }
   };
@@ -617,24 +565,8 @@ export function CallProvider({ children }) {
       const videoTrack = localStreamRef.current.getVideoTracks()[0];
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
-        const newVideoOff = !videoTrack.enabled;
-        setIsVideoOff(newVideoOff);
+        setIsVideoOff(!videoTrack.enabled);
         sfx.click();
-
-        const socket = getSocket();
-        const currentCall = callDataRef.current;
-        if (socket && currentCall?.callId) {
-          const partnerId = String(currentCall.partnerUser?._id || currentCall.partnerUser?.id || '');
-          if (partnerId) {
-            socket.emit('call:media_state', {
-              callId: currentCall.callId,
-              targetUserId: partnerId,
-              toUserId: partnerId,
-              isVideoOff: newVideoOff,
-              isMuted,
-            });
-          }
-        }
       }
     }
   };
@@ -889,18 +821,6 @@ export function CallProvider({ children }) {
       }, 2000);
     };
 
-    // 8. Realtime peer media state updates (camera toggle / mute toggle)
-    const onMediaState = (payload) => {
-      if (payload) {
-        if (typeof payload.isVideoOff === 'boolean') {
-          setIsRemoteVideoOff(payload.isVideoOff);
-        }
-        if (typeof payload.isMuted === 'boolean') {
-          setIsRemoteMuted(payload.isMuted);
-        }
-      }
-    };
-
     socket.on('call:incoming', onIncoming);
     socket.on('call:accepted', onAccepted);
     socket.on('call:rejected', onRejected);
@@ -908,7 +828,6 @@ export function CallProvider({ children }) {
     socket.on('call:signal', onSignal);
     socket.on('call:ended', onEnded);
     socket.on('call:busy', onBusy);
-    socket.on('call:media_state', onMediaState);
 
     return () => {
       socket.off('call:incoming', onIncoming);
@@ -918,7 +837,6 @@ export function CallProvider({ children }) {
       socket.off('call:signal', onSignal);
       socket.off('call:ended', onEnded);
       socket.off('call:busy', onBusy);
-      socket.off('call:media_state', onMediaState);
     };
   }, [user, callState, createPeerConnection, cleanupCall, playRingtone, stopRingtone, clearCallTimeout, startCallTimeout]);
 
@@ -931,8 +849,6 @@ export function CallProvider({ children }) {
         remoteStream,
         isMuted,
         isVideoOff,
-        isRemoteVideoOff,
-        isRemoteMuted,
         canSwitchCamera,
         isMinimized,
         isFullscreen,

@@ -24,7 +24,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useCall } from './CallContext';
-import { useAuth } from '@/hooks/useAuth';
 import { Avatar, Modal } from '@/components/ui';
 import { getUserAvatar } from '@/lib/avatars';
 
@@ -35,7 +34,6 @@ function formatSeconds(sec) {
 }
 
 export function CallOverlay() {
-  const { user } = useAuth();
   const {
     callState,
     callData,
@@ -43,8 +41,6 @@ export function CallOverlay() {
     remoteStream,
     isMuted,
     isVideoOff,
-    isRemoteVideoOff,
-    isRemoteMuted,
     canSwitchCamera,
     isMinimized,
     isFullscreen,
@@ -552,10 +548,10 @@ export function CallOverlay() {
       )}
 
       {/* ============================================================== */}
-      {/* 5. ACTIVE VIDEO CALL STAGE (Stitch Video Grid & Speaker Layout) */}
+      {/* 5. ACTIVE VIDEO CALL STAGE (Stitch Video Grid Layout)           */}
       {/* ============================================================== */}
       {callState === 'CONNECTED' && callData?.type === 'video' && !isMinimized && (
-        <div className="fixed inset-0 z-50 bg-[#1a140d] text-on-surface flex flex-col overflow-hidden h-screen h-[100dvh]">
+        <div className="fixed inset-0 z-50 bg-[#121a0e] text-on-surface flex flex-col overflow-hidden h-screen h-[100dvh]">
           {/* Top Stage Header Bar */}
           <header className="flex justify-between items-center w-full px-space-md py-space-sm h-14 z-40 bg-surface-container-high border-b border-tertiary/20 shadow-[0_2px_0px_0px_rgba(110,53,17,0.15)] shrink-0">
             <div className="flex items-center gap-space-md min-w-0">
@@ -568,11 +564,11 @@ export function CallOverlay() {
               <div className="h-5 w-px bg-tertiary/30 hidden sm:block" />
               <div className="flex items-center gap-space-sm truncate">
                 <span className="font-label-md text-label-md text-primary font-bold border-b-2 border-primary pb-0.5 truncate">
-                  VIDEO://STAGE
+                  VIDEO://LIVE
                 </span>
                 <span className="hidden md:flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant">
                   <span className="w-2 h-2 bg-primary inline-block" />
-                  Bitrate: 64kbps
+                  HD 1080p 60fps
                 </span>
                 <span className="hidden sm:flex items-center gap-1 bg-surface-container-lowest px-2 py-0.5 rounded border border-tertiary/20 font-label-sm text-label-sm">
                   <span className="material-symbols-outlined text-xs text-primary">lock</span>
@@ -584,7 +580,7 @@ export function CallOverlay() {
             {/* Top Right Controls */}
             <div className="flex items-center gap-space-sm">
               {/* Layout Switcher (Grid vs Speaker View) */}
-              <div className="flex items-center bg-surface-container rounded-lg p-0.5 border border-tertiary/30">
+              <div className="hidden sm:flex items-center bg-surface-container rounded-lg p-0.5 border border-tertiary/30">
                 <button
                   type="button"
                   onClick={() => setViewMode('grid')}
@@ -593,11 +589,9 @@ export function CallOverlay() {
                       ? 'bg-surface-container-lowest text-primary shadow-[1px_1px_0px_#6E3511]'
                       : 'text-on-surface-variant hover:text-on-surface'
                   }`}
-                  title="Grid View"
-                  aria-label="Grid View"
                 >
                   <span className="material-symbols-outlined text-xs">grid_view</span>
-                  <span className="hidden xs:inline">Grid</span>
+                  <span>Grid</span>
                 </button>
                 <button
                   type="button"
@@ -607,11 +601,9 @@ export function CallOverlay() {
                       ? 'bg-surface-container-lowest text-primary shadow-[1px_1px_0px_#6E3511]'
                       : 'text-on-surface-variant hover:text-on-surface'
                   }`}
-                  title="Speaker View"
-                  aria-label="Speaker View"
                 >
                   <span className="material-symbols-outlined text-xs">person</span>
-                  <span className="hidden xs:inline">Speaker</span>
+                  <span>Speaker</span>
                 </button>
               </div>
 
@@ -646,7 +638,7 @@ export function CallOverlay() {
           </header>
 
           {/* Main Video Stream Canvas */}
-          <main className="flex-1 flex flex-col p-2 sm:p-4 overflow-hidden relative bg-[#121a0e] pixel-grid-dots justify-between">
+          <main className="flex-1 flex flex-col p-2 sm:p-4 overflow-hidden relative bg-zinc-950 pixel-grid-dots justify-between">
             {/* Live Floating Reaction Animation */}
             {activeReaction && (
               <div className="absolute top-1/4 left-1/2 -translate-x-1/2 text-5xl floating-reaction-2 pointer-events-none z-40">
@@ -654,361 +646,90 @@ export function CallOverlay() {
               </div>
             )}
 
-            {/* ========================================================= */}
-            {/* VIEW MODE A: GRID VIEW (2 Equal Participant Cards)      */}
-            {/* ========================================================= */}
-            {viewMode === 'grid' && (
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4 overflow-y-auto">
-                {/* ---------------------------------------------------- */}
-                {/* TILE 1: REMOTE PARTICIPANT CARD                     */}
-                {/* ---------------------------------------------------- */}
-                <div className="relative bg-surface-container-lowest rounded-2xl border-2 border-tertiary p-2 flex flex-col justify-between overflow-hidden shadow-[3px_3px_0px_#6E3511] min-h-[260px] md:min-h-[380px]">
-                  {/* Scanline CRT overlay */}
-                  <div className="absolute inset-0 scanlines pointer-events-none opacity-20 z-10" />
+            {/* Video Stage Frame */}
+            <div className="flex-1 relative rounded-2xl border-2 border-tertiary overflow-hidden bg-surface-container-lowest flex items-center justify-center shadow-[4px_4px_0px_#6E3511]">
+              {/* Scanline texture overlay */}
+              <div className="absolute inset-0 scanlines pointer-events-none opacity-25 z-10" />
 
-                  {/* Top Header Overlays */}
-                  <div className="flex items-center justify-between z-20">
-                    <div className="flex items-center gap-1.5 bg-[#221a0e]/85 text-[#feeeda] px-2.5 py-1 rounded-lg border border-[#6E3511]/40 font-mono text-[11px] backdrop-blur-sm shadow-[1px_1px_0px_#6E3511]">
-                      <span className={`w-2 h-2 rounded-none ${!isRemoteVideoOff ? 'bg-primary animate-ping' : 'bg-outline'}`} />
-                      <span className="font-bold">CAM 01 (PEER)</span>
-                      <span className="opacity-60">|</span>
-                      <span className={!isRemoteVideoOff ? 'text-primary-fixed font-bold' : 'text-outline font-medium'}>
-                        {!isRemoteVideoOff ? 'LIVE' : 'OFF'}
-                      </span>
-                    </div>
+              {/* 4 Corner pixel brackets */}
+              <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-primary z-20 pointer-events-none" />
+              <div className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-primary z-20 pointer-events-none" />
+              <div className="absolute bottom-16 left-2 w-3 h-3 border-b-2 border-l-2 border-primary z-20 pointer-events-none" />
+              <div className="absolute bottom-16 right-2 w-3 h-3 border-b-2 border-r-2 border-primary z-20 pointer-events-none" />
 
-                    <div className="flex items-center gap-1 bg-surface-container-high/90 px-2 py-0.5 rounded border border-tertiary/30 font-mono text-[10px] shadow-[1px_1px_0px_rgba(110,53,17,0.15)]">
-                      <span className={`material-symbols-outlined text-xs ${isRemoteMuted ? 'text-error' : 'text-primary'}`}>
-                        {isRemoteMuted ? 'mic_off' : 'mic'}
-                      </span>
-                      <span className={isRemoteMuted ? 'text-error font-bold' : 'text-primary font-bold'}>
-                        {isRemoteMuted ? 'MUTED' : 'MIC ON'}
-                      </span>
-                    </div>
-                  </div>
+              {/* Remote Video Stream Element */}
+              <video
+                ref={setRemoteVideo}
+                autoPlay
+                playsInline
+                className="w-full h-full object-contain bg-zinc-950"
+              />
 
-                  {/* Video / Avatar Presentation Area */}
-                  <div className="flex-1 flex items-center justify-center p-2 relative overflow-hidden">
-                    {/* Real Video element (always kept in DOM so WebRTC stream binding is never dropped) */}
-                    <video
-                      ref={setRemoteVideo}
-                      autoPlay
-                      playsInline
-                      className={`w-full h-full object-contain rounded-xl bg-zinc-950 ${isRemoteVideoOff ? 'hidden' : 'block'}`}
-                    />
-
-                    {/* Camera Off Avatar Fallback Card */}
-                    {isRemoteVideoOff && (
-                      <div className="flex flex-col items-center justify-center text-center my-auto p-4 z-10">
-                        {/* Avatar with Stitch Pixel Border & Shadow */}
-                        <div className="relative p-1.5 bg-secondary-container rounded-2xl border-[2.5px] border-tertiary shadow-[3px_3px_0px_#6E3511]">
-                          <Avatar
-                            src={getUserAvatar(callData.partnerUser)}
-                            alt={partnerDisplayName}
-                            size={112}
-                            ring={false}
-                          />
-                          <span className="absolute -bottom-1 -right-1 bg-tertiary text-on-tertiary font-mono text-[9px] px-1.5 py-0.5 rounded font-bold border border-surface">
-                            PEER
-                          </span>
-                        </div>
-
-                        {/* Name & Identity */}
-                        <h3 className="font-display text-headline-sm font-bold text-on-surface mt-3">
-                          {partnerDisplayName}
-                        </h3>
-                        <p className="font-mono text-label-sm text-tertiary">
-                          @{partnerUsername}
-                        </p>
-
-                        {/* Status Pills */}
-                        <div className="mt-2.5 flex items-center gap-2 flex-wrap justify-center">
-                          <span className="inline-flex items-center gap-1 bg-surface-container px-2.5 py-0.5 rounded-full border border-tertiary/20 font-mono text-[10px] text-on-surface-variant font-bold">
-                            <span className="material-symbols-outlined text-xs text-tertiary">videocam_off</span>
-                            Camera Off
-                          </span>
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border font-mono text-[10px] font-bold ${
-                            isRemoteMuted
-                              ? 'bg-error-container/70 text-error border-error/30'
-                              : 'bg-secondary-container text-on-secondary-container border-tertiary/20'
-                          }`}>
-                            <span className="material-symbols-outlined text-xs">
-                              {isRemoteMuted ? 'mic_off' : 'mic'}
-                            </span>
-                            {isRemoteMuted ? 'Mic Off' : 'Mic On'}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Bottom Nameplate */}
-                  <div className="flex items-center justify-between bg-surface-container-high/95 backdrop-blur-sm p-2 rounded-xl border border-tertiary/30 z-20">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-2.5 h-2.5 ${!isRemoteVideoOff ? 'bg-primary' : 'bg-outline'}`} />
-                      <span className="font-headline-sm text-body-md font-bold text-on-surface truncate">
-                        @{partnerUsername}
-                      </span>
-                      <span className="font-mono text-[10px] text-on-surface-variant hidden sm:inline">
-                        ({partnerDisplayName})
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 font-mono text-[10px] text-tertiary bg-surface-container px-2 py-0.5 rounded border border-tertiary/20">
-                      <span className="material-symbols-outlined text-xs text-primary">equalizer</span>
-                      <span>OPUS 48kHz</span>
-                    </div>
-                  </div>
+              {/* Top Live Video Overlay Badge */}
+              <div className="absolute top-3 inset-x-3 flex items-center justify-between z-20 pointer-events-none">
+                <div className="flex items-center gap-1.5 bg-[#221a0e]/85 text-[#feeeda] px-2.5 py-1 rounded-lg border border-[#6E3511]/40 font-mono text-[11px] backdrop-blur-sm shadow-[1px_1px_0px_#6E3511]">
+                  <span className="w-2 h-2 bg-primary rounded-none animate-ping" />
+                  <span className="font-bold">HD CAM 01</span>
+                  <span className="opacity-60">|</span>
+                  <span className="text-primary-fixed font-bold">LIVE</span>
                 </div>
 
-                {/* ---------------------------------------------------- */}
-                {/* TILE 2: LOCAL PARTICIPANT CARD (YOU)                */}
-                {/* ---------------------------------------------------- */}
-                <div className="relative bg-surface-container-lowest rounded-2xl border-2 border-tertiary p-2 flex flex-col justify-between overflow-hidden shadow-[3px_3px_0px_#6E3511] min-h-[260px] md:min-h-[380px]">
-                  {/* Scanline CRT overlay */}
-                  <div className="absolute inset-0 scanlines pointer-events-none opacity-20 z-10" />
-
-                  {/* Top Header Overlays */}
-                  <div className="flex items-center justify-between z-20">
-                    <div className="flex items-center gap-1.5 bg-[#221a0e]/85 text-[#feeeda] px-2.5 py-1 rounded-lg border border-[#6E3511]/40 font-mono text-[11px] backdrop-blur-sm shadow-[1px_1px_0px_#6E3511]">
-                      <span className={`w-2 h-2 rounded-none ${!isVideoOff ? 'bg-primary animate-ping' : 'bg-outline'}`} />
-                      <span className="font-bold">CAM 02 (YOU)</span>
-                      <span className="opacity-60">|</span>
-                      <span className={!isVideoOff ? 'text-primary-fixed font-bold' : 'text-outline font-medium'}>
-                        {!isVideoOff ? 'LIVE' : 'OFF'}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1 bg-surface-container-high/90 px-2 py-0.5 rounded border border-tertiary/30 font-mono text-[10px] shadow-[1px_1px_0px_rgba(110,53,17,0.15)]">
-                      <span className={`material-symbols-outlined text-xs ${isMuted ? 'text-error' : 'text-primary'}`}>
-                        {isMuted ? 'mic_off' : 'mic'}
-                      </span>
-                      <span className={isMuted ? 'text-error font-bold' : 'text-primary font-bold'}>
-                        {isMuted ? 'MUTED' : 'MIC ON'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Video / Avatar Presentation Area */}
-                  <div className="flex-1 flex items-center justify-center p-2 relative overflow-hidden">
-                    {/* Real Video element (always kept in DOM) */}
-                    <video
-                      ref={setLocalVideo}
-                      autoPlay
-                      playsInline
-                      muted
-                      className={`w-full h-full object-contain -scale-x-100 rounded-xl bg-zinc-950 ${isVideoOff ? 'hidden' : 'block'}`}
-                    />
-
-                    {/* Camera Off Avatar Fallback Card */}
-                    {isVideoOff && (
-                      <div className="flex flex-col items-center justify-center text-center my-auto p-4 z-10">
-                        {/* Avatar with Stitch Pixel Border & Shadow */}
-                        <div className="relative p-1.5 bg-secondary-container rounded-2xl border-[2.5px] border-tertiary shadow-[3px_3px_0px_#6E3511]">
-                          <Avatar
-                            src={getUserAvatar(user)}
-                            alt={user?.displayName || 'You'}
-                            size={112}
-                            ring={false}
-                          />
-                          <span className="absolute -bottom-1 -right-1 bg-primary text-on-primary font-mono text-[9px] px-1.5 py-0.5 rounded font-bold border border-surface">
-                            YOU
-                          </span>
-                        </div>
-
-                        {/* Name & Identity */}
-                        <h3 className="font-display text-headline-sm font-bold text-on-surface mt-3">
-                          {user?.displayName || 'You'}
-                        </h3>
-                        <p className="font-mono text-label-sm text-tertiary">
-                          @{user?.username || 'player'}
-                        </p>
-
-                        {/* Status Pills */}
-                        <div className="mt-2.5 flex items-center gap-2 flex-wrap justify-center">
-                          <span className="inline-flex items-center gap-1 bg-surface-container px-2.5 py-0.5 rounded-full border border-tertiary/20 font-mono text-[10px] text-on-surface-variant font-bold">
-                            <span className="material-symbols-outlined text-xs text-tertiary">videocam_off</span>
-                            Camera Off
-                          </span>
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border font-mono text-[10px] font-bold ${
-                            isMuted
-                              ? 'bg-error-container/70 text-error border-error/30'
-                              : 'bg-secondary-container text-on-secondary-container border-tertiary/20'
-                          }`}>
-                            <span className="material-symbols-outlined text-xs">
-                              {isMuted ? 'mic_off' : 'mic'}
-                            </span>
-                            {isMuted ? 'Mic Off' : 'Mic On'}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Bottom Nameplate */}
-                  <div className="flex items-center justify-between bg-surface-container-high/95 backdrop-blur-sm p-2 rounded-xl border border-tertiary/30 z-20">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-2.5 h-2.5 ${!isVideoOff ? 'bg-primary' : 'bg-outline'}`} />
-                      <span className="font-headline-sm text-body-md font-bold text-on-surface truncate">
-                        You (@{user?.username || 'player'})
-                      </span>
-                    </div>
-                    {canSwitchCamera && (
-                      <button
-                        type="button"
-                        onClick={switchCamera}
-                        className="bg-surface-container px-2 py-0.5 rounded border border-tertiary/30 font-mono text-[10px] text-primary hover:text-tertiary flex items-center gap-1 font-bold"
-                        title="Flip Camera"
-                      >
-                        <span className="material-symbols-outlined text-xs">flip_camera_ios</span>
-                        <span className="hidden sm:inline">FLIP</span>
-                      </button>
-                    )}
-                  </div>
+                <div className="flex items-center gap-1 bg-surface-container-high/90 px-2 py-0.5 rounded border border-tertiary/30 font-mono text-[10px] text-primary font-bold shadow-[1px_1px_0px_rgba(110,53,17,0.15)]">
+                  <span className="material-symbols-outlined text-xs">equalizer</span>
+                  <span>SPEAKING</span>
                 </div>
               </div>
-            )}
 
-            {/* ========================================================= */}
-            {/* VIEW MODE B: SPEAKER VIEW (Hero Remote + PIP Local Card)  */}
-            {/* ========================================================= */}
-            {viewMode === 'speaker' && (
-              <div className="flex-1 relative rounded-2xl border-2 border-tertiary overflow-hidden bg-surface-container-lowest flex items-center justify-center shadow-[4px_4px_0px_#6E3511]">
-                {/* Scanline texture overlay */}
-                <div className="absolute inset-0 scanlines pointer-events-none opacity-25 z-10" />
-
-                {/* 4 Corner pixel brackets */}
-                <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-primary z-20 pointer-events-none" />
-                <div className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-primary z-20 pointer-events-none" />
-                <div className="absolute bottom-16 left-2 w-3 h-3 border-b-2 border-l-2 border-primary z-20 pointer-events-none" />
-                <div className="absolute bottom-16 right-2 w-3 h-3 border-b-2 border-r-2 border-primary z-20 pointer-events-none" />
-
-                {/* Remote Video Stream Element */}
+              {/* Local Stream PIP (Picture-In-Picture) Preview Card */}
+              <div className="absolute bottom-16 right-3 sm:bottom-16 sm:right-4 w-32 h-44 sm:w-44 sm:h-60 rounded-xl border-2 border-tertiary shadow-[3px_3px_0px_#6E3511] overflow-hidden bg-zinc-900 z-30">
                 <video
-                  ref={setRemoteVideo}
+                  ref={setLocalVideo}
                   autoPlay
                   playsInline
-                  className={`w-full h-full object-contain bg-zinc-950 ${isRemoteVideoOff ? 'hidden' : 'block'}`}
+                  muted
+                  className={`w-full h-full object-cover -scale-x-100 ${isVideoOff ? 'hidden' : ''}`}
                 />
-
-                {/* Remote Avatar Fallback Card on Speaker Stage */}
-                {isRemoteVideoOff && (
-                  <div className="flex flex-col items-center justify-center text-center my-auto p-6 z-10">
-                    <div className="relative p-2 bg-secondary-container rounded-2xl border-[3px] border-tertiary shadow-[4px_4px_0px_#6E3511]">
-                      <Avatar
-                        src={getUserAvatar(callData.partnerUser)}
-                        alt={partnerDisplayName}
-                        size={140}
-                        ring={false}
-                      />
-                      <span className="absolute -bottom-1 -right-1 bg-tertiary text-on-tertiary font-mono text-[10px] px-2 py-0.5 rounded font-bold border border-surface">
-                        SPEAKER
-                      </span>
-                    </div>
-
-                    <h2 className="font-display text-headline-md font-bold text-on-surface mt-4">
-                      {partnerDisplayName}
-                    </h2>
-                    <p className="font-mono text-label-md text-tertiary">
-                      @{partnerUsername}
-                    </p>
-
-                    <div className="mt-3 flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1 bg-surface-container px-3 py-1 rounded-full border border-tertiary/20 font-mono text-[11px] text-on-surface-variant font-bold">
-                        <span className="material-symbols-outlined text-sm text-tertiary">videocam_off</span>
-                        Camera Off
-                      </span>
-                      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full border font-mono text-[11px] font-bold ${
-                        isRemoteMuted
-                          ? 'bg-error-container/70 text-error border-error/30'
-                          : 'bg-secondary-container text-on-secondary-container border-tertiary/20'
-                      }`}>
-                        <span className="material-symbols-outlined text-sm">
-                          {isRemoteMuted ? 'mic_off' : 'mic'}
-                        </span>
-                        {isRemoteMuted ? 'Mic Off' : 'Mic Active'}
-                      </span>
-                    </div>
+                {isVideoOff && (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-surface-container p-2 text-center text-on-surface">
+                    <span className="material-symbols-outlined text-[28px] text-tertiary">videocam_off</span>
+                    <span className="font-mono text-[10px] text-tertiary font-bold mt-1">CAMERA OFF</span>
                   </div>
                 )}
-
-                {/* Top Live Video Overlay Badge */}
-                <div className="absolute top-3 inset-x-3 flex items-center justify-between z-20 pointer-events-none">
-                  <div className="flex items-center gap-1.5 bg-[#221a0e]/85 text-[#feeeda] px-2.5 py-1 rounded-lg border border-[#6E3511]/40 font-mono text-[11px] backdrop-blur-sm shadow-[1px_1px_0px_#6E3511]">
-                    <span className={`w-2 h-2 rounded-none ${!isRemoteVideoOff ? 'bg-primary animate-ping' : 'bg-outline'}`} />
-                    <span className="font-bold">HD CAM 01</span>
-                    <span className="opacity-60">|</span>
-                    <span className={!isRemoteVideoOff ? 'text-primary-fixed font-bold' : 'text-outline font-medium'}>
-                      {!isRemoteVideoOff ? 'LIVE' : 'OFFLINE'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1 bg-surface-container-high/90 px-2 py-0.5 rounded border border-tertiary/30 font-mono text-[10px] shadow-[1px_1px_0px_rgba(110,53,17,0.15)]">
-                    <span className={`material-symbols-outlined text-xs ${isRemoteMuted ? 'text-error' : 'text-primary'}`}>
-                      {isRemoteMuted ? 'mic_off' : 'equalizer'}
-                    </span>
-                    <span className={isRemoteMuted ? 'text-error font-bold' : 'text-primary font-bold'}>
-                      {isRemoteMuted ? 'PEER MUTED' : 'SPEAKING'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Local Stream PIP Preview Card */}
-                <div className="absolute bottom-16 right-3 sm:bottom-16 sm:right-4 w-32 h-44 sm:w-44 sm:h-60 rounded-xl border-2 border-tertiary shadow-[3px_3px_0px_#6E3511] overflow-hidden bg-surface-container-lowest z-30 flex flex-col justify-between">
-                  <video
-                    ref={setLocalVideo}
-                    autoPlay
-                    playsInline
-                    muted
-                    className={`w-full h-full object-cover -scale-x-100 ${isVideoOff ? 'hidden' : 'block'}`}
-                  />
-                  {isVideoOff && (
-                    <div className="flex-1 flex flex-col items-center justify-center bg-surface-container p-2 text-center text-on-surface">
-                      <div className="p-1 bg-secondary-container rounded-xl border border-tertiary shadow-[1px_1px_0px_#6E3511]">
-                        <Avatar src={getUserAvatar(user)} alt={user?.displayName || 'You'} size={48} ring={false} />
-                      </div>
-                      <span className="font-display text-[11px] font-bold text-on-surface mt-1 truncate max-w-full">
-                        {user?.displayName || 'You'}
-                      </span>
-                      <span className="font-mono text-[9px] text-tertiary font-bold flex items-center gap-0.5 mt-0.5">
-                        <span className="material-symbols-outlined text-[10px]">videocam_off</span>
-                        Cam Off
-                      </span>
-                    </div>
+                {/* Local PIP Name Tag */}
+                <div className="absolute bottom-0 inset-x-0 bg-surface-container-high/90 px-2 py-0.5 border-t border-tertiary/20 flex items-center justify-between">
+                  <span className="font-mono text-[9px] font-bold text-primary">YOU</span>
+                  {canSwitchCamera && (
+                    <button
+                      type="button"
+                      onClick={switchCamera}
+                      className="text-primary hover:text-tertiary"
+                      title="Flip camera"
+                    >
+                      <span className="material-symbols-outlined text-[13px]">flip_camera_ios</span>
+                    </button>
                   )}
-                  {/* Local PIP Name Tag */}
-                  <div className="bg-surface-container-high/90 px-2 py-0.5 border-t border-tertiary/20 flex items-center justify-between shrink-0">
-                    <span className="font-mono text-[9px] font-bold text-primary">YOU</span>
-                    {canSwitchCamera && (
-                      <button
-                        type="button"
-                        onClick={switchCamera}
-                        className="text-primary hover:text-tertiary"
-                        title="Flip camera"
-                      >
-                        <span className="material-symbols-outlined text-[13px]">flip_camera_ios</span>
-                      </button>
-                    )}
-                  </div>
                 </div>
+              </div>
 
-                {/* Bottom Video Nameplate */}
-                <div className="absolute bottom-2 inset-x-2 bg-surface-container-high/95 backdrop-blur-sm p-2 rounded-xl border border-tertiary/30 flex items-center justify-between z-20">
-                  <div className="flex items-center gap-2">
-                    <span className={`w-2.5 h-2.5 ${!isRemoteVideoOff ? 'bg-primary' : 'bg-outline'}`} />
-                    <span className="font-headline-sm text-body-md font-bold text-on-surface truncate">
-                      @{partnerUsername}
-                    </span>
-                    <span className="font-mono text-[10px] text-on-surface-variant hidden sm:inline">
-                      ({partnerDisplayName})
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 font-mono text-[10px] text-tertiary bg-surface-container px-2 py-0.5 rounded border border-tertiary/20">
+              {/* Bottom Video Nameplate */}
+              <div className="absolute bottom-2 inset-x-2 bg-surface-container-high/95 backdrop-blur-sm p-2 rounded-xl border border-tertiary/30 flex items-center justify-between z-20">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 bg-primary rounded-none" />
+                  <span className="font-headline-sm text-body-md font-bold text-on-surface truncate">
+                    @{partnerUsername}
+                  </span>
+                  <span className="font-mono text-[10px] text-on-surface-variant hidden sm:inline">
+                    ({partnerDisplayName})
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="hidden sm:flex items-center gap-1 font-mono text-[10px] text-tertiary bg-surface-container px-2 py-0.5 rounded border border-tertiary/20">
                     <span className="material-symbols-outlined text-xs text-primary">graphic_eq</span>
                     <span>16-BIT RETRO MESH</span>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
 
             {/* Floating Docked Arcade Toolbar */}
             <div className="mt-2.5 flex-shrink-0 flex justify-center pb-1 w-full z-30">

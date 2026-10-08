@@ -168,3 +168,25 @@ input[type='range']::-moz-range-thumb {
   background: rgba(110, 53, 17, 0.45);
 }
 
+/* ---- Pulsing pixel typing dots ---- */
+@keyframes pixel-bounce {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+.pixel-pulse-1 {
+  animation: pixel-bounce 1s infinite 0ms steps(2);
+}
+.pixel-pulse-2 {
+  animation: pixel-bounce 1s infinite 200ms steps(2);
+}
+.pixel-pulse-3 {
+  animation: pixel-bounce 1s infinite 400ms steps(2);
+}
+
+

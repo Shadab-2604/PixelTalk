@@ -63,6 +63,11 @@ export default function RoomPage() {
   const [editingMessage, setEditingMessage] = useState(null);
   const socketRef = useRef(null);
 
+  const activeTypingMembers = useMemo(() => {
+    const myId = String(user?._id || user?.id || '');
+    return Object.entries(typingUsers || {}).filter(([id]) => id && String(id) !== myId);
+  }, [typingUsers, user]);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -294,9 +299,22 @@ export default function RoomPage() {
                 <h1 className="font-display text-headline-sm font-bold text-on-surface tracking-tight truncate">{conversation?.name || 'Room'}</h1>
                 <Badge tone="green">{conversation?.privacy === 'private' ? 'LOBBY' : 'ROOM'}</Badge>
               </div>
-              <p className="font-mono text-label-sm text-secondary flex items-center gap-1.5 mt-0.5">
-                <PresencePip online={onlineCount > 0} />
-                <span className="truncate">{conversation?.members?.length || 0} players • {onlineCount} online</span>
+              <p className="font-mono text-label-sm text-secondary flex items-center gap-1.5 mt-0.5 min-h-[18px]">
+                {activeTypingMembers.length > 0 ? (
+                  <span className="text-primary font-bold flex items-center gap-1.5 animate-pulse">
+                    <span className="w-2 h-2 bg-primary-container inline-block" />
+                    <span>
+                      {activeTypingMembers.length === 1
+                        ? `${activeTypingMembers[0][1]?.displayName || 'Someone'} is typing...`
+                        : `${activeTypingMembers.length} players typing...`}
+                    </span>
+                  </span>
+                ) : (
+                  <>
+                    <PresencePip online={onlineCount > 0} />
+                    <span className="truncate">{conversation?.members?.length || 0} players • {onlineCount} online</span>
+                  </>
+                )}
               </p>
             </div>
           </div>

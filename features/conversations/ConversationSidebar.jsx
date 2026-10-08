@@ -66,6 +66,7 @@ export function ConversationSidebar() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
   const [busyPinId, setBusyPinId] = useState(null);
+  const [typingConvos, setTypingConvos] = useState({});
   const { isOnline } = usePresence();
 
   const activeConversationId = useMemo(() => {
@@ -256,15 +257,44 @@ export function ConversationSidebar() {
       loadInvitations();
     };
 
+    const onTypingStart = (p) => {
+      if (!p || !p.conversationId || !p.userId) return;
+      const cId = String(p.conversationId);
+      setTypingConvos((prev) => ({
+        ...prev,
+        [cId]: { ...(prev[cId] || {}), [p.userId]: p.user || { displayName: 'Player' } },
+      }));
+    };
+
+    const onTypingStop = (p) => {
+      if (!p || !p.conversationId || !p.userId) return;
+      const cId = String(p.conversationId);
+      setTypingConvos((prev) => {
+        if (!prev[cId]) return prev;
+        const nextForConvo = { ...prev[cId] };
+        delete nextForConvo[p.userId];
+        if (Object.keys(nextForConvo).length === 0) {
+          const next = { ...prev };
+          delete next[cId];
+          return next;
+        }
+        return { ...prev, [cId]: nextForConvo };
+      });
+    };
+
     socket.on('new_message', onNewMessage);
     socket.on('chat_cleared', onChatCleared);
     socket.on('chat_deleted', onChatDeleted);
     socket.on('group_invitation_received', onInvitation);
+    socket.on('typing_start', onTypingStart);
+    socket.on('typing_stop', onTypingStop);
     return () => {
       socket.off('new_message', onNewMessage);
       socket.off('chat_cleared', onChatCleared);
       socket.off('chat_deleted', onChatDeleted);
       socket.off('group_invitation_received', onInvitation);
+      socket.off('typing_start', onTypingStart);
+      socket.off('typing_stop', onTypingStop);
     };
   }, [activeConversationId]);
 
@@ -568,6 +598,7 @@ export function ConversationSidebar() {
                   isPinned={true}
                   onTogglePin={togglePin}
                   busyPinId={busyPinId}
+                  typingUsers={typingConvos[c._id]}
                 />
               ))}
             </div>
@@ -632,6 +663,7 @@ export function ConversationSidebar() {
                           isPinned={false}
                           onTogglePin={togglePin}
                           busyPinId={busyPinId}
+                          typingUsers={typingConvos[c._id]}
                         />
                       ))
                     )}
@@ -663,6 +695,7 @@ export function ConversationSidebar() {
                   isPinned={false}
                   onTogglePin={togglePin}
                   busyPinId={busyPinId}
+                  typingUsers={typingConvos[c._id]}
                 />
               ))}
             </div>
@@ -836,11 +869,15 @@ export function ConversationSidebar() {
   );
 }
 
-function ConversationRow({ c, user, isOnline, isPinned, onTogglePin, busyPinId }) {
+function ConversationRow({ c, user, isOnline, isPinned, onTogglePin, busyPinId, typingUsers }) {
   const other = otherMember(c, user);
   const online = c.type === 'direct' ? isOnline(other?._id || other?.id) : undefined;
   const lastAt = c.lastMessage?.createdAt || c.lastMessageAt || c.updatedAt;
   const isMuted = (user?.mutedConversations || []).some((id) => String(id?._id || id) === String(c._id));
+
+  const myId = String(user?._id || user?.id || '');
+  const activeTyping = Object.entries(typingUsers || {}).filter(([id]) => id && String(id) !== myId);
+  const typingName = activeTyping.length > 0 ? (activeTyping[0][1]?.displayName || activeTyping[0][1]?.username || 'Someone') : null;
 
   return (
     <div className="group relative flex items-center rounded-lg bg-surface-container-lowest/80 border border-tertiary/20 hover:border-tertiary transition-all shadow-pixel-sm hover:bg-surface-container-lowest">
@@ -859,7 +896,18 @@ function ConversationRow({ c, user, isOnline, isPinned, onTogglePin, busyPinId }
             </p>
             <span className="font-mono text-[10px] text-tertiary flex-shrink-0">{lastAt ? timeAgo(lastAt) : ''}</span>
           </div>
-          <p className="font-body-sm text-[11px] text-on-surface-variant truncate">{conversationSubtitle(c, user, isOnline)}</p>
+          {typingName ? (
+            <p className="font-mono text-[11px] text-primary font-bold truncate flex items-center gap-1.5">
+              <span>{activeTyping.length === 1 ? `${typingName} is typing` : `${activeTyping.length} typing`}</span>
+              <span className="inline-flex items-center gap-0.5 shrink-0">
+                <span className="w-1.5 h-1.5 bg-primary pixel-pulse-1 inline-block" />
+                <span className="w-1.5 h-1.5 bg-secondary pixel-pulse-2 inline-block" />
+                <span className="w-1.5 h-1.5 bg-primary-fixed-dim pixel-pulse-3 inline-block" />
+              </span>
+            </p>
+          ) : (
+            <p className="font-body-sm text-[11px] text-on-surface-variant truncate">{conversationSubtitle(c, user, isOnline)}</p>
+          )}
         </div>
         {(c.unreadCount || 0) > 0 && (
           <span className="w-4 h-4 rounded-full bg-primary-container text-surface-container font-mono text-[10px] flex items-center justify-center font-bold flex-shrink-0">

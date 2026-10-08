@@ -729,21 +729,30 @@ export function MessageList({
 
 /** Typing indicator with 3 animated square pixel dots. */
 export function TypingIndicator({ typingUsers, currentUserId }) {
-  const users = Object.entries(typingUsers).filter(([id]) => id !== String(currentUserId?._id || currentUserId?.id));
+  const myId = String(currentUserId?._id || currentUserId?.id || '');
+  const users = Object.entries(typingUsers || {}).filter(([id]) => id && String(id) !== myId);
   if (users.length === 0) return null;
-  const label = users.length === 1 ? `${users[0][1]?.displayName || 'Someone'} is typing` : `${users.length} players are typing`;
+
+  const names = users.map(([, u]) => u?.displayName || u?.username || 'Player');
+  const label =
+    names.length === 1
+      ? `${names[0]} is typing`
+      : names.length === 2
+        ? `${names[0]} and ${names[1]} are typing`
+        : `${names[0]} and ${names.length - 1} others are typing`;
 
   return (
-    <div className="flex items-center gap-3 pl-1 pt-1 pb-2 px-4">
-      <div className="w-7 h-7 rounded-md bg-surface-container-high border border-tertiary/20 flex items-center justify-center shrink-0">
+    <div className="flex items-center gap-space-sm pl-4 pt-1 pb-2 select-none animate-in fade-in slide-in-from-bottom-2 duration-150">
+      <div className="w-7 h-7 rounded-md bg-surface-container-high border border-tertiary/20 flex items-center justify-center shrink-0 shadow-[1px_1px_0_0_rgba(110,53,17,0.1)]">
         <span className="material-symbols-outlined text-[16px] text-tertiary">chat</span>
       </div>
-      <div className="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-tertiary/15 shadow-pixel-sm">
-        <span className="font-mono text-label-sm font-semibold text-on-surface-variant">{label}...</span>
+      <div className="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-tertiary/15 shadow-[1px_1px_0_0_rgba(110,53,17,0.08)]">
+        <span className="font-label-sm text-label-sm font-semibold text-on-surface-variant">{label}</span>
+        {/* 3 animated square pixel dots */}
         <div className="flex items-center gap-1">
-          <span className="w-1.5 h-1.5 bg-primary-container animate-pixel-bounce-1" />
-          <span className="w-1.5 h-1.5 bg-secondary animate-pixel-bounce-2" />
-          <span className="w-1.5 h-1.5 bg-primary-fixed-dim animate-pixel-bounce-3" />
+          <span className="w-1.5 h-1.5 bg-primary-container pixel-pulse-1 inline-block" />
+          <span className="w-1.5 h-1.5 bg-secondary pixel-pulse-2 inline-block" />
+          <span className="w-1.5 h-1.5 bg-primary-fixed-dim pixel-pulse-3 inline-block" />
         </div>
       </div>
     </div>

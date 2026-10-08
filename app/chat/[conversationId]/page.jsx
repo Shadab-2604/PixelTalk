@@ -65,6 +65,12 @@ export default function ChatPage() {
   const socketRef = useRef(null);
 
   const other = useMemo(() => (conversation ? otherMember(conversation, user) : null), [conversation, user]);
+  const otherOnline = useMemo(() => (other ? isOnline(other._id) : false), [other, isOnline]);
+  const isOtherTyping = useMemo(() => {
+    if (!other || !typingUsers) return false;
+    const otherId = String(other._id || other.id || '');
+    return Object.keys(typingUsers).some((id) => String(id) === otherId);
+  }, [other, typingUsers]);
 
   // Load conversation + initial messages & mark read
   useEffect(() => {
@@ -225,8 +231,6 @@ export default function ChatPage() {
     );
   }
 
-  const otherOnline = other ? isOnline(other._id || other.id) : false;
-
   return (
     <AppShell
       sidebar={<><ConversationSidebar /><SidebarFooter /></>}
@@ -267,9 +271,20 @@ export default function ChatPage() {
                 </h1>
                 <Badge tone="green">DIRECT</Badge>
               </div>
-              <p className="font-mono text-label-sm text-secondary flex items-center gap-1.5 mt-0.5">
-                <PresencePip online={otherOnline} />
-                <span className="truncate">{other ? (otherOnline ? 'Online' : other.lastSeen ? `Last seen ${timeAgo(other.lastSeen)}` : 'Offline') : '—'}</span>
+              <p className="font-mono text-label-sm text-secondary flex items-center gap-1.5 mt-0.5 min-h-[18px]">
+                {isOtherTyping ? (
+                  <span className="text-primary font-bold flex items-center gap-1.5 animate-pulse">
+                    <span className="w-2 h-2 bg-primary-container inline-block" />
+                    <span>typing...</span>
+                  </span>
+                ) : (
+                  <>
+                    <PresencePip online={otherOnline} />
+                    <span className="truncate">
+                      {other ? (otherOnline ? 'Online' : other.lastSeen ? `Last seen ${timeAgo(other.lastSeen)}` : 'Offline') : '—'}
+                    </span>
+                  </>
+                )}
               </p>
             </div>
           </div>

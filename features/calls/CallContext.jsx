@@ -488,32 +488,74 @@ export function CallProvider({ children }) {
       });
     }
 
-    // Receive remote stream
+    // Receive remote stream tracks (audio and video can arrive in separate ontrack events)
     pc.ontrack = (event) => {
-      if (event.streams && event.streams[0]) {
-        const remoteStream = event.streams[0];
-        groupStreamsRef.current.set(String(targetUserId), remoteStream);
+      const track = event.track;
+      console.log(`[CALL][ONTRACK] Remote track received from ${targetUserId}:`, {
+        kind: track.kind,
+        id: track.id,
+        enabled: track.enabled,
+        readyState: track.readyState,
+        streamsCount: event.streams ? event.streams.length : 0,
+      });
 
-        setGroupParticipants((prev) => {
-          const exists = prev.some((p) => String(p.userId) === String(targetUserId));
-          if (!exists) {
-            return [
-              ...prev,
-              {
-                userId: String(targetUserId),
-                user: { id: String(targetUserId), _id: String(targetUserId), username: 'player', displayName: 'Player' },
-                isMuted: false,
-                isVideoOff: false,
-                isScreenSharing: false,
-                isSpeaking: false,
-                stream: remoteStream,
-                isLocal: false,
-              },
-            ];
-          }
-          return prev.map((p) => (String(p.userId) === String(targetUserId) ? { ...p, stream: remoteStream } : p));
-        });
+      // 1. Retrieve or initialize dedicated stable MediaStream for this remote participant
+      let remoteStream = groupStreamsRef.current.get(String(targetUserId));
+      if (!remoteStream) {
+        if (event.streams && event.streams[0]) {
+          remoteStream = event.streams[0];
+        } else {
+          remoteStream = new MediaStream();
+        }
       }
+
+      // 2. Ensure the received track is present in the MediaStream
+      if (!remoteStream.getTracks().some((t) => t.id === track.id)) {
+        remoteStream.addTrack(track);
+      }
+
+      // 3. Create fresh MediaStream instance reference to guarantee React state reactivity
+      const newStreamRef = new MediaStream(remoteStream.getTracks());
+      groupStreamsRef.current.set(String(targetUserId), newStreamRef);
+
+      // 4. Attach lifecycle listeners to handle track state transitions
+      const handleTrackUpdate = () => {
+        const cur = groupStreamsRef.current.get(String(targetUserId));
+        if (cur) {
+          const fresh = new MediaStream(cur.getTracks().filter((t) => t.readyState !== 'ended'));
+          groupStreamsRef.current.set(String(targetUserId), fresh);
+          setGroupParticipants((prev) =>
+            prev.map((p) => (String(p.userId) === String(targetUserId) ? { ...p, stream: fresh } : p)),
+          );
+        }
+      };
+
+      track.addEventListener('ended', handleTrackUpdate);
+      track.addEventListener('mute', handleTrackUpdate);
+      track.addEventListener('unmute', handleTrackUpdate);
+
+      // 5. Update groupParticipants state with the fresh stream reference
+      setGroupParticipants((prev) => {
+        const exists = prev.some((p) => String(p.userId) === String(targetUserId));
+        if (!exists) {
+          return [
+            ...prev,
+            {
+              userId: String(targetUserId),
+              user: { id: String(targetUserId), _id: String(targetUserId), username: 'player', displayName: 'Player' },
+              isMuted: false,
+              isVideoOff: false,
+              isScreenSharing: false,
+              isSpeaking: false,
+              stream: newStreamRef,
+              isLocal: false,
+            },
+          ];
+        }
+        return prev.map((p) =>
+          String(p.userId) === String(targetUserId) ? { ...p, stream: newStreamRef } : p,
+        );
+      });
     };
 
     // Send ICE candidates to specific group peer

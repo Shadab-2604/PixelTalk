@@ -1489,21 +1489,66 @@ function VideoTile({
 }) {
   const videoRef = useRef(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [, setTrackCounter] = useState(0);
+
   const displayName = participant.user?.displayName || participant.user?.username || 'Player';
   const username = participant.user?.username || 'player';
   const isSpeaking = Boolean(participant.isSpeaking && !isMuted);
 
-  // Attach MediaStream to video element
-  useEffect(() => {
-    if (videoRef.current && stream) {
-      if (videoRef.current.srcObject !== stream) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play().catch(() => {});
-      }
-    }
-  }, [stream]);
+  // Check if live video track is present in the MediaStream
+  const hasLiveVideoTrack = Boolean(
+    stream &&
+      stream.getVideoTracks().length > 0 &&
+      stream.getVideoTracks().some((t) => t.enabled && t.readyState !== 'ended'),
+  );
+  const hasVideoStream = Boolean(hasLiveVideoTrack && !isVideoOff);
 
-  const hasVideoStream = Boolean(stream && !isVideoOff);
+  // Attach and observe MediaStream on video element
+  useEffect(() => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return undefined;
+
+    if (!stream) {
+      if (videoEl.srcObject) {
+        videoEl.srcObject = null;
+      }
+      return undefined;
+    }
+
+    if (videoEl.srcObject !== stream) {
+      videoEl.srcObject = stream;
+    }
+    videoEl.play().catch(() => {});
+
+    // Force re-render when tracks are added or removed dynamically
+    const onTrackChange = () => {
+      setTrackCounter((c) => c + 1);
+      if (videoRef.current && videoRef.current.srcObject !== stream) {
+        videoRef.current.srcObject = stream;
+      }
+      videoRef.current?.play().catch(() => {});
+    };
+
+    stream.addEventListener('addtrack', onTrackChange);
+    stream.addEventListener('removetrack', onTrackChange);
+
+    const vTracks = stream.getVideoTracks();
+    vTracks.forEach((t) => {
+      t.addEventListener('unmute', onTrackChange);
+      t.addEventListener('mute', onTrackChange);
+      t.addEventListener('ended', onTrackChange);
+    });
+
+    return () => {
+      stream.removeEventListener('addtrack', onTrackChange);
+      stream.removeEventListener('removetrack', onTrackChange);
+      vTracks.forEach((t) => {
+        t.removeEventListener('unmute', onTrackChange);
+        t.removeEventListener('mute', onTrackChange);
+        t.removeEventListener('ended', onTrackChange);
+      });
+    };
+  }, [stream]);
 
   return (
     <div
@@ -1531,7 +1576,7 @@ function VideoTile({
         }`}
       />
 
-      {/* CAMERA OFF AVATAR FALLBACK (MANDATORY: NO EMPTY BLACK BOX) */}
+      {/* CAMERA OFF / CONNECTING AVATAR FALLBACK */}
       {!hasVideoStream && (
         <div className="w-full h-full flex flex-col items-center justify-center bg-surface-container-low p-4 text-center">
           <div className="relative mb-2">
@@ -1554,8 +1599,12 @@ function VideoTile({
             {displayName} {isSelf && <span className="text-primary font-mono text-[10px]">(YOU)</span>}
           </p>
           <div className="mt-1 flex items-center gap-1 font-mono text-[9px] text-tertiary bg-surface-container px-2 py-0.5 rounded border border-tertiary/20 font-bold">
-            <span className="material-symbols-outlined text-[12px]">{isSpeaking ? 'record_voice_over' : 'videocam_off'}</span>
-            <span>{isSpeaking ? 'SPEAKING…' : 'CAMERA OFF'}</span>
+            <span className="material-symbols-outlined text-[12px]">
+              {isSpeaking ? 'record_voice_over' : stream ? 'videocam_off' : 'sync'}
+            </span>
+            <span>
+              {isSpeaking ? 'SPEAKING…' : stream ? (isVideoOff ? 'CAMERA OFF' : 'AUDIO ONLY') : 'CONNECTING…'}
+            </span>
           </div>
         </div>
       )}

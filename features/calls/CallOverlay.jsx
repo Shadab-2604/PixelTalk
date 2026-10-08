@@ -44,6 +44,8 @@ export function CallOverlay() {
     localStream,
     remoteStream,
     groupParticipants,
+    systemMessages,
+    activeBanVote,
     isMuted,
     isVideoOff,
     isScreenSharing,
@@ -57,6 +59,11 @@ export function CallOverlay() {
     rejectCall,
     cancelCall,
     endCall,
+    removeGroupParticipant,
+    banGroupParticipant,
+    startBanVote,
+    castBanVote,
+    dismissBanVote,
     toggleMute,
     toggleVideo,
     toggleScreenShare,
@@ -157,6 +164,54 @@ export function CallOverlay() {
             .map((p) => (
               <RemoteAudioPlayer key={p.userId} stream={p.stream} />
             ))}
+        </div>
+      )}
+
+      {/* Floating System Messages Toast Feed (in-call events) */}
+      {isGroup && Array.isArray(systemMessages) && systemMessages.length > 0 && !isMinimized && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-1.5 pointer-events-none max-w-sm w-full px-4">
+          {systemMessages.map((msg) => (
+            <div
+              key={msg.id}
+              className="bg-surface-container-high/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-tertiary/40 shadow-[2px_2px_0px_#6E3511] flex items-center gap-2 font-mono text-[11px] font-bold text-on-surface animate-fade-in"
+            >
+              <span className="w-2 h-2 rounded-full bg-primary inline-block" />
+              <span>{msg.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Democratic Ban Vote Prompt Banner */}
+      {activeBanVote && isGroup && !isMinimized && (
+        <div className="fixed top-28 left-1/2 -translate-x-1/2 z-50 bg-surface-container-high border-2 border-error p-3.5 rounded-2xl shadow-[4px_4px_0px_#ba1a1a] max-w-sm w-full animate-bounce-in">
+          <div className="flex items-start gap-2.5">
+            <span className="material-symbols-outlined text-error text-xl shrink-0 mt-0.5">how_to_vote</span>
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-[13px] font-bold text-on-surface truncate">
+                Ban @{activeBanVote.targetUser?.username || 'user'}?
+              </p>
+              <p className="font-mono text-[10px] text-tertiary">
+                Initiated by {activeBanVote.initiatorName || 'Member'} • {activeBanVote.votesCount}/{activeBanVote.majorityNeeded} votes needed
+              </p>
+              <div className="flex items-center gap-2 mt-2.5">
+                <button
+                  type="button"
+                  onClick={() => castBanVote(activeBanVote.targetUserId, true)}
+                  className="flex-1 py-1 px-3 bg-error text-on-error font-mono text-[11px] font-bold rounded-lg border border-tertiary shadow-[1px_1px_0px_#6E3511] press"
+                >
+                  Vote Ban (Yes)
+                </button>
+                <button
+                  type="button"
+                  onClick={dismissBanVote}
+                  className="py-1 px-3 bg-surface-container text-on-surface font-mono text-[11px] font-bold rounded-lg border border-tertiary press"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -788,6 +843,9 @@ export function CallOverlay() {
           isFullscreen={isFullscreen}
           onReaction={triggerReaction}
           activeReaction={activeReaction}
+          onRemoveParticipant={removeGroupParticipant}
+          onBanParticipant={banGroupParticipant}
+          onStartBanVote={startBanVote}
         />
       )}
 
@@ -817,6 +875,9 @@ export function CallOverlay() {
           activeReaction={activeReaction}
           viewMode={viewMode}
           onSetViewMode={setViewMode}
+          onRemoveParticipant={removeGroupParticipant}
+          onBanParticipant={banGroupParticipant}
+          onStartBanVote={startBanVote}
         />
       )}
 
@@ -850,8 +911,12 @@ function GroupVoiceStage({
   isFullscreen,
   onReaction,
   activeReaction,
+  onRemoveParticipant,
+  onBanParticipant,
+  onStartBanVote,
 }) {
   const roomName = callData?.conversationName || 'Community Room';
+  const [selectedUserMenu, setSelectedUserMenu] = useState(null);
 
   return (
     <div className="fixed inset-0 z-50 bg-background text-on-surface flex flex-col overflow-hidden h-screen h-[100dvh]">
@@ -915,21 +980,86 @@ function GroupVoiceStage({
             const username = p.user?.username || 'player';
             const isSelf = p.isLocal;
             const isMutedState = isSelf ? isMuted : p.isMuted;
+            const isSpeaking = Boolean(p.isSpeaking && !isMutedState);
 
             return (
               <div
                 key={p.userId}
                 className={`bg-surface-container-lowest border-2 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center text-center relative transition-all shadow-[3px_3px_0px_#6E3511] ${
-                  !isMutedState ? 'border-primary-container bg-secondary-container/10' : 'border-tertiary/40'
+                  isSpeaking
+                    ? 'border-primary ring-2 ring-primary bg-secondary-container/20 shadow-[0_0_15px_rgba(77,208,225,0.4)] speaking-tile'
+                    : !isMutedState
+                    ? 'border-primary-container bg-secondary-container/10'
+                    : 'border-tertiary/40'
                 }`}
               >
                 {/* 4 Corner brackets */}
                 <div className="absolute top-2 left-2 w-2.5 h-2.5 border-t-2 border-l-2 border-tertiary/40 pointer-events-none" />
                 <div className="absolute top-2 right-2 w-2.5 h-2.5 border-t-2 border-r-2 border-tertiary/40 pointer-events-none" />
 
+                {/* Moderation menu toggle for remote participant */}
+                {!isSelf && (
+                  <div className="absolute top-2 right-2 z-20">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedUserMenu(selectedUserMenu === p.userId ? null : p.userId)}
+                      className="p-1 rounded bg-surface-container border border-tertiary/40 text-tertiary hover:text-on-surface"
+                      title="Participant Options"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">more_vert</span>
+                    </button>
+
+                    {selectedUserMenu === p.userId && (
+                      <div className="absolute right-0 top-7 w-36 bg-surface-container-high border-2 border-tertiary rounded-xl shadow-[3px_3px_0px_#6E3511] p-1 flex flex-col gap-1 z-30 animate-fade-in text-left">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onStartBanVote(p.userId);
+                            setSelectedUserMenu(null);
+                          }}
+                          className="px-2 py-1 text-[11px] font-mono font-bold text-on-surface hover:bg-secondary-container/40 rounded flex items-center gap-1.5"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">how_to_vote</span>
+                          <span>Vote Ban</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onRemoveParticipant(p.userId);
+                            setSelectedUserMenu(null);
+                          }}
+                          className="px-2 py-1 text-[11px] font-mono font-bold text-error hover:bg-error-container/30 rounded flex items-center gap-1.5"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">person_remove</span>
+                          <span>Admin Remove</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onBanParticipant(p.userId);
+                            setSelectedUserMenu(null);
+                          }}
+                          className="px-2 py-1 text-[11px] font-mono font-bold text-error hover:bg-error-container/30 rounded flex items-center gap-1.5"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">block</span>
+                          <span>Admin Ban</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Avatar with status */}
                 <div className="relative mb-3">
-                  <div className={`p-1 rounded-2xl border-2 ${!isMutedState ? 'border-primary bg-secondary-container' : 'border-tertiary bg-surface-container'}`}>
+                  <div
+                    className={`p-1 rounded-2xl border-2 ${
+                      isSpeaking
+                        ? 'border-primary bg-secondary-container ring-2 ring-primary animate-pulse'
+                        : !isMutedState
+                        ? 'border-primary bg-secondary-container'
+                        : 'border-tertiary bg-surface-container'
+                    }`}
+                  >
                     <Avatar src={getUserAvatar(p.user)} alt={displayName} size={72} ring={false} />
                   </div>
                   <span
@@ -951,9 +1081,9 @@ function GroupVoiceStage({
                 </div>
 
                 <div className="mt-2.5 flex items-center gap-1.5 font-mono text-[10px] px-2 py-0.5 rounded border border-tertiary/20 bg-surface-container/60">
-                  <span className={`w-1.5 h-1.5 inline-block ${!isMutedState ? 'bg-primary animate-ping' : 'bg-outline'}`} />
-                  <span className={!isMutedState ? 'text-primary font-bold' : 'text-on-surface-variant'}>
-                    {!isMutedState ? 'AUDIO LIVE' : 'MUTED'}
+                  <span className={`w-1.5 h-1.5 inline-block ${isSpeaking ? 'bg-primary animate-ping' : !isMutedState ? 'bg-primary' : 'bg-outline'}`} />
+                  <span className={isSpeaking ? 'text-primary font-bold animate-pulse' : !isMutedState ? 'text-primary font-bold' : 'text-on-surface-variant'}>
+                    {isSpeaking ? 'SPEAKING…' : !isMutedState ? 'AUDIO LIVE' : 'MUTED'}
                   </span>
                 </div>
               </div>
@@ -1030,7 +1160,7 @@ function GroupVoiceStage({
 
 /**
  * ==============================================================
- * GROUP VIDEO CALL STAGE COMPONENT (Adaptive Mesh Grid)
+ * GROUP VIDEO CALL STAGE COMPONENT (Adaptive Mesh Grid & Speaker View)
  * ==============================================================
  */
 function GroupVideoStage({
@@ -1055,8 +1185,22 @@ function GroupVideoStage({
   activeReaction,
   viewMode,
   onSetViewMode,
+  onRemoveParticipant,
+  onBanParticipant,
+  onStartBanVote,
 }) {
   const roomName = callData?.conversationName || 'Community Room';
+
+  // In speaker view, focus on active speaker or screen sharer, fallback to first remote or self
+  const speakerParticipant = useMemo(() => {
+    if (viewMode !== 'speaker') return null;
+    return (
+      participants.find((p) => p.isScreenSharing) ||
+      participants.find((p) => p.isSpeaking) ||
+      participants.find((p) => !p.isLocal) ||
+      participants[0]
+    );
+  }, [viewMode, participants]);
 
   // Dynamic grid column class based on participant count
   const count = Math.max(1, participants.length);
@@ -1151,31 +1295,79 @@ function GroupVideoStage({
           </div>
         )}
 
-        {/* Video Tiles Grid */}
-        <div className="flex-1 overflow-y-auto min-h-0 w-full flex items-center justify-center">
-          <div className={`grid ${gridClass} gap-2.5 sm:gap-3.5 w-full h-full max-h-full p-1`}>
-            {participants.map((p) => {
-              const isSelf = p.isLocal;
-              const stream = isSelf ? localStream : p.stream;
-              const muted = isSelf ? isMuted : p.isMuted;
-              const videoOff = isSelf ? isVideoOff : p.isVideoOff;
+        {/* Video Tiles Grid / Speaker Layout */}
+        {viewMode === 'grid' || !speakerParticipant ? (
+          <div className="flex-1 overflow-y-auto min-h-0 w-full flex items-center justify-center">
+            <div className={`grid ${gridClass} gap-2.5 sm:gap-3.5 w-full h-full max-h-full p-1`}>
+              {participants.map((p) => {
+                const isSelf = p.isLocal;
+                const stream = isSelf ? localStream : p.stream;
+                const muted = isSelf ? isMuted : p.isMuted;
+                const videoOff = isSelf ? isVideoOff : p.isVideoOff;
 
-              return (
-                <VideoTile
-                  key={p.userId}
-                  participant={p}
-                  stream={stream}
-                  isSelf={isSelf}
-                  isMuted={muted}
-                  isVideoOff={videoOff}
-                  isScreenSharing={p.isScreenSharing}
-                  canSwitchCamera={isSelf && canSwitchCamera}
-                  onSwitchCamera={onSwitchCamera}
-                />
-              );
-            })}
+                return (
+                  <VideoTile
+                    key={p.userId}
+                    participant={p}
+                    stream={stream}
+                    isSelf={isSelf}
+                    isMuted={muted}
+                    isVideoOff={videoOff}
+                    isScreenSharing={p.isScreenSharing}
+                    canSwitchCamera={isSelf && canSwitchCamera}
+                    onSwitchCamera={onSwitchCamera}
+                    onRemoveParticipant={onRemoveParticipant}
+                    onBanParticipant={onBanParticipant}
+                    onStartBanVote={onStartBanVote}
+                  />
+                );
+              })}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex-1 flex flex-col gap-2 min-h-0 w-full">
+            {/* Main Speaker Stage */}
+            <div className="flex-1 min-h-0 w-full relative">
+              <VideoTile
+                participant={speakerParticipant}
+                stream={speakerParticipant.isLocal ? localStream : speakerParticipant.stream}
+                isSelf={speakerParticipant.isLocal}
+                isMuted={speakerParticipant.isLocal ? isMuted : speakerParticipant.isMuted}
+                isVideoOff={speakerParticipant.isLocal ? isVideoOff : speakerParticipant.isVideoOff}
+                isScreenSharing={speakerParticipant.isScreenSharing}
+                canSwitchCamera={speakerParticipant.isLocal && canSwitchCamera}
+                onSwitchCamera={onSwitchCamera}
+                onRemoveParticipant={onRemoveParticipant}
+                onBanParticipant={onBanParticipant}
+                onStartBanVote={onStartBanVote}
+              />
+            </div>
+            {/* Docked Strip for Remaining Participants */}
+            {participants.length > 1 && (
+              <div className="h-28 flex gap-2 overflow-x-auto shrink-0 pb-1">
+                {participants
+                  .filter((p) => String(p.userId) !== String(speakerParticipant.userId))
+                  .map((p) => (
+                    <div key={p.userId} className="w-40 h-full shrink-0">
+                      <VideoTile
+                        participant={p}
+                        stream={p.isLocal ? localStream : p.stream}
+                        isSelf={p.isLocal}
+                        isMuted={p.isLocal ? isMuted : p.isMuted}
+                        isVideoOff={p.isLocal ? isVideoOff : p.isVideoOff}
+                        isScreenSharing={p.isScreenSharing}
+                        canSwitchCamera={p.isLocal && canSwitchCamera}
+                        onSwitchCamera={onSwitchCamera}
+                        onRemoveParticipant={onRemoveParticipant}
+                        onBanParticipant={onBanParticipant}
+                        onStartBanVote={onStartBanVote}
+                      />
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Floating Docked Arcade Toolbar */}
         <div className="mt-2.5 flex-shrink-0 flex justify-center pb-1 w-full z-30">
@@ -1279,7 +1471,7 @@ function GroupVideoStage({
 
 /**
  * ==============================================================
- * VIDEO TILE COMPONENT (With Camera-Off PixelTalk Avatar Fallback)
+ * VIDEO TILE COMPONENT (With Camera-Off PixelTalk Avatar Fallback & Active Speaker Glow)
  * ==============================================================
  */
 function VideoTile({
@@ -1291,10 +1483,15 @@ function VideoTile({
   isScreenSharing,
   canSwitchCamera,
   onSwitchCamera,
+  onRemoveParticipant,
+  onBanParticipant,
+  onStartBanVote,
 }) {
   const videoRef = useRef(null);
+  const [showMenu, setShowMenu] = useState(false);
   const displayName = participant.user?.displayName || participant.user?.username || 'Player';
   const username = participant.user?.username || 'player';
+  const isSpeaking = Boolean(participant.isSpeaking && !isMuted);
 
   // Attach MediaStream to video element
   useEffect(() => {
@@ -1309,7 +1506,13 @@ function VideoTile({
   const hasVideoStream = Boolean(stream && !isVideoOff);
 
   return (
-    <div className="relative w-full h-full min-h-[160px] sm:min-h-[220px] rounded-2xl border-2 border-tertiary overflow-hidden bg-surface-container-lowest flex items-center justify-center shadow-[3px_3px_0px_#6E3511]">
+    <div
+      className={`relative w-full h-full min-h-[160px] sm:min-h-[220px] rounded-2xl border-2 overflow-hidden bg-surface-container-lowest flex items-center justify-center transition-all ${
+        isSpeaking
+          ? 'border-primary ring-2 ring-primary shadow-[0_0_16px_rgba(77,208,225,0.45)] speaking-tile'
+          : 'border-tertiary shadow-[3px_3px_0px_#6E3511]'
+      }`}
+    >
       {/* CRT Scanline effect */}
       <div className="absolute inset-0 scanlines pointer-events-none opacity-20 z-10" />
 
@@ -1332,7 +1535,13 @@ function VideoTile({
       {!hasVideoStream && (
         <div className="w-full h-full flex flex-col items-center justify-center bg-surface-container-low p-4 text-center">
           <div className="relative mb-2">
-            <div className="p-1 rounded-2xl border-2 border-tertiary bg-surface-container shadow-[2px_2px_0px_#6E3511]">
+            <div
+              className={`p-1 rounded-2xl border-2 ${
+                isSpeaking
+                  ? 'border-primary bg-secondary-container ring-2 ring-primary animate-pulse'
+                  : 'border-tertiary bg-surface-container shadow-[2px_2px_0px_#6E3511]'
+              }`}
+            >
               <Avatar src={getUserAvatar(participant.user)} alt={displayName} size={80} ring={false} />
             </div>
             {isMuted && (
@@ -1345,8 +1554,8 @@ function VideoTile({
             {displayName} {isSelf && <span className="text-primary font-mono text-[10px]">(YOU)</span>}
           </p>
           <div className="mt-1 flex items-center gap-1 font-mono text-[9px] text-tertiary bg-surface-container px-2 py-0.5 rounded border border-tertiary/20 font-bold">
-            <span className="material-symbols-outlined text-[12px]">videocam_off</span>
-            <span>CAMERA OFF</span>
+            <span className="material-symbols-outlined text-[12px]">{isSpeaking ? 'record_voice_over' : 'videocam_off'}</span>
+            <span>{isSpeaking ? 'SPEAKING…' : 'CAMERA OFF'}</span>
           </div>
         </div>
       )}
@@ -1354,7 +1563,7 @@ function VideoTile({
       {/* Top Video Tile Badge */}
       <div className="absolute top-2 inset-x-2 flex items-center justify-between z-20 pointer-events-none">
         <div className="flex items-center gap-1 bg-[#221a0e]/85 text-[#feeeda] px-2 py-0.5 rounded border border-[#6E3511]/40 font-mono text-[10px] backdrop-blur-sm shadow-[1px_1px_0px_#6E3511]">
-          <span className={`w-1.5 h-1.5 rounded-none ${!isMuted ? 'bg-primary animate-ping' : 'bg-outline'}`} />
+          <span className={`w-1.5 h-1.5 rounded-none ${isSpeaking ? 'bg-primary animate-ping' : !isMuted ? 'bg-primary' : 'bg-outline'}`} />
           <span className="font-bold truncate">{isSelf ? 'YOU' : `@${username}`}</span>
         </div>
 
@@ -1370,6 +1579,55 @@ function VideoTile({
               <span className="material-symbols-outlined text-[11px]">mic_off</span>
               <span>MUTED</span>
             </span>
+          )}
+          {!isSelf && onStartBanVote && (
+            <div className="relative pointer-events-auto">
+              <button
+                type="button"
+                onClick={() => setShowMenu((prev) => !prev)}
+                className="p-1 rounded bg-surface-container/90 border border-tertiary/40 text-on-surface hover:bg-secondary-container/40"
+                title="Participant Options"
+              >
+                <span className="material-symbols-outlined text-[14px]">more_vert</span>
+              </button>
+              {showMenu && (
+                <div className="absolute right-0 top-7 w-36 bg-surface-container-high border-2 border-tertiary rounded-xl shadow-[3px_3px_0px_#6E3511] p-1 flex flex-col gap-1 z-30 animate-fade-in text-left">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onStartBanVote(participant.userId);
+                      setShowMenu(false);
+                    }}
+                    className="px-2 py-1 text-[11px] font-mono font-bold text-on-surface hover:bg-secondary-container/40 rounded flex items-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">how_to_vote</span>
+                    <span>Vote Ban</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onRemoveParticipant(participant.userId);
+                      setShowMenu(false);
+                    }}
+                    className="px-2 py-1 text-[11px] font-mono font-bold text-error hover:bg-error-container/30 rounded flex items-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">person_remove</span>
+                    <span>Admin Remove</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onBanParticipant(participant.userId);
+                      setShowMenu(false);
+                    }}
+                    className="px-2 py-1 text-[11px] font-mono font-bold text-error hover:bg-error-container/30 rounded flex items-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">block</span>
+                    <span>Admin Ban</span>
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

@@ -88,6 +88,10 @@ export function CallProvider({ children }) {
   const [groupParticipants, setGroupParticipants] = useState([]);
   // Active group calls indexed by conversationId: { [conversationId]: activeCallObject }
   const [activeGroupCalls, setActiveGroupCalls] = useState({});
+  // In-call system notifications log: Array<{ id, text, event, timestamp }>
+  const [systemMessages, setSystemMessages] = useState([]);
+  // Democratic ban vote state: { conversationId, targetUserId, targetUser, initiatedBy, initiatorName, votesCount, majorityNeeded, eligibleVoters } | null
+  const [activeBanVote, setActiveBanVote] = useState(null);
 
   // 1-to-1 WebRTC refs
   const pcRef = useRef(null);
@@ -103,6 +107,8 @@ export function CallProvider({ children }) {
   const groupPeersRef = useRef(new Map());
   const groupStreamsRef = useRef(new Map());
   const groupIceQueueRef = useRef(new Map());
+  // Web Audio active speaker analysers: id ('local' | remoteUserId) -> { audioCtx, analyser, source }
+  const audioAnalysersRef = useRef(new Map());
 
   // Synchronize ref with active callData state
   useEffect(() => {
@@ -220,6 +226,121 @@ export function CallProvider({ children }) {
   );
 
   // -------------------------------------------------------------
+  // Web Audio API: Real-Time Active Speaker Energy Detection
+  // -------------------------------------------------------------
+  useEffect(() => {
+    if (callState !== 'CONNECTED') return undefined;
+
+    let animId;
+    let lastCheck = 0;
+    const checkInterval = 100; // Run energy check every 100ms
+
+    const detectAudioEnergy = (now) => {
+      if (now - lastCheck >= checkInterval) {
+        lastCheck = now;
+        const myId = String(user?._id || user?.id || '');
+        const speakingSet = new Set();
+
+        // Check local microphone stream
+        const localAudioTrack = localStreamRef.current?.getAudioTracks()[0];
+        if (localAudioTrack && localAudioTrack.enabled && !isMuted) {
+          let entry = audioAnalysersRef.current.get('local');
+          if (!entry && localStreamRef.current) {
+            try {
+              const AudioCtx = window.AudioContext || window.webkitAudioContext;
+              if (AudioCtx) {
+                const audioCtx = new AudioCtx();
+                const source = audioCtx.createMediaStreamSource(localStreamRef.current);
+                const analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 256;
+                analyser.smoothingTimeConstant = 0.4;
+                source.connect(analyser);
+                entry = { audioCtx, analyser, source };
+                audioAnalysersRef.current.set('local', entry);
+              }
+            } catch (e) {
+              console.warn('Local audio analyzer note:', e);
+            }
+          }
+          if (entry?.analyser) {
+            const buffer = new Uint8Array(entry.analyser.frequencyBinCount);
+            entry.analyser.getByteFrequencyData(buffer);
+            let sum = 0;
+            for (let i = 0; i < buffer.length; i++) sum += buffer[i];
+            const avg = sum / buffer.length;
+            if (avg > 14) {
+              speakingSet.add(myId);
+            }
+          }
+        }
+
+        // Check each remote participant stream
+        for (const [uid, rStream] of groupStreamsRef.current.entries()) {
+          const rTrack = rStream?.getAudioTracks()[0];
+          if (rTrack && rTrack.enabled) {
+            let entry = audioAnalysersRef.current.get(uid);
+            if (!entry) {
+              try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                  const audioCtx = new AudioCtx();
+                  const source = audioCtx.createMediaStreamSource(rStream);
+                  const analyser = audioCtx.createAnalyser();
+                  analyser.fftSize = 256;
+                  analyser.smoothingTimeConstant = 0.4;
+                  source.connect(analyser);
+                  entry = { audioCtx, analyser, source };
+                  audioAnalysersRef.current.set(uid, entry);
+                }
+              } catch (e) {
+                console.warn(`Remote audio analyzer note for ${uid}:`, e);
+              }
+            }
+            if (entry?.analyser) {
+              const buffer = new Uint8Array(entry.analyser.frequencyBinCount);
+              entry.analyser.getByteFrequencyData(buffer);
+              let sum = 0;
+              for (let i = 0; i < buffer.length; i++) sum += buffer[i];
+              const avg = sum / buffer.length;
+              if (avg > 14) {
+                speakingSet.add(String(uid));
+              }
+            }
+          }
+        }
+
+        // Update groupParticipants state with current active speakers
+        setGroupParticipants((prev) => {
+          let changed = false;
+          const next = prev.map((p) => {
+            const speaking = speakingSet.has(String(p.userId));
+            if (p.isSpeaking !== speaking) {
+              changed = true;
+              return { ...p, isSpeaking: speaking };
+            }
+            return p;
+          });
+          return changed ? next : prev;
+        });
+      }
+
+      animId = requestAnimationFrame(detectAudioEnergy);
+    };
+
+    animId = requestAnimationFrame(detectAudioEnergy);
+
+    return () => {
+      if (animId) cancelAnimationFrame(animId);
+      for (const [, entry] of audioAnalysersRef.current.entries()) {
+        try {
+          entry.audioCtx?.close();
+        } catch {}
+      }
+      audioAnalysersRef.current.clear();
+    };
+  }, [callState, isMuted, user]);
+
+  // -------------------------------------------------------------
   // Cleanup WebRTC & Media Tracks (Unified 1:1 and Group)
   // -------------------------------------------------------------
   const cleanupCall = useCallback(() => {
@@ -246,6 +367,14 @@ export function CallProvider({ children }) {
     groupStreamsRef.current.clear();
     groupIceQueueRef.current.clear();
 
+    // Clean audio analysers
+    for (const [, entry] of audioAnalysersRef.current.entries()) {
+      try {
+        entry.audioCtx?.close();
+      } catch {}
+    }
+    audioAnalysersRef.current.clear();
+
     // Local camera/mic media tracks cleanup
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((t) => t.stop());
@@ -266,6 +395,7 @@ export function CallProvider({ children }) {
     setIsScreenSharing(false);
     setIsMinimized(false);
     setGroupParticipants([]);
+    setActiveBanVote(null);
     iceCandidateQueueRef.current = [];
   }, [stopRingtone, clearCallTimeout]);
 
@@ -334,6 +464,9 @@ export function CallProvider({ children }) {
   // -------------------------------------------------------------
   const createGroupPeerConnection = useCallback((targetUserId, conversationId) => {
     const existingPc = groupPeersRef.current.get(String(targetUserId));
+    if (existingPc && (existingPc.connectionState === 'connected' || existingPc.connectionState === 'connecting')) {
+      return existingPc;
+    }
     if (existingPc) {
       try {
         existingPc.close();
@@ -361,9 +494,25 @@ export function CallProvider({ children }) {
         const remoteStream = event.streams[0];
         groupStreamsRef.current.set(String(targetUserId), remoteStream);
 
-        setGroupParticipants((prev) =>
-          prev.map((p) => (String(p.userId) === String(targetUserId) ? { ...p, stream: remoteStream } : p)),
-        );
+        setGroupParticipants((prev) => {
+          const exists = prev.some((p) => String(p.userId) === String(targetUserId));
+          if (!exists) {
+            return [
+              ...prev,
+              {
+                userId: String(targetUserId),
+                user: { id: String(targetUserId), _id: String(targetUserId), username: 'player', displayName: 'Player' },
+                isMuted: false,
+                isVideoOff: false,
+                isScreenSharing: false,
+                isSpeaking: false,
+                stream: remoteStream,
+                isLocal: false,
+              },
+            ];
+          }
+          return prev.map((p) => (String(p.userId) === String(targetUserId) ? { ...p, stream: remoteStream } : p));
+        });
       }
     };
 
@@ -389,6 +538,76 @@ export function CallProvider({ children }) {
 
     return pc;
   }, []);
+
+  // -------------------------------------------------------------
+  // Authoritative Participant List Reconciliation Engine
+  // -------------------------------------------------------------
+  const reconcileParticipants = useCallback((serverParticipants, conversationId) => {
+    if (!Array.isArray(serverParticipants)) return;
+    const myUserId = String(user?._id || user?.id || '');
+
+    setGroupParticipants((prev) => {
+      const serverMap = new Map();
+      serverParticipants.forEach((sp) => {
+        serverMap.set(String(sp.userId || sp.user?._id || sp.user?.id), sp);
+      });
+
+      // 1. Ensure Self is retained with localStream
+      const localP = prev.find((p) => p.isLocal) || {
+        userId: myUserId,
+        user: {
+          _id: myUserId,
+          id: myUserId,
+          username: user?.username || 'player',
+          displayName: user?.displayName || 'You',
+          avatarId: user?.avatarId,
+          avatarUrl: user?.avatarUrl || '',
+        },
+        isMuted: isMuted,
+        isVideoOff: isVideoOff,
+        isScreenSharing: isScreenSharing,
+        isSpeaking: false,
+        stream: localStreamRef.current,
+        isLocal: true,
+      };
+
+      const result = [localP];
+
+      // 2. Add / Update Remote Participants from Server Snapshot
+      serverParticipants.forEach((sp) => {
+        const uid = String(sp.userId || sp.user?._id || sp.user?.id);
+        if (uid === myUserId) return; // Skip self
+
+        const existingLocal = prev.find((p) => String(p.userId) === uid);
+        const remoteStream = groupStreamsRef.current.get(uid) || existingLocal?.stream || null;
+
+        result.push({
+          userId: uid,
+          user: sp.user || existingLocal?.user || { id: uid, _id: uid, username: 'player', displayName: 'Player' },
+          isMuted: sp.isMuted !== undefined ? !!sp.isMuted : !!existingLocal?.isMuted,
+          isVideoOff: sp.isVideoOff !== undefined ? !!sp.isVideoOff : !!existingLocal?.isVideoOff,
+          isScreenSharing: sp.isScreenSharing !== undefined ? !!sp.isScreenSharing : !!existingLocal?.isScreenSharing,
+          isSpeaking: !!existingLocal?.isSpeaking,
+          stream: remoteStream,
+          isLocal: false,
+        });
+      });
+
+      // 3. Clean up RTCPeerConnections for removed participants
+      for (const [pUserId, pc] of groupPeersRef.current.entries()) {
+        if (!serverMap.has(pUserId) && pUserId !== myUserId) {
+          try {
+            pc.close();
+          } catch {}
+          groupPeersRef.current.delete(pUserId);
+          groupStreamsRef.current.delete(pUserId);
+          groupIceQueueRef.current.delete(pUserId);
+        }
+      }
+
+      return result;
+    });
+  }, [user, isMuted, isVideoOff, isScreenSharing]);
 
   // Helper: Request media stream with graceful fallback
   const acquireMediaStream = async (isVideo) => {
@@ -696,12 +915,14 @@ export function CallProvider({ children }) {
             setCallState('CONNECTED');
             sfx.success();
 
-            // If there are existing participants already in call (we joined an ongoing call):
+            // Reconcile complete participant snapshot from server
+            reconcileParticipants(session.participants || [], conversationId);
+
+            // Establish WebRTC mesh connections: send SDP offer to each existing participant
             const existingParticipants = (session.participants || []).filter(
               (p) => String(p.userId) !== myUserId,
             );
 
-            // Create peer connection and send offer to each existing participant
             for (const p of existingParticipants) {
               const targetUserId = String(p.userId);
               const pc = createGroupPeerConnection(targetUserId, conversationId);
@@ -717,26 +938,6 @@ export function CallProvider({ children }) {
                 console.warn(`[WebRTC] Group offer error to ${targetUserId}:`, err.message);
               }
             }
-
-            // Sync participant roster with existing members
-            setGroupParticipants((prev) => {
-              const existingMap = new Map(prev.map((p) => [String(p.userId), p]));
-              existingParticipants.forEach((p) => {
-                if (!existingMap.has(String(p.userId))) {
-                  existingMap.set(String(p.userId), {
-                    userId: String(p.userId),
-                    user: p.user,
-                    isMuted: !!p.isMuted,
-                    isVideoOff: !!p.isVideoOff,
-                    isScreenSharing: !!p.isScreenSharing,
-                    isSpeaking: false,
-                    stream: groupStreamsRef.current.get(String(p.userId)) || null,
-                    isLocal: false,
-                  });
-                }
-              });
-              return Array.from(existingMap.values());
-            });
           } else {
             throw new Error(res?.message || 'Failed to start group call');
           }
@@ -772,6 +973,63 @@ export function CallProvider({ children }) {
       setCallState('IDLE');
       setCallData(null);
     }, 1000);
+  };
+
+  // -------------------------------------------------------------
+  // Group Moderation Actions (Admin Direct Remove & Ban, Democratic Vote Ban)
+  // -------------------------------------------------------------
+  const removeGroupParticipant = (targetUserId) => {
+    const current = callDataRef.current || callData;
+    const socket = getSocket();
+    if (socket && current?.conversationId && targetUserId) {
+      socket.emit('call:group_remove_user', {
+        conversationId: current.conversationId,
+        targetUserId: String(targetUserId),
+      });
+      sfx.click();
+    }
+  };
+
+  const banGroupParticipant = (targetUserId) => {
+    const current = callDataRef.current || callData;
+    const socket = getSocket();
+    if (socket && current?.conversationId && targetUserId) {
+      socket.emit('call:group_ban_user', {
+        conversationId: current.conversationId,
+        targetUserId: String(targetUserId),
+      });
+      sfx.click();
+    }
+  };
+
+  const startBanVote = (targetUserId) => {
+    const current = callDataRef.current || callData;
+    const socket = getSocket();
+    if (socket && current?.conversationId && targetUserId) {
+      socket.emit('call:group_vote_ban_start', {
+        conversationId: current.conversationId,
+        targetUserId: String(targetUserId),
+      });
+      sfx.click();
+    }
+  };
+
+  const castBanVote = (targetUserId, vote = true) => {
+    const current = callDataRef.current || callData;
+    const socket = getSocket();
+    if (socket && current?.conversationId && targetUserId) {
+      socket.emit('call:group_vote_ban_cast', {
+        conversationId: current.conversationId,
+        targetUserId: String(targetUserId),
+        vote,
+      });
+      setActiveBanVote(null);
+      sfx.click();
+    }
+  };
+
+  const dismissBanVote = () => {
+    setActiveBanVote(null);
   };
 
   // -------------------------------------------------------------
@@ -1196,6 +1454,23 @@ export function CallProvider({ children }) {
         ...prev,
         [String(payload.conversationId)]: payload.activeCall,
       }));
+
+      // If we are currently connected in this room, reconcile participants
+      const current = callDataRef.current;
+      if (current?.isGroup && String(current.conversationId) === String(payload.conversationId)) {
+        if (payload.activeCall?.participants) {
+          reconcileParticipants(payload.activeCall.participants, payload.conversationId);
+        }
+      }
+    };
+
+    const onGroupRoomState = (payload) => {
+      const current = callDataRef.current;
+      if (current?.isGroup && String(current.conversationId) === String(payload?.conversationId)) {
+        if (payload.activeCall?.participants) {
+          reconcileParticipants(payload.activeCall.participants, payload.conversationId);
+        }
+      }
     };
 
     const onGroupStarted = (payload) => {
@@ -1213,13 +1488,18 @@ export function CallProvider({ children }) {
       }
 
       const joinerUser = payload.user || payload.participant?.user;
-      const joinerId = String(joinerUser?._id || joinerUser?.id);
+      const joinerId = String(joinerUser?._id || joinerUser?.id || payload.participant?.userId);
       const myId = String(user._id || user.id);
 
       if (!joinerId || joinerId === myId) return;
 
+      // Add joiner to local state immediately
       setGroupParticipants((prev) => {
-        if (prev.some((p) => String(p.userId) === joinerId)) return prev;
+        if (prev.some((p) => String(p.userId) === joinerId)) {
+          return prev.map((p) =>
+            String(p.userId) === joinerId ? { ...p, user: joinerUser || p.user } : p,
+          );
+        }
         return [
           ...prev,
           {
@@ -1229,11 +1509,14 @@ export function CallProvider({ children }) {
             isVideoOff: false,
             isScreenSharing: false,
             isSpeaking: false,
-            stream: null,
+            stream: groupStreamsRef.current.get(joinerId) || null,
             isLocal: false,
           },
         ];
       });
+
+      // Existing participant creates peer connection ready to receive offer or handshake
+      createGroupPeerConnection(joinerId, current.conversationId);
     };
 
     const onGroupUserLeft = (payload) => {
@@ -1262,6 +1545,25 @@ export function CallProvider({ children }) {
       }
 
       const fromUserId = String(payload.fromUserId);
+
+      // Ensure participant is staged in state so remote track renders immediately
+      setGroupParticipants((prev) => {
+        if (prev.some((p) => String(p.userId) === fromUserId)) return prev;
+        return [
+          ...prev,
+          {
+            userId: fromUserId,
+            user: { id: fromUserId, _id: fromUserId, username: 'player', displayName: 'Player' },
+            isMuted: false,
+            isVideoOff: false,
+            isScreenSharing: false,
+            isSpeaking: false,
+            stream: groupStreamsRef.current.get(fromUserId) || null,
+            isLocal: false,
+          },
+        ];
+      });
+
       let pc = groupPeersRef.current.get(fromUserId);
       if (!pc) {
         pc = createGroupPeerConnection(fromUserId, current.conversationId);
@@ -1359,6 +1661,60 @@ export function CallProvider({ children }) {
       }
     };
 
+    const onSystemMessage = (payload) => {
+      if (!payload?.text) return;
+      const msgObj = {
+        id: payload.id || `sys_${Date.now()}_${Math.random()}`,
+        text: payload.text,
+        event: payload.event,
+        timestamp: payload.timestamp || Date.now(),
+      };
+      setSystemMessages((prev) => [...prev.slice(-4), msgObj]);
+
+      // Auto-dismiss system toast after 5s
+      setTimeout(() => {
+        setSystemMessages((prev) => prev.filter((m) => m.id !== msgObj.id));
+      }, 5000);
+    };
+
+    const onUserRemoved = (payload) => {
+      cleanupCall();
+      setCallState('FAILED');
+      setCallError('You were removed from the call by Admin');
+      sfx.error();
+      setTimeout(() => {
+        setCallState('IDLE');
+        setCallData(null);
+      }, 3000);
+    };
+
+    const onUserBanned = (payload) => {
+      cleanupCall();
+      setCallState('FAILED');
+      setCallError('You were banned from the call');
+      sfx.error();
+      setTimeout(() => {
+        setCallState('IDLE');
+        setCallData(null);
+      }, 3000);
+    };
+
+    const onBanVoteStarted = (payload) => {
+      const myId = String(user._id || user.id);
+      if (String(payload.targetUserId) !== myId) {
+        setActiveBanVote(payload);
+        sfx.bell();
+      }
+    };
+
+    const onBanVoteUpdated = (payload) => {
+      setActiveBanVote((prev) => (prev ? { ...prev, ...payload } : payload));
+    };
+
+    const onBanVoteApproved = () => {
+      setActiveBanVote(null);
+    };
+
     socket.on('call:incoming', onIncoming);
     socket.on('call:accepted', onAccepted);
     socket.on('call:rejected', onRejected);
@@ -1368,12 +1724,19 @@ export function CallProvider({ children }) {
     socket.on('call:busy', onBusy);
 
     socket.on('call:group_active_state', onGroupActiveState);
+    socket.on('call:group_room_state', onGroupRoomState);
     socket.on('call:group_started', onGroupStarted);
     socket.on('call:group_user_joined', onGroupUserJoined);
     socket.on('call:group_user_left', onGroupUserLeft);
     socket.on('call:group_signal', onGroupSignal);
     socket.on('call:group_media_state', onGroupMediaState);
     socket.on('call:group_ended', onGroupEnded);
+    socket.on('call:system_message', onSystemMessage);
+    socket.on('call:group_user_removed', onUserRemoved);
+    socket.on('call:group_user_banned', onUserBanned);
+    socket.on('call:group_ban_vote_started', onBanVoteStarted);
+    socket.on('call:group_ban_vote_updated', onBanVoteUpdated);
+    socket.on('call:group_ban_vote_approved', onBanVoteApproved);
 
     return () => {
       socket.off('call:incoming', onIncoming);
@@ -1385,18 +1748,26 @@ export function CallProvider({ children }) {
       socket.off('call:busy', onBusy);
 
       socket.off('call:group_active_state', onGroupActiveState);
+      socket.off('call:group_room_state', onGroupRoomState);
       socket.off('call:group_started', onGroupStarted);
       socket.off('call:group_user_joined', onGroupUserJoined);
       socket.off('call:group_user_left', onGroupUserLeft);
       socket.off('call:group_signal', onGroupSignal);
       socket.off('call:group_media_state', onGroupMediaState);
       socket.off('call:group_ended', onGroupEnded);
+      socket.off('call:system_message', onSystemMessage);
+      socket.off('call:group_user_removed', onUserRemoved);
+      socket.off('call:group_user_banned', onUserBanned);
+      socket.off('call:group_ban_vote_started', onBanVoteStarted);
+      socket.off('call:group_ban_vote_updated', onBanVoteUpdated);
+      socket.off('call:group_ban_vote_approved', onBanVoteApproved);
     };
   }, [
     user,
     callState,
     createPeerConnection,
     createGroupPeerConnection,
+    reconcileParticipants,
     cleanupCall,
     playRingtone,
     stopRingtone,
@@ -1413,6 +1784,8 @@ export function CallProvider({ children }) {
         remoteStream,
         groupParticipants,
         activeGroupCalls,
+        systemMessages,
+        activeBanVote,
         isMuted,
         isVideoOff,
         isScreenSharing,
@@ -1430,6 +1803,11 @@ export function CallProvider({ children }) {
         startGroupCall,
         joinGroupCall,
         leaveGroupCall,
+        removeGroupParticipant,
+        banGroupParticipant,
+        startBanVote,
+        castBanVote,
+        dismissBanVote,
         toggleMute,
         toggleVideo,
         toggleScreenShare,

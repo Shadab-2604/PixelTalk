@@ -2,20 +2,19 @@
  * File: CallContext.jsx
  *
  * Responsibility:
- * Central WebRTC 1-to-1 Voice & Video Call State Machine and Signaling Engine:
- * - Direct peer-to-peer MediaStream management (Audio & Video)
- * - Native RTCPeerConnection lifecycle (Offer / Answer / ICE Candidates)
- * - Asymmetric Offer/Answer negotiation (initiator creates offer, recipient creates answer)
- * - Resilient getUserMedia with progressive constraint fallback (audio-only fallback if camera is busy/missing)
- * - Immediate synchronous state cache (callDataRef) to eliminate race conditions on Accept
- * - Socket.IO signaling synchronization (call:initiate, call:accept, call:reject, call:cancel, call:signal, call:end)
- * - Web Audio API synthesized telephone ringtone and ringback chimes (no external assets needed)
+ * Unified WebRTC 1-to-1 and Group Voice & Video Call State Machine and Signaling Engine:
+ * - 1-to-1 WebRTC Call Architecture (direct peer-to-peer MediaStream & RTCPeerConnection)
+ * - Group Multi-Peer WebRTC Mesh Architecture (dynamic peer-per-participant mesh for groups)
+ * - Camera-Off Avatar Fallback support (MediaStream toggles, track enabled state, camera-off signaling)
+ * - Screen Sharing support with seamless track swap and presenter priority
+ * - Real-time Socket.IO signaling synchronization for 1:1 and group rooms
+ * - Active Group Call discovery and live banner state broadcast
+ * - Web Audio API synthesized telephone ringtone and ringback chimes
  * - Dynamic STUN / TURN ICE server configuration via environment variables
  * - Call duration elapsed timer & unanswered timeout (35s)
  * - Mute microphone & Camera toggle controls
- * - Camera switching (front/back facingMode) without rebuilding peer connection
- * - Minimize / restore call UI stage
- * - Fullscreen toggle
+ * - Mobile Camera switching (front/back facingMode) without rebuilding peer connections
+ * - Minimize / restore call UI stage & fullscreen mode
  *
  * Layer:
  * Frontend / Call Features & State Context
@@ -25,6 +24,7 @@
  * - frontend/features/calls/CallOverlay.jsx
  * - frontend/components/AppShell.jsx
  * - frontend/app/chat/[conversationId]/page.jsx
+ * - frontend/app/rooms/[conversationId]/page.jsx
  */
 
 'use client';
@@ -70,11 +70,13 @@ export function CallProvider({ children }) {
 
   // Call lifecycle state: 'IDLE' | 'CALLING' | 'RINGING' | 'CONNECTING' | 'CONNECTED' | 'ENDING' | 'ENDED' | 'REJECTED' | 'CANCELLED' | 'BUSY' | 'FAILED' | 'TIMEOUT'
   const [callState, setCallState] = useState('IDLE');
-  const [callData, setCallData] = useState(null); // { callId, partnerUser, type: 'audio'|'video', conversationId, isInitiator }
+  const [callData, setCallData] = useState(null); // { callId, partnerUser, type: 'audio'|'video', conversationId, isInitiator, isGroup, conversationName }
   const [localStream, setLocalStream] = useState(null);
-  const [remoteStream, setRemoteStream] = useState(null);
+  const [remoteStream, setRemoteStream] = useState(null); // 1:1 remote stream
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [screenStream, setScreenStream] = useState(null);
   const [facingMode, setFacingMode] = useState('user');
   const [canSwitchCamera, setCanSwitchCamera] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -82,13 +84,25 @@ export function CallProvider({ children }) {
   const [callDuration, setCallDuration] = useState(0);
   const [callError, setCallError] = useState('');
 
+  // Group call multi-participant state: Array<{ userId, user, isMuted, isVideoOff, isScreenSharing, isSpeaking, stream, isLocal }>
+  const [groupParticipants, setGroupParticipants] = useState([]);
+  // Active group calls indexed by conversationId: { [conversationId]: activeCallObject }
+  const [activeGroupCalls, setActiveGroupCalls] = useState({});
+
+  // 1-to-1 WebRTC refs
   const pcRef = useRef(null);
   const localStreamRef = useRef(null);
+  const screenStreamRef = useRef(null);
   const callDataRef = useRef(null);
   const iceCandidateQueueRef = useRef([]);
   const ringtoneTimerRef = useRef(null);
   const audioContextRef = useRef(null);
   const callTimeoutTimerRef = useRef(null);
+
+  // Group WebRTC mesh refs (userId -> RTCPeerConnection, userId -> MediaStream, userId -> ICE candidate queue)
+  const groupPeersRef = useRef(new Map());
+  const groupStreamsRef = useRef(new Map());
+  const groupIceQueueRef = useRef(new Map());
 
   // Synchronize ref with active callData state
   useEffect(() => {
@@ -186,7 +200,7 @@ export function CallProvider({ children }) {
   }, [callState]);
 
   // -------------------------------------------------------------
-  // Call Timeout Timer (35s limit on unanswered calls)
+  // Call Timeout Timer (35s limit on unanswered 1:1 calls)
   // -------------------------------------------------------------
   const clearCallTimeout = useCallback(() => {
     if (callTimeoutTimerRef.current) {
@@ -206,31 +220,57 @@ export function CallProvider({ children }) {
   );
 
   // -------------------------------------------------------------
-  // Cleanup WebRTC & Media Tracks
+  // Cleanup WebRTC & Media Tracks (Unified 1:1 and Group)
   // -------------------------------------------------------------
   const cleanupCall = useCallback(() => {
     stopRingtone();
     clearCallTimeout();
+
+    // 1:1 Peer connection cleanup
     if (pcRef.current) {
       try {
         pcRef.current.close();
       } catch {}
       pcRef.current = null;
     }
+
+    // Group Mesh Peer connections cleanup
+    if (groupPeersRef.current) {
+      for (const [, pc] of groupPeersRef.current.entries()) {
+        try {
+          pc.close();
+        } catch {}
+      }
+      groupPeersRef.current.clear();
+    }
+    groupStreamsRef.current.clear();
+    groupIceQueueRef.current.clear();
+
+    // Local camera/mic media tracks cleanup
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((t) => t.stop());
       localStreamRef.current = null;
     }
+
+    // Screen sharing media tracks cleanup
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach((t) => t.stop());
+      screenStreamRef.current = null;
+    }
+
     setLocalStream(null);
     setRemoteStream(null);
+    setScreenStream(null);
     setIsMuted(false);
     setIsVideoOff(false);
+    setIsScreenSharing(false);
     setIsMinimized(false);
+    setGroupParticipants([]);
     iceCandidateQueueRef.current = [];
   }, [stopRingtone, clearCallTimeout]);
 
   // -------------------------------------------------------------
-  // Create Peer Connection & Attach Tracks
+  // 1-to-1 WebRTC Peer Connection Factory
   // -------------------------------------------------------------
   const createPeerConnection = useCallback((currentCall) => {
     if (pcRef.current) {
@@ -290,7 +330,97 @@ export function CallProvider({ children }) {
   }, []);
 
   // -------------------------------------------------------------
-  // Outgoing Call Initiation
+  // Group WebRTC Mesh Peer Connection Factory
+  // -------------------------------------------------------------
+  const createGroupPeerConnection = useCallback((targetUserId, conversationId) => {
+    const existingPc = groupPeersRef.current.get(String(targetUserId));
+    if (existingPc) {
+      try {
+        existingPc.close();
+      } catch {}
+    }
+
+    const pc = new RTCPeerConnection({ iceServers: getIceServers() });
+    groupPeersRef.current.set(String(targetUserId), pc);
+
+    // Attach local media stream tracks
+    const activeStream = localStreamRef.current;
+    if (activeStream) {
+      activeStream.getTracks().forEach((track) => {
+        try {
+          pc.addTrack(track, activeStream);
+        } catch (e) {
+          console.warn('Group track add warning:', e.message);
+        }
+      });
+    }
+
+    // Receive remote stream
+    pc.ontrack = (event) => {
+      if (event.streams && event.streams[0]) {
+        const remoteStream = event.streams[0];
+        groupStreamsRef.current.set(String(targetUserId), remoteStream);
+
+        setGroupParticipants((prev) =>
+          prev.map((p) => (String(p.userId) === String(targetUserId) ? { ...p, stream: remoteStream } : p)),
+        );
+      }
+    };
+
+    // Send ICE candidates to specific group peer
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        const socket = getSocket();
+        if (socket) {
+          socket.emit('call:group_signal', {
+            conversationId,
+            targetUserId: String(targetUserId),
+            signal: { candidate: event.candidate },
+          });
+        }
+      }
+    };
+
+    pc.onconnectionstatechange = () => {
+      if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+        console.warn(`[WebRTC] Group peer connection ${pc.connectionState} for user ${targetUserId}`);
+      }
+    };
+
+    return pc;
+  }, []);
+
+  // Helper: Request media stream with graceful fallback
+  const acquireMediaStream = async (isVideo) => {
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: isVideo
+          ? { width: { ideal: 1280, max: 1920 }, height: { ideal: 720, max: 1080 }, facingMode: 'user' }
+          : false,
+      });
+    } catch (err1) {
+      console.warn('Initial video constraints failed, trying relaxed video:', err1);
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: isVideo,
+        });
+      } catch (err2) {
+        console.warn('Standard video failed, falling back to audio only:', err2);
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: false,
+        });
+        setIsVideoOff(true);
+      }
+    }
+    return stream;
+  };
+
+  // -------------------------------------------------------------
+  // 1-to-1 Call Initiation
   // -------------------------------------------------------------
   const startCall = async (targetUserOrOptions, typeOrOptions = 'audio') => {
     if (!user || callState !== 'IDLE') return;
@@ -312,30 +442,8 @@ export function CallProvider({ children }) {
     if (!targetUser) return;
 
     try {
-      let stream = null;
       const isVideo = type === 'video';
-
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: isVideo ? { width: { ideal: 1280, max: 1920 }, height: { ideal: 720, max: 1080 }, facingMode: 'user' } : false,
-        });
-      } catch (err1) {
-        console.warn('Initial video constraints failed, trying fallback:', err1);
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: isVideo,
-          });
-        } catch (err2) {
-          console.warn('Standard video constraints failed, falling back to audio only:', err2);
-          stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: false,
-          });
-          setIsVideoOff(true);
-        }
-      }
+      const stream = await acquireMediaStream(isVideo);
 
       localStreamRef.current = stream;
       setLocalStream(stream);
@@ -347,6 +455,7 @@ export function CallProvider({ children }) {
         type,
         conversationId,
         isInitiator: true,
+        isGroup: false,
       };
 
       callDataRef.current = initialCallData;
@@ -422,14 +531,11 @@ export function CallProvider({ children }) {
   };
 
   // -------------------------------------------------------------
-  // Accept Incoming Call (Recipient)
+  // Accept Incoming 1:1 Call
   // -------------------------------------------------------------
   const acceptCall = async () => {
     const current = callDataRef.current || callData;
-    if (!current) {
-      console.warn('acceptCall called without active callData');
-      return;
-    }
+    if (!current) return;
 
     stopRingtone();
     clearCallTimeout();
@@ -437,35 +543,12 @@ export function CallProvider({ children }) {
     setCallState('CONNECTING');
 
     try {
-      let stream = null;
       const isVideo = current.type === 'video';
-
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: isVideo ? { width: { ideal: 1280, max: 1920 }, height: { ideal: 720, max: 1080 } } : false,
-        });
-      } catch (err1) {
-        console.warn('Initial video constraints failed, trying relaxed constraints:', err1);
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: isVideo,
-          });
-        } catch (err2) {
-          console.warn('Video constraints failed, falling back to audio only:', err2);
-          stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: false,
-          });
-          setIsVideoOff(true);
-        }
-      }
+      const stream = await acquireMediaStream(isVideo);
 
       localStreamRef.current = stream;
       setLocalStream(stream);
 
-      // Recipient creates RTCPeerConnection and attaches local tracks
       createPeerConnection(current);
 
       const socket = getSocket();
@@ -486,7 +569,7 @@ export function CallProvider({ children }) {
   };
 
   // -------------------------------------------------------------
-  // Reject Incoming Call
+  // Reject / Cancel / End 1:1 Call
   // -------------------------------------------------------------
   const rejectCall = (reason = 'declined') => {
     const current = callDataRef.current || callData;
@@ -505,9 +588,6 @@ export function CallProvider({ children }) {
     }, 1200);
   };
 
-  // -------------------------------------------------------------
-  // Cancel Outgoing Call
-  // -------------------------------------------------------------
   const cancelCall = () => {
     const current = callDataRef.current || callData;
     if (current?.callId) {
@@ -525,12 +605,13 @@ export function CallProvider({ children }) {
     }, 1200);
   };
 
-  // -------------------------------------------------------------
-  // End Active Call
-  // -------------------------------------------------------------
   const endCall = () => {
-    setCallState('ENDING');
     const current = callDataRef.current || callData;
+    if (current?.isGroup) {
+      leaveGroupCall();
+      return;
+    }
+    setCallState('ENDING');
     if (current?.callId) {
       const socket = getSocket();
       if (socket) {
@@ -547,6 +628,153 @@ export function CallProvider({ children }) {
   };
 
   // -------------------------------------------------------------
+  // Group Call: Start or Join Live Room Call
+  // -------------------------------------------------------------
+  const startGroupCall = async ({ conversationId, isVideo = false, conversationName = 'Room' }) => {
+    if (!user || callState !== 'IDLE' || !conversationId) return;
+    setCallError('');
+
+    try {
+      const type = isVideo ? 'video' : 'audio';
+      const stream = await acquireMediaStream(isVideo);
+
+      localStreamRef.current = stream;
+      setLocalStream(stream);
+
+      const myUserId = String(user._id || user.id);
+      const initialCallData = {
+        callId: null,
+        partnerUser: null,
+        type,
+        conversationId,
+        isInitiator: true,
+        isGroup: true,
+        conversationName,
+      };
+
+      callDataRef.current = initialCallData;
+      setCallData(initialCallData);
+      setCallState('CONNECTING');
+
+      // Add self to initial group participants list
+      const selfParticipant = {
+        userId: myUserId,
+        user: {
+          _id: myUserId,
+          id: myUserId,
+          username: user.username,
+          displayName: user.displayName,
+          avatarId: user.avatarId,
+          avatarUrl: user.avatarUrl || '',
+        },
+        isMuted: false,
+        isVideoOff: false,
+        isScreenSharing: false,
+        isSpeaking: false,
+        stream,
+        isLocal: true,
+      };
+      setGroupParticipants([selfParticipant]);
+
+      const socket = getSocket();
+      if (!socket) throw new Error('Socket connection unavailable');
+
+      socket.emit(
+        'call:group_start',
+        {
+          conversationId,
+          callType: type,
+          type,
+        },
+        async (res) => {
+          if (res?.success && res.callSession) {
+            const session = res.callSession;
+            setCallData((prev) => ({
+              ...prev,
+              callId: session.callId || session.id,
+            }));
+            setCallState('CONNECTED');
+            sfx.success();
+
+            // If there are existing participants already in call (we joined an ongoing call):
+            const existingParticipants = (session.participants || []).filter(
+              (p) => String(p.userId) !== myUserId,
+            );
+
+            // Create peer connection and send offer to each existing participant
+            for (const p of existingParticipants) {
+              const targetUserId = String(p.userId);
+              const pc = createGroupPeerConnection(targetUserId, conversationId);
+              try {
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                socket.emit('call:group_signal', {
+                  conversationId,
+                  targetUserId,
+                  signal: { sdp: offer },
+                });
+              } catch (err) {
+                console.warn(`[WebRTC] Group offer error to ${targetUserId}:`, err.message);
+              }
+            }
+
+            // Sync participant roster with existing members
+            setGroupParticipants((prev) => {
+              const existingMap = new Map(prev.map((p) => [String(p.userId), p]));
+              existingParticipants.forEach((p) => {
+                if (!existingMap.has(String(p.userId))) {
+                  existingMap.set(String(p.userId), {
+                    userId: String(p.userId),
+                    user: p.user,
+                    isMuted: !!p.isMuted,
+                    isVideoOff: !!p.isVideoOff,
+                    isScreenSharing: !!p.isScreenSharing,
+                    isSpeaking: false,
+                    stream: groupStreamsRef.current.get(String(p.userId)) || null,
+                    isLocal: false,
+                  });
+                }
+              });
+              return Array.from(existingMap.values());
+            });
+          } else {
+            throw new Error(res?.message || 'Failed to start group call');
+          }
+        },
+      );
+    } catch (err) {
+      sfx.error();
+      cleanupCall();
+      setCallState('FAILED');
+      setCallData(null);
+      setCallError(err.message || 'Could not join group call');
+      setTimeout(() => setCallState('IDLE'), 3000);
+    }
+  };
+
+  const joinGroupCall = async ({ conversationId, isVideo = false, conversationName = 'Room' }) => {
+    return startGroupCall({ conversationId, isVideo, conversationName });
+  };
+
+  const leaveGroupCall = () => {
+    const current = callDataRef.current || callData;
+    const convoId = current?.conversationId;
+    if (convoId) {
+      const socket = getSocket();
+      if (socket) {
+        socket.emit('call:group_leave', { conversationId: convoId });
+      }
+    }
+    cleanupCall();
+    setCallState('ENDED');
+    sfx.click();
+    setTimeout(() => {
+      setCallState('IDLE');
+      setCallData(null);
+    }, 1000);
+  };
+
+  // -------------------------------------------------------------
   // Audio Mute & Video Toggle
   // -------------------------------------------------------------
   const toggleMute = () => {
@@ -554,8 +782,30 @@ export function CallProvider({ children }) {
       const audioTrack = localStreamRef.current.getAudioTracks()[0];
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
-        setIsMuted(!audioTrack.enabled);
+        const newMuteState = !audioTrack.enabled;
+        setIsMuted(newMuteState);
         sfx.click();
+
+        const current = callDataRef.current || callData;
+        const socket = getSocket();
+        if (socket && current) {
+          if (current.isGroup) {
+            socket.emit('call:group_media_state', {
+              conversationId: current.conversationId,
+              isMuted: newMuteState,
+            });
+            setGroupParticipants((prev) =>
+              prev.map((p) => (p.isLocal ? { ...p, isMuted: newMuteState } : p)),
+            );
+          } else {
+            const partnerId = String(current.partnerUser?._id || current.partnerUser?.id || '');
+            socket.emit('call:media_state', {
+              callId: current.callId,
+              targetUserId: partnerId,
+              isMuted: newMuteState,
+            });
+          }
+        }
       }
     }
   };
@@ -565,17 +815,135 @@ export function CallProvider({ children }) {
       const videoTrack = localStreamRef.current.getVideoTracks()[0];
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
-        setIsVideoOff(!videoTrack.enabled);
+        const newVideoOffState = !videoTrack.enabled;
+        setIsVideoOff(newVideoOffState);
         sfx.click();
+
+        const current = callDataRef.current || callData;
+        const socket = getSocket();
+        if (socket && current) {
+          if (current.isGroup) {
+            socket.emit('call:group_media_state', {
+              conversationId: current.conversationId,
+              isVideoOff: newVideoOffState,
+            });
+            setGroupParticipants((prev) =>
+              prev.map((p) => (p.isLocal ? { ...p, isVideoOff: newVideoOffState } : p)),
+            );
+          } else {
+            const partnerId = String(current.partnerUser?._id || current.partnerUser?.id || '');
+            socket.emit('call:media_state', {
+              callId: current.callId,
+              targetUserId: partnerId,
+              isVideoOff: newVideoOffState,
+            });
+          }
+        }
       }
     }
+  };
+
+  // -------------------------------------------------------------
+  // Screen Sharing Engine
+  // -------------------------------------------------------------
+  const startScreenShare = async () => {
+    if (isScreenSharing || !navigator.mediaDevices?.getDisplayMedia) return;
+    try {
+      const screenStreamObj = await navigator.mediaDevices.getDisplayMedia({
+        video: { cursor: 'always' },
+        audio: true,
+      });
+
+      screenStreamRef.current = screenStreamObj;
+      setScreenStream(screenStreamObj);
+      setIsScreenSharing(true);
+      sfx.success();
+
+      const screenVideoTrack = screenStreamObj.getVideoTracks()[0];
+
+      // Replace video tracks in peer connections
+      if (pcRef.current) {
+        const sender = pcRef.current.getSenders().find((s) => s.track && s.track.kind === 'video');
+        if (sender && screenVideoTrack) sender.replaceTrack(screenVideoTrack);
+      }
+
+      if (groupPeersRef.current) {
+        for (const [, pc] of groupPeersRef.current.entries()) {
+          const sender = pc.getSenders().find((s) => s.track && s.track.kind === 'video');
+          if (sender && screenVideoTrack) sender.replaceTrack(screenVideoTrack);
+        }
+      }
+
+      // Notify group peers
+      const current = callDataRef.current || callData;
+      const socket = getSocket();
+      if (socket && current?.isGroup) {
+        socket.emit('call:group_media_state', {
+          conversationId: current.conversationId,
+          isScreenSharing: true,
+        });
+        setGroupParticipants((prev) =>
+          prev.map((p) => (p.isLocal ? { ...p, isScreenSharing: true } : p)),
+        );
+      }
+
+      // Handle user stopping screen share via browser stop sharing button
+      screenVideoTrack.onended = () => {
+        stopScreenShare();
+      };
+    } catch (err) {
+      console.warn('Screen share cancelled or failed:', err.message);
+    }
+  };
+
+  const stopScreenShare = () => {
+    if (!isScreenSharing && !screenStreamRef.current) return;
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach((t) => t.stop());
+      screenStreamRef.current = null;
+    }
+    setScreenStream(null);
+    setIsScreenSharing(false);
+    sfx.click();
+
+    // Restore camera track to all peer connections
+    const localVideoTrack = localStreamRef.current ? localStreamRef.current.getVideoTracks()[0] : null;
+
+    if (pcRef.current && localVideoTrack) {
+      const sender = pcRef.current.getSenders().find((s) => s.track && s.track.kind === 'video');
+      if (sender) sender.replaceTrack(localVideoTrack);
+    }
+
+    if (groupPeersRef.current && localVideoTrack) {
+      for (const [, pc] of groupPeersRef.current.entries()) {
+        const sender = pc.getSenders().find((s) => s.track && s.track.kind === 'video');
+        if (sender) sender.replaceTrack(localVideoTrack);
+      }
+    }
+
+    const current = callDataRef.current || callData;
+    const socket = getSocket();
+    if (socket && current?.isGroup) {
+      socket.emit('call:group_media_state', {
+        conversationId: current.conversationId,
+        isScreenSharing: false,
+      });
+      setGroupParticipants((prev) =>
+        prev.map((p) => (p.isLocal ? { ...p, isScreenSharing: false } : p)),
+      );
+    }
+  };
+
+  const toggleScreenShare = () => {
+    if (isScreenSharing) stopScreenShare();
+    else startScreenShare();
   };
 
   // -------------------------------------------------------------
   // Mobile Camera Switching (Front/Back)
   // -------------------------------------------------------------
   const switchCamera = async () => {
-    if (!localStreamRef.current || !pcRef.current) return;
+    if (!localStreamRef.current) return;
     const nextMode = facingMode === 'user' ? 'environment' : 'user';
     try {
       const newStream = await navigator.mediaDevices.getUserMedia({
@@ -591,11 +959,22 @@ export function CallProvider({ children }) {
       }
       localStreamRef.current.addTrack(newTrack);
 
-      const senders = pcRef.current.getSenders();
-      const videoSender = senders.find((s) => s.track && s.track.kind === 'video');
-      if (videoSender) {
-        await videoSender.replaceTrack(newTrack);
+      // Replace track on 1:1 peer connection
+      if (pcRef.current) {
+        const senders = pcRef.current.getSenders();
+        const videoSender = senders.find((s) => s.track && s.track.kind === 'video');
+        if (videoSender) await videoSender.replaceTrack(newTrack);
       }
+
+      // Replace track on group mesh peer connections
+      if (groupPeersRef.current) {
+        for (const [, pc] of groupPeersRef.current.entries()) {
+          const senders = pc.getSenders();
+          const videoSender = senders.find((s) => s.track && s.track.kind === 'video');
+          if (videoSender) await videoSender.replaceTrack(newTrack);
+        }
+      }
+
       setFacingMode(nextMode);
       setLocalStream(new MediaStream(localStreamRef.current.getTracks()));
       sfx.click();
@@ -623,13 +1002,13 @@ export function CallProvider({ children }) {
   };
 
   // -------------------------------------------------------------
-  // Socket.IO Call Signaling Handlers
+  // Socket.IO Call Signaling Handlers (1:1 and Group)
   // -------------------------------------------------------------
   useEffect(() => {
     const socket = getSocket();
     if (!socket || !user) return undefined;
 
-    // 1. Incoming Call received
+    // --- 1-to-1 Handlers ---
     const onIncoming = (payload) => {
       if (callState !== 'IDLE') {
         socket.emit('call:reject', { callId: payload.callId, reason: 'busy' });
@@ -641,15 +1020,14 @@ export function CallProvider({ children }) {
         type: payload.callType || payload.type || 'audio',
         conversationId: payload.conversationId,
         isInitiator: false,
+        isGroup: false,
       };
 
-      // Set state and update ref synchronously
       callDataRef.current = incomingCall;
       setCallData(incomingCall);
       setCallState('RINGING');
       playRingtone();
 
-      // Incoming call 35s timeout
       startCallTimeout(() => {
         stopRingtone();
         cleanupCall();
@@ -662,7 +1040,6 @@ export function CallProvider({ children }) {
       });
     };
 
-    // 2. Call accepted by recipient
     const onAccepted = async (payload) => {
       stopRingtone();
       clearCallTimeout();
@@ -674,7 +1051,6 @@ export function CallProvider({ children }) {
       callDataRef.current = currentCall;
       setCallData(currentCall);
 
-      // ONLY the initiator creates the SDP offer!
       if (!currentCall.isInitiator) {
         setCallState('CONNECTED');
         return;
@@ -683,9 +1059,7 @@ export function CallProvider({ children }) {
       setCallState('CONNECTING');
       sfx.success();
 
-      // Initiator creates and sends SDP offer
       const pc = pcRef.current || createPeerConnection(currentCall);
-
       try {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
@@ -704,7 +1078,6 @@ export function CallProvider({ children }) {
       }
     };
 
-    // 3. Call rejected
     const onRejected = (payload) => {
       stopRingtone();
       clearCallTimeout();
@@ -718,7 +1091,6 @@ export function CallProvider({ children }) {
       }, 2000);
     };
 
-    // 4. Call cancelled by caller
     const onCancelled = () => {
       stopRingtone();
       clearCallTimeout();
@@ -731,11 +1103,10 @@ export function CallProvider({ children }) {
       }, 1200);
     };
 
-    // 5. WebRTC Signal Relay (SDP Offer / Answer & ICE Candidate)
     const onSignal = async (payload) => {
       let pc = pcRef.current;
       const currentCall = callDataRef.current;
-      if (!pc && currentCall) {
+      if (!pc && currentCall && !currentCall.isGroup) {
         pc = createPeerConnection(currentCall);
       }
       if (!pc || !payload.signal) return;
@@ -746,7 +1117,6 @@ export function CallProvider({ children }) {
         if (sdp) {
           if (sdp.type === 'offer') {
             await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-            // Drain any queued ICE candidates
             while (iceCandidateQueueRef.current.length > 0) {
               const cand = iceCandidateQueueRef.current.shift();
               try {
@@ -794,7 +1164,6 @@ export function CallProvider({ children }) {
       }
     };
 
-    // 6. Call ended by peer
     const onEnded = () => {
       stopRingtone();
       clearCallTimeout();
@@ -807,7 +1176,6 @@ export function CallProvider({ children }) {
       }, 1200);
     };
 
-    // 7. Busy event
     const onBusy = () => {
       stopRingtone();
       clearCallTimeout();
@@ -821,6 +1189,176 @@ export function CallProvider({ children }) {
       }, 2000);
     };
 
+    // --- Group Call Handlers ---
+    const onGroupActiveState = (payload) => {
+      if (!payload?.conversationId) return;
+      setActiveGroupCalls((prev) => ({
+        ...prev,
+        [String(payload.conversationId)]: payload.activeCall,
+      }));
+    };
+
+    const onGroupStarted = (payload) => {
+      if (!payload?.conversationId) return;
+      setActiveGroupCalls((prev) => ({
+        ...prev,
+        [String(payload.conversationId)]: payload.activeCall,
+      }));
+    };
+
+    const onGroupUserJoined = async (payload) => {
+      const current = callDataRef.current;
+      if (!current?.isGroup || String(current.conversationId) !== String(payload.conversationId)) {
+        return;
+      }
+
+      const joinerUser = payload.user || payload.participant?.user;
+      const joinerId = String(joinerUser?._id || joinerUser?.id);
+      const myId = String(user._id || user.id);
+
+      if (!joinerId || joinerId === myId) return;
+
+      setGroupParticipants((prev) => {
+        if (prev.some((p) => String(p.userId) === joinerId)) return prev;
+        return [
+          ...prev,
+          {
+            userId: joinerId,
+            user: joinerUser,
+            isMuted: false,
+            isVideoOff: false,
+            isScreenSharing: false,
+            isSpeaking: false,
+            stream: null,
+            isLocal: false,
+          },
+        ];
+      });
+    };
+
+    const onGroupUserLeft = (payload) => {
+      const current = callDataRef.current;
+      if (!current?.isGroup || String(current.conversationId) !== String(payload.conversationId)) {
+        return;
+      }
+      const leftId = String(payload.userId);
+      const pc = groupPeersRef.current.get(leftId);
+      if (pc) {
+        try {
+          pc.close();
+        } catch {}
+        groupPeersRef.current.delete(leftId);
+      }
+      groupStreamsRef.current.delete(leftId);
+      groupIceQueueRef.current.delete(leftId);
+
+      setGroupParticipants((prev) => prev.filter((p) => String(p.userId) !== leftId));
+    };
+
+    const onGroupSignal = async (payload) => {
+      const current = callDataRef.current;
+      if (!current?.isGroup || String(current.conversationId) !== String(payload.conversationId)) {
+        return;
+      }
+
+      const fromUserId = String(payload.fromUserId);
+      let pc = groupPeersRef.current.get(fromUserId);
+      if (!pc) {
+        pc = createGroupPeerConnection(fromUserId, current.conversationId);
+      }
+
+      const { sdp, candidate } = payload.signal || {};
+
+      try {
+        if (sdp) {
+          if (sdp.type === 'offer') {
+            await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+
+            // Drain queued ICE candidates
+            const queue = groupIceQueueRef.current.get(fromUserId) || [];
+            while (queue.length > 0) {
+              const cand = queue.shift();
+              try {
+                await pc.addIceCandidate(new RTCIceCandidate(cand));
+              } catch (e) {
+                console.warn('Group ICE drain notice:', e.message);
+              }
+            }
+
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+
+            socket.emit('call:group_signal', {
+              conversationId: current.conversationId,
+              targetUserId: fromUserId,
+              signal: { sdp: answer },
+            });
+          } else if (sdp.type === 'answer') {
+            await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+            const queue = groupIceQueueRef.current.get(fromUserId) || [];
+            while (queue.length > 0) {
+              const cand = queue.shift();
+              try {
+                await pc.addIceCandidate(new RTCIceCandidate(cand));
+              } catch (e) {
+                console.warn('Group ICE drain notice:', e.message);
+              }
+            }
+          }
+        } else if (candidate) {
+          if (pc.remoteDescription && pc.remoteDescription.type) {
+            try {
+              await pc.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (e) {
+              console.warn('Group add ICE notice:', e.message);
+            }
+          } else {
+            const queue = groupIceQueueRef.current.get(fromUserId) || [];
+            queue.push(candidate);
+            groupIceQueueRef.current.set(fromUserId, queue);
+          }
+        }
+      } catch (err) {
+        console.warn('Group WebRTC signal notice:', err.message);
+      }
+    };
+
+    const onGroupMediaState = (payload) => {
+      const fromUserId = String(payload.fromUserId);
+      setGroupParticipants((prev) =>
+        prev.map((p) => {
+          if (String(p.userId) === fromUserId) {
+            return {
+              ...p,
+              ...(payload.isMuted !== undefined ? { isMuted: payload.isMuted } : {}),
+              ...(payload.isVideoOff !== undefined ? { isVideoOff: payload.isVideoOff } : {}),
+              ...(payload.isScreenSharing !== undefined ? { isScreenSharing: payload.isScreenSharing } : {}),
+            };
+          }
+          return p;
+        }),
+      );
+    };
+
+    const onGroupEnded = (payload) => {
+      const current = callDataRef.current;
+      setActiveGroupCalls((prev) => {
+        const next = { ...prev };
+        delete next[String(payload.conversationId)];
+        return next;
+      });
+
+      if (current?.isGroup && String(current.conversationId) === String(payload.conversationId)) {
+        cleanupCall();
+        setCallState('ENDED');
+        sfx.click();
+        setTimeout(() => {
+          setCallState('IDLE');
+          setCallData(null);
+        }, 1200);
+      }
+    };
+
     socket.on('call:incoming', onIncoming);
     socket.on('call:accepted', onAccepted);
     socket.on('call:rejected', onRejected);
@@ -828,6 +1366,14 @@ export function CallProvider({ children }) {
     socket.on('call:signal', onSignal);
     socket.on('call:ended', onEnded);
     socket.on('call:busy', onBusy);
+
+    socket.on('call:group_active_state', onGroupActiveState);
+    socket.on('call:group_started', onGroupStarted);
+    socket.on('call:group_user_joined', onGroupUserJoined);
+    socket.on('call:group_user_left', onGroupUserLeft);
+    socket.on('call:group_signal', onGroupSignal);
+    socket.on('call:group_media_state', onGroupMediaState);
+    socket.on('call:group_ended', onGroupEnded);
 
     return () => {
       socket.off('call:incoming', onIncoming);
@@ -837,8 +1383,26 @@ export function CallProvider({ children }) {
       socket.off('call:signal', onSignal);
       socket.off('call:ended', onEnded);
       socket.off('call:busy', onBusy);
+
+      socket.off('call:group_active_state', onGroupActiveState);
+      socket.off('call:group_started', onGroupStarted);
+      socket.off('call:group_user_joined', onGroupUserJoined);
+      socket.off('call:group_user_left', onGroupUserLeft);
+      socket.off('call:group_signal', onGroupSignal);
+      socket.off('call:group_media_state', onGroupMediaState);
+      socket.off('call:group_ended', onGroupEnded);
     };
-  }, [user, callState, createPeerConnection, cleanupCall, playRingtone, stopRingtone, clearCallTimeout, startCallTimeout]);
+  }, [
+    user,
+    callState,
+    createPeerConnection,
+    createGroupPeerConnection,
+    cleanupCall,
+    playRingtone,
+    stopRingtone,
+    clearCallTimeout,
+    startCallTimeout,
+  ]);
 
   return (
     <CallContext.Provider
@@ -847,8 +1411,12 @@ export function CallProvider({ children }) {
         callData,
         localStream,
         remoteStream,
+        groupParticipants,
+        activeGroupCalls,
         isMuted,
         isVideoOff,
+        isScreenSharing,
+        screenStream,
         canSwitchCamera,
         isMinimized,
         isFullscreen,
@@ -859,8 +1427,14 @@ export function CallProvider({ children }) {
         rejectCall,
         cancelCall,
         endCall,
+        startGroupCall,
+        joinGroupCall,
+        leaveGroupCall,
         toggleMute,
         toggleVideo,
+        toggleScreenShare,
+        startScreenShare,
+        stopScreenShare,
         switchCamera,
         toggleMinimize,
         toggleFullscreen,

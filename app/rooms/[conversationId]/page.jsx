@@ -38,6 +38,7 @@ import { useAuth, useRequireAuth } from '@/hooks/useAuth';
 import { useTyping } from '@/hooks/useTyping';
 import { useSound } from '@/hooks/useSound';
 import { usePresence } from '@/hooks/usePresence';
+import { useCall } from '@/features/calls/CallContext';
 import { avatarSrc } from '@/lib/avatars';
 import { Badge, IconButton, PresencePip, EmptyState, Spinner, PasswordInput } from '@/components/ui';
 import { sfx } from '@/lib/sound';
@@ -52,6 +53,7 @@ export default function RoomPage() {
   const { play } = useSound();
   const { isOnline } = usePresence();
   const { typingUsers, signal, stop } = useTyping(conversationId);
+  const { startGroupCall, joinGroupCall, activeGroupCalls, callState } = useCall();
 
   const [conversation, setConversation] = useState(null);
   const [notMember, setNotMember] = useState(false);
@@ -101,6 +103,7 @@ export default function RoomPage() {
     socketRef.current = socket;
     socket.emit('join_conversation', { conversationId });
     socket.emit('mark_read', { conversationId });
+    socket.emit('call:group_get_active', { conversationId });
 
     const onNewMessage = (p) => {
       if (String(p.message.conversationId) !== String(conversationId)) return;
@@ -325,15 +328,37 @@ export default function RoomPage() {
           </div>
           <div className="flex items-center gap-1.5">
             {conversation && (
-              <ConversationActionsMenu
-                conversation={conversation}
-                currentUser={user}
-                onCleared={() => {
-                  setMessages([]);
-                  setNextCursor(null);
-                }}
-                onDeleted={() => router.push('/rooms')}
-              />
+              <>
+                <button
+                  type="button"
+                  onClick={() => startGroupCall({ conversationId, isVideo: false, conversationName: conversation.name })}
+                  disabled={callState !== 'IDLE'}
+                  className="p-2 rounded-lg bg-surface-container hover:bg-secondary-container/50 text-on-surface border-[1.5px] border-[#6E3511]/30 shadow-[1.5px_1.5px_0px_rgba(110,53,17,0.2)] hover:border-[#6E3511] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center transition-all disabled:opacity-40"
+                  title="Start Group Voice Call"
+                  aria-label="Start Group Voice Call"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-primary">call</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => startGroupCall({ conversationId, isVideo: true, conversationName: conversation.name })}
+                  disabled={callState !== 'IDLE'}
+                  className="p-2 rounded-lg bg-surface-container hover:bg-secondary-container/50 text-on-surface border-[1.5px] border-[#6E3511]/30 shadow-[1.5px_1.5px_0px_rgba(110,53,17,0.2)] hover:border-[#6E3511] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center transition-all disabled:opacity-40"
+                  title="Start Group Video Call"
+                  aria-label="Start Group Video Call"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-primary">videocam</span>
+                </button>
+                <ConversationActionsMenu
+                  conversation={conversation}
+                  currentUser={user}
+                  onCleared={() => {
+                    setMessages([]);
+                    setNextCursor(null);
+                  }}
+                  onDeleted={() => router.push('/rooms')}
+                />
+              </>
             )}
             <IconButton
               icon="info"
@@ -342,6 +367,51 @@ export default function RoomPage() {
             />
           </div>
         </div>
+
+        {/* Live Active Group Call Banner */}
+        {activeGroupCalls[String(conversationId)] && (
+          <div className="bg-secondary-container/95 border-b-2 border-primary/40 px-4 py-2.5 flex items-center justify-between gap-3 shadow-[0_2px_0px_0px_rgba(66,96,16,0.15)] animate-fade-in shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-primary text-surface-container flex items-center justify-center border border-tertiary shadow-[1px_1px_0px_#6E3511] shrink-0">
+                <span className="material-symbols-outlined text-[18px] animate-pulse">
+                  {activeGroupCalls[String(conversationId)].callType === 'video' ? 'videocam' : 'call'}
+                </span>
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-on-secondary-container">
+                  <span className="w-2 h-2 bg-primary rounded-none animate-ping inline-block" />
+                  <span>
+                    LIVE {activeGroupCalls[String(conversationId)].callType === 'video' ? 'VIDEO CALL' : 'VOICE CALL'}
+                  </span>
+                </div>
+                <p className="font-mono text-[10px] text-tertiary truncate">
+                  {activeGroupCalls[String(conversationId)].participantCount ||
+                    (activeGroupCalls[String(conversationId)].participants || []).length ||
+                    1}{' '}
+                  players connected
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                joinGroupCall({
+                  conversationId,
+                  isVideo: activeGroupCalls[String(conversationId)].callType === 'video',
+                  conversationName: conversation?.name,
+                })
+              }
+              disabled={callState !== 'IDLE'}
+              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-surface-container font-mono text-[11px] font-bold border border-tertiary shadow-[2px_2px_0px_#6E3511] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-1.5 shrink-0 press disabled:opacity-50"
+            >
+              <span className="material-symbols-outlined text-[16px]">login</span>
+              <span>
+                JOIN {activeGroupCalls[String(conversationId)].callType === 'video' ? 'VIDEO' : 'CALL'}
+              </span>
+            </button>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex-1 flex items-center justify-center">

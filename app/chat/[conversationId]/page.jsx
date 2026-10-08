@@ -262,31 +262,67 @@ export default function ChatPage() {
             >
               <span className="material-symbols-outlined text-[20px]">arrow_back</span>
             </button>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={avatarSrc(conversationAvatarId(conversation, user))} alt="" className="w-10 h-10 rounded-lg bg-surface-container border-2 border-tertiary pixelated shadow-pixel-sm-solid shrink-0" />
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h1 className="font-display text-headline-sm font-bold text-on-surface tracking-tight truncate">
-                  {conversationLabel(conversation, user)}
-                </h1>
-                <Badge tone="green">DIRECT</Badge>
-              </div>
-              <p className="font-mono text-label-sm text-secondary flex items-center gap-1.5 mt-0.5 min-h-[18px]">
-                {isOtherTyping ? (
-                  <span className="text-primary font-bold flex items-center gap-1.5 animate-pulse">
-                    <span className="w-2 h-2 bg-primary-container inline-block" />
-                    <span>typing...</span>
-                  </span>
-                ) : (
-                  <>
-                    <PresencePip online={otherOnline} />
-                    <span className="truncate">
-                      {other ? (otherOnline ? 'Online' : other.lastSeen ? `Last seen ${timeAgo(other.lastSeen)}` : 'Offline') : '—'}
-                    </span>
-                  </>
-                )}
-              </p>
-            </div>
+            {conversation?.type === 'direct' && other?.username ? (
+              <Link
+                href={`/profile/${other.username}`}
+                title={`View @${other.username}'s profile`}
+                className="flex items-center gap-2 sm:gap-3 min-w-0 hover:opacity-85 transition-opacity cursor-pointer"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={avatarSrc(conversationAvatarId(conversation, user))} alt="" className="w-10 h-10 rounded-lg bg-surface-container border-2 border-tertiary pixelated shadow-pixel-sm-solid shrink-0" />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h1 className="font-display text-headline-sm font-bold text-on-surface tracking-tight truncate">
+                      {conversationLabel(conversation, user)}
+                    </h1>
+                    <Badge tone="green">DIRECT</Badge>
+                  </div>
+                  <p className="font-mono text-label-sm text-secondary flex items-center gap-1.5 mt-0.5 min-h-[18px]">
+                    {isOtherTyping ? (
+                      <span className="text-primary font-bold flex items-center gap-1.5 animate-pulse">
+                        <span className="w-2 h-2 bg-primary-container inline-block" />
+                        <span>typing...</span>
+                      </span>
+                    ) : (
+                      <>
+                        <PresencePip online={otherOnline} />
+                        <span className="truncate">
+                          {other ? (otherOnline ? 'Online' : other.lastSeen ? `Last seen ${timeAgo(other.lastSeen)}` : 'Offline') : '—'}
+                        </span>
+                      </>
+                    )}
+                  </p>
+                </div>
+              </Link>
+            ) : (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={avatarSrc(conversationAvatarId(conversation, user))} alt="" className="w-10 h-10 rounded-lg bg-surface-container border-2 border-tertiary pixelated shadow-pixel-sm-solid shrink-0" />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h1 className="font-display text-headline-sm font-bold text-on-surface tracking-tight truncate">
+                      {conversationLabel(conversation, user)}
+                    </h1>
+                    <Badge tone="green">DIRECT</Badge>
+                  </div>
+                  <p className="font-mono text-label-sm text-secondary flex items-center gap-1.5 mt-0.5 min-h-[18px]">
+                    {isOtherTyping ? (
+                      <span className="text-primary font-bold flex items-center gap-1.5 animate-pulse">
+                        <span className="w-2 h-2 bg-primary-container inline-block" />
+                        <span>typing...</span>
+                      </span>
+                    ) : (
+                      <>
+                        <PresencePip online={otherOnline} />
+                        <span className="truncate">
+                          {other ? (otherOnline ? 'Online' : other.lastSeen ? `Last seen ${timeAgo(other.lastSeen)}` : 'Offline') : '—'}
+                        </span>
+                      </>
+                    )}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-1.5">
             {conversation?.type === 'direct' && other && (

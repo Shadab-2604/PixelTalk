@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useMemo } from 'react';
+import Link from 'next/link';
 import { timeShort, dayLabel } from '@/lib/format';
 import { messageService } from '@/services/messageService';
 import { avatarSrc, getUserAvatar } from '@/lib/avatars';
@@ -475,17 +476,42 @@ export function MessageList({
             )}
 
             <div className={`flex items-start gap-3 max-w-3xl ${mine ? 'ml-auto flex-row-reverse' : ''}`}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={getUserAvatar(m.senderId)}
-                alt={m.senderId?.displayName || 'player'}
-                className="w-9 h-9 rounded-lg border border-tertiary bg-surface-variant shrink-0 shadow-pixel-sm-solid pixelated object-cover"
-              />
+              {!mine && m.senderId?.username ? (
+                <Link
+                  href={`/profile/${m.senderId.username}`}
+                  title={`View @${m.senderId.username}'s profile`}
+                  className="shrink-0 hover:opacity-85 transition-opacity"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={getUserAvatar(m.senderId)}
+                    alt={m.senderId?.displayName || 'player'}
+                    className="w-9 h-9 rounded-lg border border-tertiary bg-surface-variant shadow-pixel-sm-solid pixelated object-cover"
+                  />
+                </Link>
+              ) : (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={getUserAvatar(m.senderId)}
+                  alt={m.senderId?.displayName || 'player'}
+                  className="w-9 h-9 rounded-lg border border-tertiary bg-surface-variant shrink-0 shadow-pixel-sm-solid pixelated object-cover"
+                />
+              )}
               <div className={`space-y-1 min-w-0 max-w-[88%] sm:max-w-xl ${mine ? 'items-end text-right flex flex-col' : ''}`}>
                 <div className={`flex items-baseline gap-2 ${mine ? 'flex-row-reverse' : ''}`}>
-                  <span className="font-body-md font-bold text-on-surface">
-                    {mine ? 'You' : m.senderId?.displayName || 'Player'}
-                  </span>
+                  {!mine && m.senderId?.username ? (
+                    <Link
+                      href={`/profile/${m.senderId.username}`}
+                      title={`View @${m.senderId.username}'s profile`}
+                      className="font-body-md font-bold text-on-surface hover:text-primary transition-colors truncate"
+                    >
+                      {m.senderId?.displayName || m.senderId?.username || 'Player'}
+                    </Link>
+                  ) : (
+                    <span className="font-body-md font-bold text-on-surface">
+                      {mine ? 'You' : m.senderId?.displayName || 'Player'}
+                    </span>
+                  )}
                   <span className="font-mono text-label-sm text-outline">{timeShort(m.createdAt)}</span>
                 </div>
 

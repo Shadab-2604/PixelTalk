@@ -182,7 +182,7 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
             </button>
 
             {other?._id && (
-              <Link href={`/profile?userId=${other._id}`} className="block">
+              <Link href={`/profile/${other.username || other._id}`} className="block">
                 <GhostButton className="w-full py-1.5 text-label-xs">
                   <span className="material-symbols-outlined text-[14px]">person</span> View Player Profile
                 </GhostButton>
@@ -816,7 +816,11 @@ function MemberItem({
     <div className={`p-2 rounded-lg transition-colors ${online ? 'bg-surface/80 hover:bg-surface-container-low/50' : 'bg-transparent hover:bg-surface/40'}`}>
       <div className="flex items-center justify-between gap-2">
         {/* User Info Brief */}
-        <div className="flex items-center gap-2 min-w-0">
+        <Link
+          href={`/profile/${m.username}`}
+          title={`View @${m.username}'s profile`}
+          className="flex items-center gap-2 min-w-0 flex-1 hover:opacity-80 transition-opacity cursor-pointer"
+        >
           <div className="relative shrink-0">
             <Avatar src={avatarSrc(m.avatarId)} alt={m.displayName} size={28} online={online} ring={false} />
           </div>
@@ -828,7 +832,7 @@ function MemberItem({
             </div>
             <span className="font-mono text-[10px] text-tertiary block truncate">@{m.username}</span>
           </div>
-        </div>
+        </Link>
 
         {/* Role Badge & Contextual Actions */}
         <div className="flex items-center gap-1.5 shrink-0">

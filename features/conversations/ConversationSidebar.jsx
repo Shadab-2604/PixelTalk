@@ -488,16 +488,24 @@ export function ConversationSidebar() {
                       key={u.id || u._id}
                       className="flex items-center justify-between gap-2 p-2 rounded-lg bg-surface border border-tertiary/15 hover:border-tertiary transition-all"
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
+                      <Link
+                        href={`/profile/${u.username}`}
+                        onClick={() => {
+                          setQuery('');
+                          setSearchResults({ users: [], rooms: [], isSearching: false });
+                        }}
+                        className="flex items-center gap-2.5 min-w-0 flex-1 hover:opacity-85 transition-opacity cursor-pointer"
+                        title={`View @${u.username}'s profile`}
+                      >
                         <Avatar src={avatarSrc(u.avatarId)} alt={u.displayName} size={32} online={online} />
                         <div className="min-w-0">
                           <p className="font-display text-[13px] font-bold text-on-surface truncate">{u.displayName}</p>
                           <p className="font-mono text-[11px] text-tertiary truncate">@{u.username}</p>
                         </div>
-                      </div>
+                      </Link>
                       <button
                         onClick={() => startDirectFromSearch(u.id || u._id)}
-                        className="px-2.5 py-1 bg-primary-container text-surface-container font-mono text-[11px] font-bold rounded border border-tertiary hover:bg-primary transition-all shrink-0"
+                        className="px-2.5 py-1 bg-primary-container text-surface-container font-mono text-[11px] font-bold rounded border border-tertiary hover:bg-primary transition-all shrink-0 cursor-pointer"
                       >
                         MESSAGE
                       </button>

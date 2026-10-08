@@ -26,6 +26,8 @@ export const userService = {
   toggleMute: (conversationId) => patch(`/users/mute/${conversationId}`),
   toggleVibrate: (conversationId) => patch(`/users/vibrate/${conversationId}`),
   getUser: (id) => get(`/users/${id}`),
+  getUserByUsername: (username) => get(`/users/by-username/${encodeURIComponent(username)}`),
+  getProfile: (idOrUsername) => get(`/users/${encodeURIComponent(idOrUsername)}`),
   search: (q) => get(`/users/search?q=${encodeURIComponent(q)}`),
   uploadAvatar: (file) => {
     const formData = new FormData();

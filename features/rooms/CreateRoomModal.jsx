@@ -110,6 +110,16 @@ export function CreateRoomModal({ open, onClose }) {
     setError('');
     setBusy(true);
     try {
+      if (privacy === 'private') {
+        const trimmedPass = passcode.trim();
+        if (!trimmedPass || trimmedPass.length < 4) {
+          setError('Please enter a room password with at least 4 characters for private rooms.');
+          play('error');
+          setBusy(false);
+          return;
+        }
+      }
+
       const payload = {
         name: name.trim(),
         description: description.trim(),
@@ -123,7 +133,7 @@ export function CreateRoomModal({ open, onClose }) {
           invitePermission,
         },
       };
-      if (privacy === 'private') payload.passcode = passcode;
+      if (privacy === 'private') payload.passcode = passcode.trim();
       const data = await conversationService.createGroup(payload);
       play('room-created');
       onClose();
@@ -504,7 +514,162 @@ export function CreateRoomModal({ open, onClose }) {
 
           {/*
            * ============================================================
-           * 4. LIVE GROUP RULES SUMMARY & PREVIEW (Stitch Summary Strip)
+           * 4. ROOM ACCESS & SECURITY SECTION (Step 04)
+           * ============================================================
+           * WHAT: Options for Open/Public, Password Protected, or Invite-Only access.
+           * Allows setting room passcode during creation.
+           */}
+          <section className="bg-surface-container-lowest border-2 border-tertiary/30 rounded-xl p-4 sm:p-5 shadow-[2px_2px_0_0_#6E3511]">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-tertiary/15">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-primary inline-block" />
+                <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface">Room Access & Security</h3>
+              </div>
+              <span className="text-label-sm font-label-sm text-tertiary bg-surface-container px-2 py-0.5 rounded border border-tertiary/20 font-bold uppercase">
+                Step 04
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Option 1: PUBLIC */}
+                <div
+                  onClick={() => {
+                    setPrivacy('public');
+                    setPasscode('');
+                  }}
+                  className={`relative rounded-xl p-3.5 cursor-pointer transition-all flex flex-col justify-between border-2 ${
+                    privacy === 'public'
+                      ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_#426010]'
+                      : 'bg-surface border-tertiary/30 hover:border-tertiary/60 hover:bg-surface-container-low'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="w-7 h-7 rounded bg-surface-container flex items-center justify-center text-primary border border-tertiary/20">
+                        <span className="material-symbols-outlined text-[16px]">public</span>
+                      </div>
+                      <div
+                        className={`w-5 h-5 rounded flex items-center justify-center border ${
+                          privacy === 'public'
+                            ? 'bg-primary text-on-primary border-[#6E3511]'
+                            : 'bg-surface border-tertiary/40'
+                        }`}
+                      >
+                        {privacy === 'public' && (
+                          <span className="material-symbols-outlined text-[13px] font-bold">check</span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="font-mono text-label-sm font-bold text-on-surface block">PUBLIC / OPEN</span>
+                    <p className="font-body-sm text-[11px] text-on-surface-variant mt-1 leading-relaxed">
+                      Anyone can discover and join directly. No password required.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Option 2: PASSWORD PROTECTED */}
+                <div
+                  onClick={() => setPrivacy('private')}
+                  className={`relative rounded-xl p-3.5 cursor-pointer transition-all flex flex-col justify-between border-2 ${
+                    privacy === 'private'
+                      ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_#426010]'
+                      : 'bg-surface border-tertiary/30 hover:border-tertiary/60 hover:bg-surface-container-low'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="w-7 h-7 rounded bg-primary-container text-surface-container flex items-center justify-center border border-[#6E3511]">
+                        <span className="material-symbols-outlined text-[16px]">lock</span>
+                      </div>
+                      <div
+                        className={`w-5 h-5 rounded flex items-center justify-center border ${
+                          privacy === 'private'
+                            ? 'bg-primary text-on-primary border-[#6E3511]'
+                            : 'bg-surface border-tertiary/40'
+                        }`}
+                      >
+                        {privacy === 'private' && (
+                          <span className="material-symbols-outlined text-[13px] font-bold">check</span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="font-mono text-label-sm font-bold text-on-surface block">PASSWORD PROTECTED</span>
+                    <p className="font-body-sm text-[11px] text-on-surface-variant mt-1 leading-relaxed">
+                      Requires a secret passcode to enter. Only players with the code can join.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Option 3: INVITE ONLY */}
+                <div
+                  onClick={() => {
+                    setPrivacy('invite');
+                    setPasscode('');
+                  }}
+                  className={`relative rounded-xl p-3.5 cursor-pointer transition-all flex flex-col justify-between border-2 ${
+                    privacy === 'invite'
+                      ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_#426010]'
+                      : 'bg-surface border-tertiary/30 hover:border-tertiary/60 hover:bg-surface-container-low'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="w-7 h-7 rounded bg-surface-container flex items-center justify-center text-secondary border border-tertiary/20">
+                        <span className="material-symbols-outlined text-[16px]">mark_email_unread</span>
+                      </div>
+                      <div
+                        className={`w-5 h-5 rounded flex items-center justify-center border ${
+                          privacy === 'invite'
+                            ? 'bg-primary text-on-primary border-[#6E3511]'
+                            : 'bg-surface border-tertiary/40'
+                        }`}
+                      >
+                        {privacy === 'invite' && (
+                          <span className="material-symbols-outlined text-[13px] font-bold">check</span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="font-mono text-label-sm font-bold text-on-surface block">INVITE ONLY</span>
+                    <p className="font-body-sm text-[11px] text-on-surface-variant mt-1 leading-relaxed">
+                      Only players invited by members/admins can join after accepting.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Passcode input field when privacy is private */}
+              {privacy === 'private' && (
+                <div className="p-3.5 bg-surface-container-low rounded-xl border border-primary/40 space-y-2 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between">
+                    <label className="font-mono text-label-sm font-bold text-on-surface flex items-center gap-1.5" htmlFor="create-passcode">
+                      <span className="material-symbols-outlined text-[16px] text-primary">key</span>
+                      <span>Room Password / Passcode</span>
+                      <span className="text-error">*</span>
+                    </label>
+                    <span className="font-mono text-[11px] text-tertiary">Min 4 chars</span>
+                  </div>
+                  <PasswordInput
+                    id="create-passcode"
+                    value={passcode}
+                    onChange={(e) => setPasscode(e.target.value)}
+                    placeholder="Enter secret room password (e.g. pixel123)"
+                    minLength={4}
+                    maxLength={64}
+                    className="bg-surface"
+                  />
+                  <p className="font-body-sm text-[11px] text-on-surface-variant flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px] text-primary">shield</span>
+                    <span>As group admin, you can edit or remove this password anytime later in Room Settings.</span>
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/*
+           * ============================================================
+           * 5. LIVE GROUP RULES SUMMARY & PREVIEW (Stitch Summary Strip)
            * ============================================================
            */}
           <section className="bg-surface-container border-2 border-[#6E3511] rounded-xl p-4 shadow-[2px_2px_0_0_#6E3511]">
@@ -514,24 +679,44 @@ export function CreateRoomModal({ open, onClose }) {
                 Group Rules Summary
               </h4>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <div className="bg-surface-container-lowest border border-tertiary/25 rounded-lg px-3 py-2 flex items-center justify-between">
-                <span className="font-mono text-[11px] text-on-surface-variant">Messages:</span>
-                <span className="font-mono text-[11px] font-bold text-primary bg-secondary-container/60 px-2 py-0.5 rounded">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="bg-surface-container-lowest border border-tertiary/25 rounded-lg px-2.5 py-1.5 flex flex-col justify-between">
+                <span className="font-mono text-[10px] text-on-surface-variant">Messages:</span>
+                <span className="font-mono text-[11px] font-bold text-primary truncate">
                   {adminOnlyChat ? 'Admins only' : 'Everyone'}
                 </span>
               </div>
-              <div className="bg-surface-container-lowest border border-tertiary/25 rounded-lg px-3 py-2 flex items-center justify-between">
-                <span className="font-mono text-[11px] text-on-surface-variant">Invitations:</span>
-                <span className="font-mono text-[11px] font-bold text-tertiary bg-surface-container-high px-2 py-0.5 rounded">
+              <div className="bg-surface-container-lowest border border-tertiary/25 rounded-lg px-2.5 py-1.5 flex flex-col justify-between">
+                <span className="font-mono text-[10px] text-on-surface-variant">Invitations:</span>
+                <span className="font-mono text-[11px] font-bold text-tertiary truncate">
                   {invitePermission === 'ADMINS_ONLY' ? 'Admins only' : 'Anyone'}
                 </span>
               </div>
-              <div className="bg-surface-container-lowest border border-tertiary/25 rounded-lg px-3 py-2 flex items-center justify-between">
-                <span className="font-mono text-[11px] text-on-surface-variant">Approval:</span>
-                <span className="font-mono text-[11px] font-bold text-secondary bg-surface-variant px-2 py-0.5 rounded flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[12px]">lock</span>
-                  <span>Required</span>
+              <div className="bg-surface-container-lowest border border-tertiary/25 rounded-lg px-2.5 py-1.5 flex flex-col justify-between">
+                <span className="font-mono text-[10px] text-on-surface-variant">Access:</span>
+                <span className="font-mono text-[11px] font-bold text-secondary truncate flex items-center gap-1">
+                  {privacy === 'private' ? (
+                    <>
+                      <span className="material-symbols-outlined text-[12px]">lock</span>
+                      <span>Password</span>
+                    </>
+                  ) : privacy === 'invite' ? (
+                    <>
+                      <span className="material-symbols-outlined text-[12px]">mail</span>
+                      <span>Invite Only</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-[12px]">public</span>
+                      <span>Public</span>
+                    </>
+                  )}
+                </span>
+              </div>
+              <div className="bg-surface-container-lowest border border-tertiary/25 rounded-lg px-2.5 py-1.5 flex flex-col justify-between">
+                <span className="font-mono text-[10px] text-on-surface-variant">Approval:</span>
+                <span className="font-mono text-[11px] font-bold text-on-surface truncate">
+                  {privacy === 'invite' ? 'Required' : 'Passcode/Open'}
                 </span>
               </div>
             </div>

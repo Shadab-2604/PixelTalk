@@ -72,11 +72,11 @@ export default function RoomsIndexPage() {
               <Link key={g._id} href={`/rooms/${g._id}`}>
                 <article className="bg-surface-container-lowest border-[1.5px] border-tertiary/30 hover:border-tertiary rounded-xl p-4 shadow-pixel-sm transition-all flex items-center gap-3.5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={avatarSrc(g.avatarId || 'avatar-06')} alt="" className="w-11 h-11 rounded-lg border-[1.5px] border-tertiary pixelated" />
+                  <img src={g.avatarUrl || avatarSrc(g.avatarId || 'avatar-06')} alt="" className="w-11 h-11 rounded-lg border-[1.5px] border-tertiary object-cover pixelated" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-display text-headline-sm font-bold text-on-surface truncate">{g.name}</h3>
-                      {g.privacy === 'private' && <Badge tone="amber">🔒 Passcode</Badge>}
+                      {(g.privacy === 'private' || g.hasPasscode) && <Badge tone="amber">🔒 Passcode</Badge>}
                     </div>
                     <p className="font-body-sm text-body-sm text-on-surface-variant truncate">{g.description || 'No description'}</p>
                     <p className="font-mono text-label-sm text-tertiary mt-0.5">{g.members?.length || 0} players • {timeAgo(g.updatedAt)}</p>

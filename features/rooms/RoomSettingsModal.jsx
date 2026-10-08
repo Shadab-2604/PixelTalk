@@ -111,6 +111,24 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
     setSuccess('');
 
     try {
+      const trimmedPass = passcode.trim();
+      const wasPrivate = conversation?.privacy === 'private' || conversation?.hasPasscode;
+
+      if (privacy === 'private') {
+        if (!wasPrivate && (!trimmedPass || trimmedPass.length < 4)) {
+          setError('Please enter a passcode of at least 4 characters to protect this room.');
+          sfx.error();
+          setBusy(false);
+          return;
+        }
+        if (trimmedPass && trimmedPass.length < 4) {
+          setError('New passcode must be at least 4 characters long.');
+          sfx.error();
+          setBusy(false);
+          return;
+        }
+      }
+
       const payload = {
         name: name.trim(),
         description: description.trim(),
@@ -124,9 +142,13 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
         },
         permissions,
       };
-      if (privacy === 'private' && passcode) {
-        payload.passcode = passcode;
-      } else if (privacy !== 'private') {
+
+      if (privacy === 'private') {
+        if (trimmedPass) {
+          payload.passcode = trimmedPass;
+        }
+      } else {
+        // Explicitly clear passcode when moving to public or invite-only
         payload.passcode = '';
       }
 
@@ -134,6 +156,7 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
       sfx.success();
       setSuccess('Group settings updated successfully!');
       onUpdated?.(updated.conversation || updated);
+      setPasscode('');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       sfx.error();
@@ -647,59 +670,259 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
            * ============================================================
            * SECTION 5: PRIVACY & PASSCODE
            * ============================================================
+           * WHAT: Admin-only management of room privacy and secret passcode.
+           * Allows:
+           * - Viewing current protection status
+           * - Switching between Public, Password Protected, and Invite Only
+           * - Setting or Editing secret passcode (min 4 chars)
+           * - Removing password protection
            */}
           {tab === 'privacy' && (
             <div className="space-y-4">
-              <div>
-                <h4 className="font-headline-sm text-headline-sm font-bold text-on-surface">Room Privacy</h4>
-                <p className="font-body-sm text-[12px] text-on-surface-variant mt-0.5">
-                  Configure passcode protection or invitation-only entry.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div
-                  onClick={() => setPrivacy('invite')}
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    privacy === 'invite'
-                      ? 'border-primary bg-secondary-container/40 shadow-[2px_2px_0_0_#426010]'
-                      : 'border-tertiary/25 bg-surface hover:border-tertiary/60'
-                  }`}
-                >
-                  <span className="font-mono text-label-sm font-bold text-on-surface block">INVITE ONLY</span>
-                  <p className="font-body-sm text-[12px] text-on-surface-variant mt-1">
-                    Players must be approved by members or admins to join.
-                  </p>
-                </div>
-
-                <div
-                  onClick={() => setPrivacy('private')}
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    privacy === 'private'
-                      ? 'border-primary bg-secondary-container/40 shadow-[2px_2px_0_0_#426010]'
-                      : 'border-tertiary/25 bg-surface hover:border-tertiary/60'
-                  }`}
-                >
-                  <span className="font-mono text-label-sm font-bold text-on-surface block">PASSCODE PROTECTED</span>
-                  <p className="font-body-sm text-[12px] text-on-surface-variant mt-1">
-                    Players enter the secret passcode to join instantly.
-                  </p>
-                </div>
-              </div>
-
-              {privacy === 'private' && (
+              <div className="flex items-center justify-between">
                 <div>
-                  <label className="block font-mono text-label-sm font-bold text-tertiary mb-1">
-                    Passcode (Leave blank to keep current)
-                  </label>
+                  <h4 className="font-headline-sm text-headline-sm font-bold text-on-surface">
+                    Room Access & Security
+                  </h4>
+                  <p className="font-body-sm text-[12px] text-on-surface-variant mt-0.5">
+                    Configure room privacy, set or edit secret passcodes, or remove password protection.
+                  </p>
+                </div>
+                <span className="font-mono text-[10px] bg-primary-container text-surface-container font-bold px-2 py-0.5 rounded border border-[#6E3511] uppercase shrink-0">
+                  Admin Only
+                </span>
+              </div>
+
+              {/* Current Status Indicator Banner */}
+              <div
+                className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 ${
+                  conversation?.privacy === 'private' || conversation?.hasPasscode
+                    ? 'bg-secondary-container/40 border-primary/50 text-on-surface'
+                    : conversation?.privacy === 'public'
+                    ? 'bg-surface-container border-tertiary/30 text-on-surface'
+                    : 'bg-surface-container border-tertiary/30 text-on-surface'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${
+                      conversation?.privacy === 'private' || conversation?.hasPasscode
+                        ? 'bg-primary text-surface-container border-[#6E3511]'
+                        : 'bg-surface-variant text-tertiary border-tertiary/30'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">
+                      {conversation?.privacy === 'private' || conversation?.hasPasscode
+                        ? 'lock'
+                        : conversation?.privacy === 'public'
+                        ? 'public'
+                        : 'mark_email_unread'}
+                    </span>
+                  </div>
+                  <div className="min-w-0">
+                    <span className="font-mono text-[11px] font-bold uppercase tracking-wider block">
+                      Current Room Status:
+                    </span>
+                    <p className="font-body-sm text-[12px] text-on-surface-variant truncate">
+                      {conversation?.privacy === 'private' || conversation?.hasPasscode
+                        ? 'Protected with a secret passcode'
+                        : conversation?.privacy === 'public'
+                        ? 'Public room — Anyone can join freely'
+                        : 'Invite-only — Requires invitation to join'}
+                    </p>
+                  </div>
+                </div>
+
+                {(conversation?.privacy === 'private' || conversation?.hasPasscode) && (
+                  <span className="font-mono text-[10px] bg-primary/20 text-primary border border-primary/40 px-2 py-0.5 rounded font-bold shrink-0">
+                    LOCKED 🔒
+                  </span>
+                )}
+              </div>
+
+              {/* Access Mode Selector: 3 Options */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {/* 1. PUBLIC */}
+                <div
+                  onClick={() => {
+                    sfx.click();
+                    setPrivacy('public');
+                    setPasscode('');
+                  }}
+                  className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                    privacy === 'public'
+                      ? 'border-primary bg-secondary-container/50 shadow-[2px_2px_0_0_#426010]'
+                      : 'border-tertiary/25 bg-surface hover:border-tertiary/60'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="w-6 h-6 rounded bg-surface-container flex items-center justify-center text-primary border border-tertiary/20">
+                        <span className="material-symbols-outlined text-[15px]">public</span>
+                      </div>
+                      <div
+                        className={`w-4 h-4 rounded flex items-center justify-center border ${
+                          privacy === 'public'
+                            ? 'border-primary bg-primary text-surface-container'
+                            : 'border-tertiary/40 bg-surface'
+                        }`}
+                      >
+                        {privacy === 'public' && (
+                          <span className="material-symbols-outlined text-[11px] font-bold">check</span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="font-mono text-label-sm font-bold text-on-surface block">PUBLIC</span>
+                    <p className="font-body-sm text-[11px] text-on-surface-variant mt-0.5">
+                      Open to all players. No password needed.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2. PASSWORD PROTECTED */}
+                <div
+                  onClick={() => {
+                    sfx.click();
+                    setPrivacy('private');
+                  }}
+                  className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                    privacy === 'private'
+                      ? 'border-primary bg-secondary-container/50 shadow-[2px_2px_0_0_#426010]'
+                      : 'border-tertiary/25 bg-surface hover:border-tertiary/60'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="w-6 h-6 rounded bg-primary-container text-surface-container flex items-center justify-center border border-[#6E3511]">
+                        <span className="material-symbols-outlined text-[15px]">lock</span>
+                      </div>
+                      <div
+                        className={`w-4 h-4 rounded flex items-center justify-center border ${
+                          privacy === 'private'
+                            ? 'border-primary bg-primary text-surface-container'
+                            : 'border-tertiary/40 bg-surface'
+                        }`}
+                      >
+                        {privacy === 'private' && (
+                          <span className="material-symbols-outlined text-[11px] font-bold">check</span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="font-mono text-label-sm font-bold text-on-surface block">PASSCODE</span>
+                    <p className="font-body-sm text-[11px] text-on-surface-variant mt-0.5">
+                      Requires secret passcode to enter.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 3. INVITE ONLY */}
+                <div
+                  onClick={() => {
+                    sfx.click();
+                    setPrivacy('invite');
+                    setPasscode('');
+                  }}
+                  className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                    privacy === 'invite'
+                      ? 'border-primary bg-secondary-container/50 shadow-[2px_2px_0_0_#426010]'
+                      : 'border-tertiary/25 bg-surface hover:border-tertiary/60'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="w-6 h-6 rounded bg-surface-container flex items-center justify-center text-secondary border border-tertiary/20">
+                        <span className="material-symbols-outlined text-[15px]">mark_email_unread</span>
+                      </div>
+                      <div
+                        className={`w-4 h-4 rounded flex items-center justify-center border ${
+                          privacy === 'invite'
+                            ? 'border-primary bg-primary text-surface-container'
+                            : 'border-tertiary/40 bg-surface'
+                        }`}
+                      >
+                        {privacy === 'invite' && (
+                          <span className="material-symbols-outlined text-[11px] font-bold">check</span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="font-mono text-label-sm font-bold text-on-surface block">INVITE ONLY</span>
+                    <p className="font-body-sm text-[11px] text-on-surface-variant mt-0.5">
+                      Requires invitation request approval.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Detail pane when PASSWORD PROTECTED is active */}
+              {privacy === 'private' && (
+                <div className="p-4 bg-surface-container-low rounded-xl border-2 border-primary/40 space-y-3 shadow-pixel-xs">
+                  <div className="flex items-center justify-between">
+                    <label className="font-mono text-label-sm font-bold text-on-surface flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[16px] text-primary">key</span>
+                      <span>
+                        {conversation?.privacy === 'private' || conversation?.hasPasscode
+                          ? 'Edit / Change Room Password'
+                          : 'Set New Room Password'}
+                      </span>
+                    </label>
+                    <span className="font-mono text-[11px] text-tertiary">Min 4 chars</span>
+                  </div>
+
                   <PasswordInput
                     value={passcode}
                     onChange={(e) => setPasscode(e.target.value)}
-                    placeholder="Set secret passcode (min 4 chars)"
+                    placeholder={
+                      conversation?.privacy === 'private' || conversation?.hasPasscode
+                        ? 'Enter new passcode (leave blank to keep current)'
+                        : 'Set secret passcode (e.g. gameon123)'
+                    }
                     minLength={4}
                     maxLength={64}
                     className="bg-surface"
                   />
+
+                  {conversation?.privacy === 'private' || conversation?.hasPasscode ? (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1">
+                      <p className="font-body-sm text-[11px] text-on-surface-variant">
+                        Leave blank to keep your existing password, or enter a new one above.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sfx.click();
+                          setPrivacy('public');
+                          setPasscode('');
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-error-container/40 text-error border border-error/30 font-mono text-[11px] font-bold hover:bg-error-container/70 active:translate-x-0.5 active:translate-y-0.5 transition-all shrink-0 cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">lock_open</span>
+                        <span>Remove Password</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="font-body-sm text-[11px] text-on-surface-variant">
+                      Players will be required to enter this password when attempting to join.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Informative notice when removing password */}
+              {(conversation?.privacy === 'private' || conversation?.hasPasscode) && privacy !== 'private' && (
+                <div className="p-3 bg-secondary-container/40 border border-primary/50 rounded-xl flex items-start gap-2.5 animate-in fade-in duration-200">
+                  <span className="material-symbols-outlined text-[18px] text-primary shrink-0 mt-0.5">
+                    lock_open
+                  </span>
+                  <div>
+                    <span className="font-mono text-[11px] font-bold text-on-surface block">
+                      Removing Password Protection
+                    </span>
+                    <p className="font-body-sm text-[11px] text-on-surface-variant mt-0.5">
+                      {privacy === 'public'
+                        ? 'When you save, the password will be removed and this room will be open to all players.'
+                        : 'When you save, the password will be removed and this room will require member invites.'}
+                    </p>
+                  </div>
                 </div>
               )}
             </div>

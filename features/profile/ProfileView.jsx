@@ -324,35 +324,35 @@ export function ProfileView({ username = null, targetId = null }) {
         {/* LOADING SKELETON */}
         {loading ? (
           <div className="bg-surface-container-lowest rounded-2xl border-2 border-tertiary shadow-pixel-sm overflow-hidden animate-pulse">
-            <div className="w-full h-44 sm:h-56 md:h-64 lg:h-72 xl:h-80 bg-surface-container border-b-2 border-tertiary/20" />
-            <div className="px-4 sm:px-6 md:px-8 pb-6 pt-3 space-y-5">
-              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-12 sm:-mt-14 md:-mt-16 lg:-mt-20">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-2xl bg-surface-container border-4 border-surface shadow-pixel-md shrink-0" />
-                <div className="space-y-2 flex-1 min-w-0">
-                  <div className="h-6 sm:h-8 bg-surface-container rounded-lg w-48 max-w-full" />
-                  <div className="h-4 bg-surface-container rounded w-32" />
+            <div className="w-full h-28 min-[320px]:h-32 min-[375px]:h-36 min-[420px]:h-40 sm:h-44 md:h-52 lg:h-60 xl:h-[270px] 2xl:h-[300px] bg-surface-container border-b-2 border-tertiary/20" />
+            <div className="px-3 sm:px-6 md:px-8 pb-5 sm:pb-6 pt-3 space-y-4 sm:space-y-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 -mt-9 min-[320px]:-mt-10 min-[375px]:-mt-11 min-[420px]:-mt-12 sm:-mt-13 md:-mt-14 lg:-mt-16 xl:-mt-18">
+                <div className="w-18 h-18 min-[320px]:w-20 min-[320px]:h-20 min-[375px]:w-22 min-[375px]:h-22 min-[420px]:w-24 min-[420px]:h-24 sm:w-26 sm:h-26 md:w-28 md:h-28 lg:w-32 lg:h-32 xl:w-36 xl:h-36 rounded-2xl bg-surface-container border-4 border-surface shadow-pixel-md shrink-0" />
+                <div className="space-y-1.5 sm:space-y-2 flex-1 min-w-0">
+                  <div className="h-5 sm:h-7 bg-surface-container rounded-lg w-40 sm:w-48 max-w-full" />
+                  <div className="h-3.5 sm:h-4 bg-surface-container rounded w-24 sm:w-32" />
                 </div>
               </div>
-              <div className="h-16 bg-surface-container/60 rounded-xl" />
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-3.5">
+              <div className="h-14 sm:h-16 bg-surface-container/60 rounded-xl" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3.5">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="h-16 bg-surface-container/50 rounded-xl" />
+                  <div key={i} className="h-14 sm:h-16 bg-surface-container/50 rounded-xl" />
                 ))}
               </div>
             </div>
           </div>
         ) : notFound ? (
           /* NOT FOUND STATE */
-          <div className="bg-surface-container-lowest rounded-2xl border-2 border-tertiary p-8 sm:p-12 shadow-pixel-sm text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-surface-container border-2 border-tertiary/30 flex items-center justify-center text-tertiary">
-              <span className="material-symbols-outlined text-[36px]">person_off</span>
+          <div className="bg-surface-container-lowest rounded-2xl border-2 border-tertiary p-6 sm:p-12 shadow-pixel-sm text-center space-y-4">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto rounded-2xl bg-surface-container border-2 border-tertiary/30 flex items-center justify-center text-tertiary">
+              <span className="material-symbols-outlined text-[30px] sm:text-[36px]">person_off</span>
             </div>
-            <h2 className="font-display text-headline-md text-on-surface font-bold">PROFILE NOT FOUND</h2>
-            <p className="font-body text-body-md text-on-surface-variant max-w-md mx-auto">
+            <h2 className="font-display text-headline-sm sm:text-headline-md text-on-surface font-bold">PROFILE NOT FOUND</h2>
+            <p className="font-body text-body-sm sm:text-body-md text-on-surface-variant max-w-md mx-auto">
               This player doesn&apos;t exist or is no longer available on PixelTalk.
             </p>
             <div className="pt-2">
-              <SecondaryButton onClick={() => router.back()} className="px-6 py-2">
+              <SecondaryButton onClick={() => router.back()} className="px-5 sm:px-6 py-2">
                 <span className="material-symbols-outlined text-[18px]">arrow_back</span>
                 <span>Go Back</span>
               </SecondaryButton>
@@ -360,16 +360,16 @@ export function ProfileView({ username = null, targetId = null }) {
           </div>
         ) : error && !user ? (
           /* ERROR STATE */
-          <div className="bg-surface-container-lowest rounded-2xl border-2 border-tertiary p-8 sm:p-12 shadow-pixel-sm text-center space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-error-container border border-error/40 flex items-center justify-center text-error">
-              <span className="material-symbols-outlined text-[36px]">error</span>
+          <div className="bg-surface-container-lowest rounded-2xl border-2 border-tertiary p-6 sm:p-12 shadow-pixel-sm text-center space-y-4">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto rounded-2xl bg-error-container border border-error/40 flex items-center justify-center text-error">
+              <span className="material-symbols-outlined text-[30px] sm:text-[36px]">error</span>
             </div>
-            <h2 className="font-display text-headline-md text-on-surface font-bold">Couldn&apos;t load this profile.</h2>
-            <p className="font-body text-body-md text-on-surface-variant max-w-md mx-auto">
+            <h2 className="font-display text-headline-sm sm:text-headline-md text-on-surface font-bold">Couldn&apos;t load this profile.</h2>
+            <p className="font-body text-body-sm sm:text-body-md text-on-surface-variant max-w-md mx-auto">
               {error}
             </p>
             <div className="pt-2">
-              <PrimaryButton onClick={loadProfile} className="px-6 py-2">
+              <PrimaryButton onClick={loadProfile} className="px-5 sm:px-6 py-2">
                 <span className="material-symbols-outlined text-[18px]">refresh</span>
                 <span>Try Again</span>
               </PrimaryButton>
@@ -379,21 +379,26 @@ export function ProfileView({ username = null, targetId = null }) {
           /* COMPLETE PROFILE CARD */
           <div className="bg-surface-container-lowest rounded-2xl border-2 border-tertiary shadow-pixel-sm overflow-hidden mb-6">
             {/*
-              * 1. BANNER CONTAINER
+              * 1. UNIVERSAL RESPONSIVE BANNER CONTAINER
               * Respects private account masking: if restricted, displays minimal pixel horizon.
-              * Height is fluid: 176px (mobile) -> 224px (sm) -> 256px (md) -> 288px (lg) -> 320px (xl/2xl).
+              * Height is fluid & responsive across all screen categories:
+              * - Small phones (240–374px): 112px–128px (`h-28 min-[320px]:h-32`)
+              * - Standard phones (375–479px): 144px–160px (`min-[375px]:h-36 min-[420px]:h-40`)
+              * - Tablets (480–1023px): 176px–208px (`sm:h-44 md:h-52`)
+              * - Desktop (1024–1599px): 240px–270px (`lg:h-60 xl:h-[270px]`)
+              * - Large desktop / ultrawide (1600px+): 300px (`2xl:h-[300px]`)
               */}
-            <div className="w-full h-44 sm:h-56 md:h-64 lg:h-72 xl:h-80 relative overflow-hidden bg-surface-container border-b-2 border-tertiary group">
+            <div className="w-full h-28 min-[320px]:h-32 min-[375px]:h-36 min-[420px]:h-40 sm:h-44 md:h-52 lg:h-60 xl:h-[270px] 2xl:h-[300px] relative overflow-hidden bg-surface-container border-b-2 border-tertiary group transition-[height] duration-200">
               {isPrivateRestricted ? (
                 <div className="w-full h-full bg-gradient-to-br from-surface-container-high via-surface-container-lowest to-surface-container flex items-center justify-center">
-                  <span className="material-symbols-outlined text-tertiary/20 text-[72px] sm:text-[96px] select-none">lock</span>
+                  <span className="material-symbols-outlined text-tertiary/20 text-[56px] sm:text-[80px] select-none">lock</span>
                 </div>
               ) : (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={getUserBanner(user)}
                   alt="Profile Banner"
-                  className="w-full h-full object-cover object-center select-none"
+                  className="w-full h-full object-cover object-[center_35%] select-none"
                 />
               )}
 
@@ -401,12 +406,12 @@ export function ProfileView({ username = null, targetId = null }) {
               <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/20 pointer-events-none" />
 
               {/* Top-Left Banner Metadata Tag */}
-              <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10">
-                <span className="inline-flex items-center gap-1.5 font-mono text-[10px] sm:text-label-sm px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md bg-surface/90 text-tertiary border border-tertiary/30 backdrop-blur-sm shadow-sm font-bold">
-                  <span className="material-symbols-outlined text-[14px]">
+              <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 min-[480px]:top-4 min-[480px]:left-4 z-10">
+                <span className="inline-flex items-center gap-1 sm:gap-1.5 font-mono text-[9px] min-[360px]:text-[10px] sm:text-label-sm px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md bg-surface/90 text-tertiary border border-tertiary/30 backdrop-blur-sm shadow-sm font-bold max-w-[120px] min-[360px]:max-w-[160px] sm:max-w-none">
+                  <span className="material-symbols-outlined text-[12px] sm:text-[14px]">
                     {isPrivateRestricted ? 'lock' : 'image'}
                   </span>
-                  <span className="truncate max-w-[160px] sm:max-w-none">
+                  <span className="truncate">
                     {isPrivateRestricted
                       ? 'Private Profile'
                       : user?.bannerUrl
@@ -420,27 +425,36 @@ export function ProfileView({ username = null, targetId = null }) {
 
               {/* Banner Action Controls inside top-right of banner (Owner only) */}
               {isSelf && (
-                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2 z-10">
+                <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 min-[480px]:top-4 min-[480px]:right-4 flex items-center gap-1.5 sm:gap-2 z-10">
                   <button
                     type="button"
                     onClick={() => setBannerModalOpen(true)}
                     disabled={uploadingBanner}
                     aria-label="Edit Profile Banner"
-                    className="flex items-center gap-1.5 font-mono text-label-xs sm:text-label-sm bg-surface-container/95 text-tertiary hover:text-on-surface px-2.5 sm:px-3.5 py-1.5 rounded-lg border-1.5 border-tertiary shadow-pixel-sm-solid hover:bg-surface active:translate-x-0.5 active:translate-y-0.5 backdrop-blur-sm transition-all cursor-pointer"
+                    className="flex items-center gap-1 sm:gap-1.5 font-mono text-[10px] min-[360px]:text-label-xs sm:text-label-sm bg-surface-container/95 text-tertiary hover:text-on-surface px-2 py-1 min-[360px]:px-2.5 min-[360px]:py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg border-1.5 border-tertiary shadow-pixel-sm-solid hover:bg-surface active:translate-x-0.5 active:translate-y-0.5 backdrop-blur-sm transition-all cursor-pointer"
                   >
-                    <span className="material-symbols-outlined text-[15px] sm:text-[17px]">palette</span>
-                    <span>{uploadingBanner ? 'Updating…' : 'Edit Banner'}</span>
+                    <span className="material-symbols-outlined text-[13px] min-[360px]:text-[15px] sm:text-[17px]">palette</span>
+                    <span>
+                      {uploadingBanner ? (
+                        'Updating…'
+                      ) : (
+                        <>
+                          <span className="inline min-[360px]:hidden">Edit</span>
+                          <span className="hidden min-[360px]:inline">Edit Banner</span>
+                        </>
+                      )}
+                    </span>
                   </button>
                   {user?.bannerUrl && (
                     <button
                       type="button"
                       onClick={handleRemoveBanner}
                       disabled={uploadingBanner}
-                      className="p-1.5 sm:p-2 rounded-lg bg-error-container/95 text-on-error-container border border-error/40 shadow-pixel-xs hover:bg-error-container active:translate-x-0.5 active:translate-y-0.5 text-[14px] cursor-pointer"
+                      className="p-1 min-[360px]:p-1.5 sm:p-2 rounded-lg bg-error-container/95 text-on-error-container border border-error/40 shadow-pixel-xs hover:bg-error-container active:translate-x-0.5 active:translate-y-0.5 text-[12px] min-[360px]:text-[14px] cursor-pointer"
                       title="Remove Custom Banner"
                       aria-label="Remove Custom Banner"
                     >
-                      <span className="material-symbols-outlined text-[16px] sm:text-[18px]">delete</span>
+                      <span className="material-symbols-outlined text-[14px] min-[360px]:text-[16px] sm:text-[18px]">delete</span>
                     </button>
                   )}
                 </div>
@@ -451,19 +465,18 @@ export function ProfileView({ username = null, targetId = null }) {
             </div>
 
             {/*
-              * 2. IDENTITY SECTION & RESERVED AVATAR SPACE
-              * Solves the layout bug: The avatar overlaps the banner edge visually,
-              * but real layout space is strictly reserved for display name, username,
-              * status, followed-by context, and action buttons.
+              * 2. IDENTITY SECTION & PROPORTIONALLY RESERVED AVATAR SPACE
+              * Solves the mobile banner crunch: Avatar scales proportionally and overlaps
+              * cleanly across all breakpoints without covering the banner artwork or top badges.
               */}
-            <div className="px-4 sm:px-6 md:px-8 lg:px-10 pb-6 sm:pb-8 pt-0 bg-surface">
+            <div className="px-3 min-[360px]:px-4 sm:px-6 md:px-8 lg:px-10 pb-5 sm:pb-6 md:pb-8 pt-0 bg-surface">
               {/* Header Grid: Avatar on left, Actions on right (desktop) or stacked (mobile) */}
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 -mt-12 sm:-mt-14 md:-mt-16 lg:-mt-20 relative z-20">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-3.5 sm:gap-4 -mt-9 min-[320px]:-mt-10 min-[375px]:-mt-11 min-[420px]:-mt-12 sm:-mt-13 md:-mt-14 lg:-mt-16 xl:-mt-18 relative z-20">
                 {/* Avatar Frame + Identity Details */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3.5 sm:gap-5 md:gap-6 min-w-0 flex-1">
-                  {/* Avatar Container: 96px (mobile) -> 112px (sm) -> 128px (md) -> 144px (lg/xl) */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 md:gap-5 min-w-0 flex-1">
+                  {/* Avatar Container: 72px–80px (small) -> 88px–96px (standard mobile) -> 104px–112px (tablet) -> 128px–144px (desktop) */}
                   <div className="relative shrink-0">
-                    <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-2xl bg-surface-container border-4 border-surface shadow-pixel-md overflow-hidden ring-2 ring-tertiary relative">
+                    <div className="w-18 h-18 min-[320px]:w-20 min-[320px]:h-20 min-[375px]:w-22 min-[375px]:h-22 min-[420px]:w-24 min-[420px]:h-24 sm:w-26 sm:h-26 md:w-28 md:h-28 lg:w-32 lg:h-32 xl:w-36 xl:h-36 rounded-2xl bg-surface-container border-4 border-surface shadow-pixel-md overflow-hidden ring-2 ring-tertiary relative transition-all">
                       <Avatar src={getUserAvatar(user)} alt={user?.displayName || user?.username} size={144} ring={false} className="!w-full !h-full" />
                       {uploadingAvatar && (
                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -474,7 +487,7 @@ export function ProfileView({ username = null, targetId = null }) {
 
                     {/* Live Presence Dot */}
                     <span
-                      className={`absolute bottom-1 right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-surface ring-1 ring-tertiary ${
+                      className={`absolute bottom-1 right-1 w-3 h-3 min-[375px]:w-3.5 min-[375px]:h-3.5 sm:w-4 sm:h-4 border-2 border-surface ring-1 ring-tertiary ${
                         user?.presence === 'online' ? 'bg-primary' : user?.presence === 'away' ? 'bg-amberpix' : 'bg-brown/40'
                       }`}
                       title={`Presence: ${user?.presence || 'offline'}`}
@@ -488,10 +501,10 @@ export function ProfileView({ username = null, targetId = null }) {
                           onClick={() => setAvatarModalOpen(true)}
                           disabled={uploadingAvatar}
                           aria-label="Upload custom photo or snap camera"
-                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-surface border border-tertiary/40 shadow-pixel-xs flex items-center justify-center hover:bg-surface-container text-tertiary active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
+                          className="w-6 h-6 min-[375px]:w-7 min-[375px]:h-7 sm:w-8 sm:h-8 rounded-md bg-surface border border-tertiary/40 shadow-pixel-xs flex items-center justify-center hover:bg-surface-container text-tertiary active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
                           title={user?.avatarUrl ? 'Change Photo (Crop / Camera)' : 'Upload Photo (Crop / Camera)'}
                         >
-                          <span className="material-symbols-outlined text-[15px] sm:text-[17px]">photo_camera</span>
+                          <span className="material-symbols-outlined text-[13px] min-[375px]:text-[15px] sm:text-[17px]">photo_camera</span>
                         </button>
                         {user?.avatarUrl && (
                           <button
@@ -499,10 +512,10 @@ export function ProfileView({ username = null, targetId = null }) {
                             onClick={handleRemoveAvatar}
                             disabled={uploadingAvatar}
                             aria-label="Remove custom profile picture"
-                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-md bg-error-container border border-error/40 text-on-error-container shadow-pixel-xs flex items-center justify-center hover:bg-error-container/80 active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
+                            className="w-6 h-6 min-[375px]:w-7 min-[375px]:h-7 sm:w-8 sm:h-8 rounded-md bg-error-container border border-error/40 text-on-error-container shadow-pixel-xs flex items-center justify-center hover:bg-error-container/80 active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
                             title="Remove Custom Photo"
                           >
-                            <span className="material-symbols-outlined text-[14px] sm:text-[16px]">delete</span>
+                            <span className="material-symbols-outlined text-[12px] min-[375px]:text-[14px] sm:text-[16px]">delete</span>
                           </button>
                         )}
                       </div>
@@ -510,44 +523,44 @@ export function ProfileView({ username = null, targetId = null }) {
                   </div>
 
                   {/* Identity Text (Never hidden or overlapped) */}
-                  <div className="flex flex-col gap-1 sm:gap-1.5 min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h1 className="font-headline-md sm:font-headline-lg lg:text-headline-lg font-bold text-on-surface uppercase tracking-tight break-words overflow-hidden">
+                  <div className="flex flex-col gap-1 min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                      <h1 className="font-headline-md sm:font-headline-lg text-body-lg min-[360px]:text-headline-sm sm:text-headline-md lg:text-headline-lg font-bold text-on-surface uppercase tracking-tight break-words overflow-hidden">
                         {user?.displayName || user?.username}
                       </h1>
 
                       {user?.isPrivate && (
-                        <span className="inline-flex items-center gap-1 font-mono text-[10px] sm:text-[11px] bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded font-bold border border-secondary/40 shrink-0">
-                          <span className="material-symbols-outlined text-[12px] sm:text-[14px]">lock</span>
+                        <span className="inline-flex items-center gap-1 font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] bg-secondary-container text-on-secondary-container px-1.5 min-[360px]:px-2 py-0.5 rounded font-bold border border-secondary/40 shrink-0">
+                          <span className="material-symbols-outlined text-[11px] min-[360px]:text-[12px] sm:text-[14px]">lock</span>
                           PRIVATE
                         </span>
                       )}
 
                       {user?.role === 'admin' ? (
-                        <span className="inline-flex items-center gap-1 font-mono text-[10px] sm:text-[11px] bg-tertiary text-on-tertiary px-2 py-0.5 rounded font-bold uppercase tracking-wider border border-tertiary shrink-0">
-                          <span className="material-symbols-outlined text-[12px] sm:text-[14px]">shield</span>
+                        <span className="inline-flex items-center gap-1 font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] bg-tertiary text-on-tertiary px-1.5 min-[360px]:px-2 py-0.5 rounded font-bold uppercase tracking-wider border border-tertiary shrink-0">
+                          <span className="material-symbols-outlined text-[11px] min-[360px]:text-[12px] sm:text-[14px]">shield</span>
                           ADMIN
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 font-mono text-[10px] sm:text-[11px] bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded font-bold border border-secondary/40 shrink-0">
-                          <span className="material-symbols-outlined text-[12px] sm:text-[14px]">bolt</span>
+                        <span className="inline-flex items-center gap-1 font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] bg-secondary-container text-on-secondary-container px-1.5 min-[360px]:px-2 py-0.5 rounded font-bold border border-secondary/40 shrink-0">
+                          <span className="material-symbols-outlined text-[11px] min-[360px]:text-[12px] sm:text-[14px]">bolt</span>
                           PLAYER
                         </span>
                       )}
                     </div>
 
                     {/* Handle & Node ID */}
-                    <div className="flex items-center gap-2 font-mono text-label-sm sm:text-label-md text-on-surface-variant flex-wrap min-w-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2 font-mono text-label-xs min-[360px]:text-label-sm sm:text-label-md text-on-surface-variant flex-wrap min-w-0">
                       <span className="text-tertiary font-bold truncate">@{user?.username}</span>
                       <span>•</span>
                       <span className="shrink-0">Node #{((user?.id || user?._id || '')).slice(-4).toUpperCase()}</span>
-                      <span className="material-symbols-outlined text-primary text-[16px] sm:text-[18px] shrink-0" title="Verified PixelTalk Player">verified</span>
+                      <span className="material-symbols-outlined text-primary text-[14px] min-[360px]:text-[16px] sm:text-[18px] shrink-0" title="Verified PixelTalk Player">verified</span>
                     </div>
 
                     {/* Custom Status Thought Bubble */}
                     {!isPrivateRestricted && user?.customStatus && (
-                      <div className="mt-1 sm:mt-1.5 inline-flex items-center gap-2 bg-surface-container-high border border-tertiary/30 px-3.5 py-1.5 rounded-full text-body-sm sm:text-body-md text-on-surface shadow-pixel-xs w-fit max-w-full">
-                        <span className="text-xs sm:text-sm shrink-0">💬</span>
+                      <div className="mt-0.5 sm:mt-1 inline-flex items-center gap-1.5 sm:gap-2 bg-surface-container-high border border-tertiary/30 px-2.5 min-[360px]:px-3.5 py-1 min-[360px]:py-1.5 rounded-full text-body-xs min-[360px]:text-body-sm sm:text-body-md text-on-surface shadow-pixel-xs w-fit max-w-full">
+                        <span className="text-[11px] min-[360px]:text-xs sm:text-sm shrink-0">💬</span>
                         <span className="font-medium italic truncate">&ldquo;{user.customStatus}&rdquo;</span>
                       </div>
                     )}
@@ -555,19 +568,19 @@ export function ProfileView({ username = null, targetId = null }) {
                 </div>
 
                 {/* Right Action Cluster: Edit Profile (Self) OR Follow/Message (Other) */}
-                <div className="flex items-center gap-2.5 self-stretch md:self-auto justify-end pt-2 md:pt-0 shrink-0">
+                <div className="flex items-center gap-2 self-stretch md:self-auto justify-end pt-1 md:pt-0 shrink-0">
                   {isSelf ? (
                     <button
                       type="button"
                       onClick={() => setEditOpen(true)}
                       aria-label="Edit Profile"
-                      className="w-full sm:w-auto flex items-center justify-center gap-1.5 bg-surface-container text-tertiary font-mono text-label-md sm:text-label-lg px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg border-1.5 border-tertiary shadow-pixel-sm-solid hover:bg-secondary-container/40 active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
+                      className="w-full md:w-auto flex items-center justify-center gap-1.5 bg-surface-container text-tertiary font-mono text-label-sm min-[360px]:text-label-md sm:text-label-lg px-3.5 min-[360px]:px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg border-1.5 border-tertiary shadow-pixel-sm-solid hover:bg-secondary-container/40 active:translate-x-0.5 active:translate-y-0.5 transition-all cursor-pointer"
                     >
-                      <span className="material-symbols-outlined text-[18px] sm:text-[20px]">tune</span>
+                      <span className="material-symbols-outlined text-[16px] min-[360px]:text-[18px] sm:text-[20px]">tune</span>
                       <span>Edit Profile</span>
                     </button>
                   ) : (
-                    <div className="flex items-center gap-2.5 w-full sm:w-auto flex-wrap sm:flex-nowrap">
+                    <div className="flex items-center gap-2 sm:gap-2.5 w-full md:w-auto flex-wrap sm:flex-nowrap">
                       {/* Follow State Button */}
                       {user?.followStatus === 'PENDING' ? (
                         <button
@@ -575,10 +588,10 @@ export function ProfileView({ username = null, targetId = null }) {
                           onClick={handleFollowToggle}
                           disabled={busyFollow}
                           aria-label={`Follow request pending for @${user?.username}. Click to cancel`}
-                          className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg bg-surface-container text-tertiary font-mono text-label-md sm:text-label-lg font-bold border-1.5 border-tertiary shadow-pixel-sm hover:bg-secondary-container/40 press"
+                          className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-lg bg-surface-container text-tertiary font-mono text-label-sm sm:text-label-lg font-bold border-1.5 border-tertiary shadow-pixel-sm hover:bg-secondary-container/40 press"
                           title="Click to cancel follow request"
                         >
-                          <span className="material-symbols-outlined text-[18px] sm:text-[20px]">hourglass_top</span>
+                          <span className="material-symbols-outlined text-[16px] sm:text-[20px]">hourglass_top</span>
                           <span>{busyFollow ? '…' : 'Requested'}</span>
                         </button>
                       ) : user?.followStatus === 'ACCEPTED' ? (
@@ -587,10 +600,10 @@ export function ProfileView({ username = null, targetId = null }) {
                           onClick={handleFollowToggle}
                           disabled={busyFollow}
                           aria-label={`Unfollow @${user?.username}`}
-                          className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg bg-secondary-container text-on-secondary-container font-mono text-label-md sm:text-label-lg font-bold border-1.5 border-tertiary shadow-pixel-sm hover:brightness-105 press"
+                          className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-lg bg-secondary-container text-on-secondary-container font-mono text-label-sm sm:text-label-lg font-bold border-1.5 border-tertiary shadow-pixel-sm hover:brightness-105 press"
                           title="Click to unfollow"
                         >
-                          <span className="material-symbols-outlined text-[18px] sm:text-[20px]">check</span>
+                          <span className="material-symbols-outlined text-[16px] sm:text-[20px]">check</span>
                           <span>{busyFollow ? '…' : 'Following'}</span>
                         </button>
                       ) : (
@@ -599,9 +612,9 @@ export function ProfileView({ username = null, targetId = null }) {
                           onClick={handleFollowToggle}
                           disabled={busyFollow}
                           aria-label={`Follow @${user?.username}`}
-                          className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg bg-primary-container text-surface-container font-mono text-label-md sm:text-label-lg font-bold border-1.5 border-tertiary shadow-pixel-sm hover:brightness-105 press"
+                          className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-lg bg-primary-container text-surface-container font-mono text-label-sm sm:text-label-lg font-bold border-1.5 border-tertiary shadow-pixel-sm hover:brightness-105 press"
                         >
-                          <span className="material-symbols-outlined text-[18px] sm:text-[20px]">person_add</span>
+                          <span className="material-symbols-outlined text-[16px] sm:text-[20px]">person_add</span>
                           <span>{busyFollow ? '…' : 'Follow'}</span>
                         </button>
                       )}
@@ -612,10 +625,10 @@ export function ProfileView({ username = null, targetId = null }) {
                           type="button"
                           disabled
                           aria-label="Messaging blocked on private profile"
-                          className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg bg-surface-container/60 text-outline font-mono text-label-md sm:text-label-lg border border-tertiary/20 cursor-not-allowed opacity-60"
+                          className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-lg bg-surface-container/60 text-outline font-mono text-label-sm sm:text-label-lg border border-tertiary/20 cursor-not-allowed opacity-60"
                           title="Follow request must be accepted before you can message this player"
                         >
-                          <span className="material-symbols-outlined text-[18px] sm:text-[20px]">lock</span>
+                          <span className="material-symbols-outlined text-[16px] sm:text-[20px]">lock</span>
                           <span>Message</span>
                         </button>
                       ) : (
@@ -623,9 +636,9 @@ export function ProfileView({ username = null, targetId = null }) {
                           onClick={handleMessage}
                           disabled={busyMsg}
                           aria-label={`Send direct message to @${user?.username}`}
-                          className="flex-1 sm:flex-initial px-5 sm:px-6 py-2 sm:py-2.5"
+                          className="flex-1 md:flex-initial px-4 sm:px-6 py-2 sm:py-2.5"
                         >
-                          <span className="material-symbols-outlined text-[18px] sm:text-[20px]">chat</span>
+                          <span className="material-symbols-outlined text-[16px] sm:text-[20px]">chat</span>
                           <span>{busyMsg ? 'Opening…' : 'Message'}</span>
                         </PrimaryButton>
                       )}
@@ -641,10 +654,10 @@ export function ProfileView({ username = null, targetId = null }) {
                 * Each avatar and name is clickable and links to their `/profile/[username]`.
                 */}
               {!isSelf && !isPrivateRestricted && socialContext?.followedBy?.length > 0 && (
-                <div className="mt-4 sm:mt-5 pt-3.5 sm:pt-4 border-t border-tertiary/15">
-                  <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap p-2.5 sm:p-3 rounded-xl bg-surface-container/50 border border-tertiary/20 shadow-pixel-xs">
+                <div className="mt-3.5 sm:mt-5 pt-3 sm:pt-4 border-t border-tertiary/15">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap p-2 min-[360px]:p-2.5 sm:p-3 rounded-xl bg-surface-container/50 border border-tertiary/20 shadow-pixel-xs">
                     {/* Overlapping Avatars Cluster */}
-                    <div className="flex items-center -space-x-2 shrink-0">
+                    <div className="flex items-center -space-x-1.5 sm:-space-x-2 shrink-0">
                       {socialContext.followedBy.map((friend) => (
                         <Link
                           key={friend._id || friend.id}
@@ -656,7 +669,7 @@ export function ProfileView({ username = null, targetId = null }) {
                           <Avatar
                             src={getUserAvatar(friend)}
                             alt={friend.displayName || friend.username}
-                            size={28}
+                            size={26}
                             ring={false}
                           />
                         </Link>
@@ -664,8 +677,8 @@ export function ProfileView({ username = null, targetId = null }) {
                     </div>
 
                     {/* Human-readable Followed-By Summary */}
-                    <div className="font-body-sm text-body-sm sm:text-body-md text-on-surface-variant flex items-center gap-1 flex-wrap min-w-0">
-                      <span className="font-mono text-[11px] sm:text-label-sm font-bold text-tertiary uppercase">Followed by</span>
+                    <div className="font-body-sm text-[11px] min-[360px]:text-body-sm sm:text-body-md text-on-surface-variant flex items-center gap-1 flex-wrap min-w-0">
+                      <span className="font-mono text-[10px] min-[360px]:text-[11px] sm:text-label-sm font-bold text-tertiary uppercase">Followed by</span>
                       {socialContext.followedBy.map((friend, idx) => (
                         <span key={friend._id || friend.id} className="inline-flex items-center">
                           <Link
@@ -682,7 +695,7 @@ export function ProfileView({ username = null, targetId = null }) {
 
                       {/* "+ N others" count if more common followers exist */}
                       {socialContext.followedByCount > socialContext.followedBy.length && (
-                        <span className="font-mono text-label-xs sm:text-label-sm text-tertiary font-bold ml-0.5">
+                        <span className="font-mono text-[10px] sm:text-label-sm text-tertiary font-bold ml-0.5">
                           +{socialContext.followedByCount - socialContext.followedBy.length} others
                         </span>
                       )}
@@ -696,28 +709,28 @@ export function ProfileView({ username = null, targetId = null }) {
                 */}
               {isPrivateRestricted ? (
                 /* Private Account Gate */
-                <div className="pt-6 sm:pt-8 space-y-4 border-t border-tertiary/15 mt-5 sm:mt-6">
-                  <div className="py-8 sm:py-10 px-6 sm:px-8 bg-surface-container/30 rounded-2xl border-2 border-dashed border-tertiary/25 text-center space-y-3">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto rounded-xl bg-surface-container-high border border-tertiary/30 flex items-center justify-center text-primary">
-                      <span className="material-symbols-outlined text-[28px] sm:text-[32px]">lock</span>
+                <div className="pt-5 sm:pt-8 space-y-3.5 sm:space-y-4 border-t border-tertiary/15 mt-4 sm:mt-6">
+                  <div className="py-6 sm:py-10 px-4 sm:px-8 bg-surface-container/30 rounded-2xl border-2 border-dashed border-tertiary/25 text-center space-y-2.5 sm:space-y-3">
+                    <div className="w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-xl bg-surface-container-high border border-tertiary/30 flex items-center justify-center text-primary">
+                      <span className="material-symbols-outlined text-[24px] sm:text-[32px]">lock</span>
                     </div>
                     <h3 className="font-display text-headline-sm sm:text-headline-md text-tertiary font-bold">This Account is Private</h3>
-                    <p className="font-body text-body-sm sm:text-body-md text-on-surface-variant max-w-lg mx-auto leading-relaxed">
+                    <p className="font-body text-body-xs min-[360px]:text-body-sm sm:text-body-md text-on-surface-variant max-w-lg mx-auto leading-relaxed">
                       Follow @{user?.username} to view their full player profile, personal bio, custom banners, and start direct conversations.
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-1">
-                    <div className="p-3.5 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs">
-                      <span className="block font-mono text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Visibility</span>
-                      <span className="font-mono text-label-md sm:text-headline-sm font-bold text-tertiary mt-0.5 sm:mt-1 flex items-center justify-center gap-1">
-                        <span className="material-symbols-outlined text-[14px] sm:text-[16px]">lock</span>
+                  <div className="grid grid-cols-2 gap-2.5 sm:gap-4 pt-1">
+                    <div className="p-3 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs">
+                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Visibility</span>
+                      <span className="font-mono text-label-sm min-[360px]:text-label-md sm:text-headline-sm font-bold text-tertiary mt-0.5 sm:mt-1 flex items-center justify-center gap-1">
+                        <span className="material-symbols-outlined text-[13px] sm:text-[16px]">lock</span>
                         Private
                       </span>
                     </div>
-                    <div className="p-3.5 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs">
-                      <span className="block font-mono text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Joined</span>
-                      <span className="font-mono text-label-md sm:text-headline-sm font-bold text-on-surface mt-0.5 sm:mt-1 block truncate">
+                    <div className="p-3 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs">
+                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Joined</span>
+                      <span className="font-mono text-label-sm min-[360px]:text-label-md sm:text-headline-sm font-bold text-on-surface mt-0.5 sm:mt-1 block truncate">
                         {dateShort(user?.createdAt)}
                       </span>
                     </div>
@@ -725,60 +738,61 @@ export function ProfileView({ username = null, targetId = null }) {
                 </div>
               ) : (
                 /* Full Allowed Profile Information */
-                <div className="pt-6 sm:pt-8 space-y-5 sm:space-y-6 border-t border-tertiary/15 mt-5 sm:mt-6">
+                <div className="pt-5 sm:pt-8 space-y-4 sm:space-y-6 border-t border-tertiary/15 mt-4 sm:mt-6">
                   {/* Bio Card */}
                   <div>
-                    <h3 className="font-mono text-[11px] sm:text-label-sm uppercase font-bold text-tertiary tracking-wider mb-2">About Player</h3>
-                    <p className="font-body text-body-md sm:text-body-lg text-on-surface bg-surface-container/40 p-4 sm:p-5 rounded-xl border border-tertiary/15 leading-relaxed break-words whitespace-pre-wrap">
+                    <h3 className="font-mono text-[10px] min-[360px]:text-[11px] sm:text-label-sm uppercase font-bold text-tertiary tracking-wider mb-1.5 sm:mb-2">About Player</h3>
+                    <p className="font-body text-body-sm sm:text-body-lg text-on-surface bg-surface-container/40 p-3.5 sm:p-5 rounded-xl border border-tertiary/15 leading-relaxed break-words whitespace-pre-wrap">
                       {user?.bio || 'No bio written yet.'}
                     </p>
                   </div>
 
                   {/*
                     * Account Metadata Bento (Section 38)
-                    * Desktop: 6-column flexible grid with clean spacing & typography
-                    * Tablet: 3x2 grid
-                    * Mobile: 2-column grid
+                    * Responsive layout:
+                    * - Mobile: 2-column grid
+                    * - Tablet: 3-column grid
+                    * - Desktop: 6-column grid
                     */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-3.5 pt-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 min-[360px]:gap-2.5 sm:gap-3.5 pt-1">
                     <button
                       type="button"
                       onClick={() => setFollowListModal({ open: true, type: 'followers' })}
-                      className="p-3.5 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs hover:border-tertiary transition-all press cursor-pointer min-w-0"
+                      className="p-2.5 min-[360px]:p-3 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs hover:border-tertiary transition-all press cursor-pointer min-w-0"
                     >
-                      <span className="block font-mono text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Followers</span>
-                      <span className="font-mono text-label-md sm:text-headline-sm font-bold text-on-surface mt-0.5 sm:mt-1 block truncate">{followCounts.followersCount}</span>
+                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Followers</span>
+                      <span className="font-mono text-label-sm min-[360px]:text-label-md sm:text-headline-sm font-bold text-on-surface mt-0.5 sm:mt-1 block truncate">{followCounts.followersCount}</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setFollowListModal({ open: true, type: 'following' })}
-                      className="p-3.5 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs hover:border-tertiary transition-all press cursor-pointer min-w-0"
+                      className="p-2.5 min-[360px]:p-3 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs hover:border-tertiary transition-all press cursor-pointer min-w-0"
                     >
-                      <span className="block font-mono text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Following</span>
-                      <span className="font-mono text-label-md sm:text-headline-sm font-bold text-on-surface mt-0.5 sm:mt-1 block truncate">{followCounts.followingCount}</span>
+                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Following</span>
+                      <span className="font-mono text-label-sm min-[360px]:text-label-md sm:text-headline-sm font-bold text-on-surface mt-0.5 sm:mt-1 block truncate">{followCounts.followingCount}</span>
                     </button>
-                    <div className="p-3.5 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs min-w-0">
-                      <span className="block font-mono text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Presence</span>
-                      <span className="font-mono text-label-md sm:text-headline-sm font-bold text-on-surface capitalize flex items-center justify-center gap-1.5 mt-0.5 sm:mt-1 truncate">
+                    <div className="p-2.5 min-[360px]:p-3 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs min-w-0">
+                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Presence</span>
+                      <span className="font-mono text-label-sm min-[360px]:text-label-md sm:text-headline-sm font-bold text-on-surface capitalize flex items-center justify-center gap-1.5 mt-0.5 sm:mt-1 truncate">
                         <PresencePip online={user?.presence === 'online'} away={user?.presence === 'away'} />
                         <span className="truncate">{user?.presence || 'offline'}</span>
                       </span>
                     </div>
-                    <div className="p-3.5 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs min-w-0">
-                      <span className="block font-mono text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Status</span>
-                      <span className="font-mono text-label-md sm:text-headline-sm font-bold text-primary uppercase mt-0.5 sm:mt-1 block truncate">
+                    <div className="p-2.5 min-[360px]:p-3 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs min-w-0">
+                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Status</span>
+                      <span className="font-mono text-label-sm min-[360px]:text-label-md sm:text-headline-sm font-bold text-primary uppercase mt-0.5 sm:mt-1 block truncate">
                         {user?.status || 'ACTIVE'}
                       </span>
                     </div>
-                    <div className="p-3.5 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs min-w-0">
-                      <span className="block font-mono text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Joined</span>
-                      <span className="font-mono text-label-md sm:text-headline-sm font-bold text-on-surface mt-0.5 sm:mt-1 block truncate">
+                    <div className="p-2.5 min-[360px]:p-3 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs min-w-0">
+                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Joined</span>
+                      <span className="font-mono text-label-sm min-[360px]:text-label-md sm:text-headline-sm font-bold text-on-surface mt-0.5 sm:mt-1 block truncate">
                         {dateShort(user?.createdAt)}
                       </span>
                     </div>
-                    <div className="p-3.5 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs min-w-0">
-                      <span className="block font-mono text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Identifier</span>
-                      <span className="font-mono text-label-md sm:text-headline-sm font-bold text-tertiary mt-0.5 sm:mt-1 block truncate">
+                    <div className="p-2.5 min-[360px]:p-3 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs min-w-0">
+                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Identifier</span>
+                      <span className="font-mono text-label-sm min-[360px]:text-label-md sm:text-headline-sm font-bold text-tertiary mt-0.5 sm:mt-1 block truncate">
                         #{(user?.id || user?._id || '').slice(-4).toUpperCase()}
                       </span>
                     </div>

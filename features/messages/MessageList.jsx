@@ -456,6 +456,33 @@ export function MessageList({
         const mediaInfo = !deleted ? getMediaInfo(m) : null;
         const isSystem = m.messageType === 'system';
 
+        // Group emoji reactions for display
+        const rawReactions = Array.isArray(m.reactions) ? m.reactions : [];
+        const myUidStr = currentUser ? String(currentUser._id || currentUser.id || '') : '';
+        const reactionMap = new Map();
+        for (const r of rawReactions) {
+          if (!r || !r.emoji) continue;
+          const rUserId = String(r.userId?._id || r.userId || '');
+          const rUserName = r.userId?.displayName || r.userId?.username || 'Player';
+          if (!reactionMap.has(r.emoji)) {
+            reactionMap.set(r.emoji, {
+              emoji: r.emoji,
+              count: 0,
+              users: [],
+              hasMine: false,
+            });
+          }
+          const group = reactionMap.get(r.emoji);
+          group.count += 1;
+          if (rUserName) {
+            group.users.push(rUserName);
+          }
+          if (myUidStr && rUserId === myUidStr) {
+            group.hasMine = true;
+          }
+        }
+        const reactionGroups = Array.from(reactionMap.values());
+
         if (isSystem) {
           return (
             <div

@@ -12,6 +12,35 @@ import { getSocket } from '@/lib/socket';
 
 const POPULAR_EMOJIS = ['👍', '❤️', '🔥', '😂', '🎉', '😮'];
 
+function getSystemEventConfig(eventType) {
+  switch (eventType) {
+    case 'member_joined':
+      return { icon: 'person_add', iconColor: 'text-primary' };
+    case 'member_left':
+      return { icon: 'directions_walk', iconColor: 'text-amber-700' };
+    case 'member_removed':
+      return { icon: 'person_remove', iconColor: 'text-rose-700' };
+    case 'member_role_changed':
+      return { icon: 'shield_person', iconColor: 'text-primary' };
+    case 'owner_transferred':
+      return { icon: 'workspace_premium', iconColor: 'text-amber-600' };
+    case 'group_name_changed':
+      return { icon: 'edit', iconColor: 'text-primary' };
+    case 'group_description_changed':
+      return { icon: 'edit_note', iconColor: 'text-tertiary' };
+    case 'group_photo_changed':
+      return { icon: 'add_a_photo', iconColor: 'text-primary' };
+    case 'group_photo_removed':
+      return { icon: 'hide_image', iconColor: 'text-outline' };
+    case 'group_settings_changed':
+      return { icon: 'tune', iconColor: 'text-tertiary' };
+    case 'room_created':
+      return { icon: 'celebration', iconColor: 'text-primary' };
+    default:
+      return { icon: 'info', iconColor: 'text-tertiary' };
+  }
+}
+
 function groupReactions(reactions = [], currentUserId) {
   const groups = {};
   for (const r of reactions) {
@@ -484,6 +513,9 @@ export function MessageList({
         const reactionGroups = Array.from(reactionMap.values());
 
         if (isSystem) {
+          const sysConfig = getSystemEventConfig(m.systemEvent?.eventType);
+          const eventText = m.content || `${m.systemEvent?.actorUsername || m.senderId?.username || 'Player'} joined the room`;
+
           return (
             <div
               key={msgId}
@@ -503,10 +535,12 @@ export function MessageList({
                 </div>
               )}
 
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface-container/60 border border-tertiary/20 shadow-pixel-xs select-none max-w-full">
-                <span className="material-symbols-outlined text-[14px] text-tertiary shrink-0">person_add</span>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface-container/70 border border-tertiary/25 shadow-pixel-xs select-none max-w-[92%] sm:max-w-lg">
+                <span className={`material-symbols-outlined text-[15px] ${sysConfig.iconColor} shrink-0`}>
+                  {sysConfig.icon}
+                </span>
                 <span className="font-mono text-label-xs font-semibold text-on-surface-variant truncate">
-                  {m.content || `${m.systemEvent?.actorUsername || m.senderId?.username || 'Player'} joined the room`}
+                  {eventText}
                 </span>
                 <span className="font-mono text-[10px] text-outline ml-1 shrink-0">
                   {timeShort(m.createdAt)}

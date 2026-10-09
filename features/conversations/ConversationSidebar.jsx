@@ -4,19 +4,14 @@
  * Responsibility:
  * Renders the persistent messaging conversation inbox list:
  * - Direct chats and community group lounges
+ * - Custom Chat Folders & Locked Folders system (PIN/password protected)
  * - Real-time unread badges, typing status, and online presence indicators
  * - Conversation pinning, muting, and vibration preference toggles
  * - "Start a chat" modal dialog (`StartChatModal`) for player discovery
+ * - Folder CRUD, Lock/Unlock session lifecycle, and responsive retro pixel layout
  *
  * Layer:
  * Frontend / Conversation Features
- *
- * Connected to:
- * - frontend/components/AppShell.jsx
- * - frontend/features/conversations/conversationUtils.js
- * - frontend/services/conversationService.js
- * - frontend/services/userService.js
- * - frontend/components/ui.jsx (Modal portal)
  */
 
 'use client';
@@ -27,15 +22,31 @@ import { useRouter, usePathname } from 'next/navigation';
 import { conversationService } from '@/services/conversationService';
 import { userService } from '@/services/userService';
 import { chatSectionService } from '@/services/chatSectionService';
-import { conversationLabel, conversationAvatarId, conversationSubtitle, otherMember } from '@/features/conversations/conversationUtils';
-import { Avatar, Badge, Input, ErrorText, EmptyState, Modal, PrimaryButton, SecondaryButton, DestructiveButton, Field } from '@/components/ui';
+import {
+  conversationLabel,
+  conversationAvatarId,
+  conversationSubtitle,
+  otherMember,
+} from '@/features/conversations/conversationUtils';
+import {
+  Avatar,
+  Badge,
+  Input,
+  ErrorText,
+  EmptyState,
+  Modal,
+  PrimaryButton,
+  SecondaryButton,
+  DestructiveButton,
+  Field,
+  Spinner,
+} from '@/components/ui';
 import { avatarSrc } from '@/lib/avatars';
 import { usePresence } from '@/hooks/usePresence';
 import { useAuth } from '@/hooks/useAuth';
 import { useSound } from '@/hooks/useSound';
 import { timeAgo } from '@/lib/format';
 import { getSocket } from '@/lib/socket';
-import { handleIncomingMessageNotification } from '@/services/notificationService';
 
 function conversationHref(c) {
   return c.type === 'group' ? `/rooms/${c._id}` : `/chat/${c._id}`;
@@ -49,18 +60,25 @@ export function ConversationSidebar() {
   const [convos, setConvos] = useState([]);
   const [sections, setSections] = useState([]);
   const [collapsedSections, setCollapsedSections] = useState(new Set());
-  const [createSectionOpen, setCreateSectionOpen] = useState(false);
-  const [newSectionName, setNewSectionName] = useState('');
-  const [sectionError, setSectionError] = useState('');
-  const [busySection, setBusySection] = useState(false);
-  const [renameModal, setRenameModal] = useState({ open: false, section: null, name: '' });
+  const [unlockedSections, setUnlockedSections] = useState(new Set());
+
+  // Modals state
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [renameModal, setRenameModal] = useState({ open: false, section: null });
+  const [lockModal, setLockModal] = useState({ open: false, section: null, mode: 'SET' }); // 'SET', 'CHANGE', 'REMOVE'
+  const [unlockModal, setUnlockModal] = useState({ open: false, section: null });
   const [deleteModal, setDeleteModal] = useState({ open: false, section: null });
+
+  // Invitations
   const [invitations, setInvitations] = useState([]);
   const [invitationsOpen, setInvitationsOpen] = useState(false);
   const [actionBusyId, setActionBusyId] = useState(null);
+
+  // General sidebar state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState('all'); // 'all', 'direct', 'group', or folderId
+  const [selectedFolderId, setSelectedFolderId] = useState(null); // When focusing on a specific folder
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState({ users: [], rooms: [], isSearching: false });
   const [searchLoading, setSearchLoading] = useState(false);
@@ -105,7 +123,17 @@ export function ConversationSidebar() {
     }
   };
 
-  const toggleCollapse = (sectionId) => {
+  const toggleCollapse = (section) => {
+    const sectionId = String(section._id);
+    const isLocked = section.isLocked || section.hasPasscode;
+    const isUnlocked = unlockedSections.has(sectionId);
+
+    // If folder is locked and user is expanding it while not yet unlocked in session, prompt unlock dialog
+    if (isLocked && !isUnlocked && collapsedSections.has(sectionId)) {
+      setUnlockModal({ open: true, section });
+      return;
+    }
+
     setCollapsedSections((prev) => {
       const next = new Set(prev);
       if (next.has(sectionId)) next.delete(sectionId);
@@ -114,61 +142,43 @@ export function ConversationSidebar() {
     });
   };
 
-  const handleCreateSection = async (e) => {
-    e.preventDefault();
-    const trimmed = newSectionName.trim();
-    if (!trimmed) return;
-    setBusySection(true);
-    setSectionError('');
-    try {
-      const data = await chatSectionService.create(trimmed);
-      play('room-created');
-      setSections((prev) => [...prev, data.section]);
-      setNewSectionName('');
-      setCreateSectionOpen(false);
-    } catch (err) {
-      setSectionError(err.message || 'Failed to create section');
-    } finally {
-      setBusySection(false);
+  const handleFolderClick = (section) => {
+    const sectionId = String(section._id);
+    const isLocked = section.isLocked || section.hasPasscode;
+    const isUnlocked = unlockedSections.has(sectionId);
+
+    if (isLocked && !isUnlocked) {
+      setUnlockModal({ open: true, section });
+      return;
+    }
+
+    // Toggle folder focus filter or expand
+    if (selectedFolderId === sectionId) {
+      setSelectedFolderId(null);
+    } else {
+      setSelectedFolderId(sectionId);
+      // Auto expand when selected
+      setCollapsedSections((prev) => {
+        const next = new Set(prev);
+        next.delete(sectionId);
+        return next;
+      });
     }
   };
 
-  const handleRenameSection = async (e) => {
-    e.preventDefault();
-    const trimmed = renameModal.name.trim();
-    if (!trimmed || !renameModal.section) return;
-    setBusySection(true);
-    setSectionError('');
-    try {
-      const data = await chatSectionService.rename(renameModal.section._id, trimmed);
-      play('click');
-      setSections((prev) => prev.map((s) => (s._id === renameModal.section._id ? data.section : s)));
-      setRenameModal({ open: false, section: null, name: '' });
-    } catch (err) {
-      setSectionError(err.message || 'Failed to rename section');
-    } finally {
-      setBusySection(false);
-    }
-  };
-
-  const handleDeleteSection = async () => {
-    if (!deleteModal.section) return;
-    setBusySection(true);
-    setSectionError('');
-    try {
-      const deletedId = deleteModal.section._id;
-      await chatSectionService.delete(deletedId);
-      play('click');
-      setSections((prev) => prev.filter((s) => s._id !== deletedId));
-      setConvos((prev) =>
-        prev.map((c) => (String(c.sectionId) === String(deletedId) ? { ...c, sectionId: null } : c))
-      );
-      setDeleteModal({ open: false, section: null });
-    } catch (err) {
-      setSectionError(err.message || 'Failed to delete section');
-    } finally {
-      setBusySection(false);
-    }
+  const handleRelockFolder = (sectionId) => {
+    play('click');
+    setUnlockedSections((prev) => {
+      const next = new Set(prev);
+      next.delete(String(sectionId));
+      return next;
+    });
+    // Auto collapse
+    setCollapsedSections((prev) => {
+      const next = new Set(prev);
+      next.add(String(sectionId));
+      return next;
+    });
   };
 
   const handleRespondInvitation = async (invitationId, action, convoId) => {
@@ -192,7 +202,6 @@ export function ConversationSidebar() {
 
   useEffect(() => {
     load();
-    // Background polling relaxed to 60s; active changes arrive via Socket.IO events
     const t = setInterval(load, 60000);
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible') load();
@@ -204,7 +213,7 @@ export function ConversationSidebar() {
     };
   }, []);
 
-  // Realtime conversation list updates: in-place cache mutation without full refetches
+  // Realtime conversation updates
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return undefined;
@@ -218,7 +227,6 @@ export function ConversationSidebar() {
       setConvos((prev) => {
         const idx = prev.findIndex((c) => String(c._id) === convoId);
         if (idx === -1) {
-          // If conversation wasn't present in sidebar (e.g. newly created or restored), reload from server
           load();
           return prev;
         }
@@ -298,7 +306,7 @@ export function ConversationSidebar() {
     };
   }, [activeConversationId]);
 
-  // Global search routing: # -> room search, otherwise user search
+  // Search routing
   useEffect(() => {
     const q = query.trim();
     if (!q) {
@@ -369,6 +377,7 @@ export function ConversationSidebar() {
     }
   };
 
+  // Organize conversations into pinned, custom folders, and unassigned
   const { pinnedList, sectionGroups, unassignedList } = useMemo(() => {
     let list = convos;
     if (filter === 'direct') list = list.filter((c) => c.type === 'direct');
@@ -434,7 +443,7 @@ export function ConversationSidebar() {
           )}
         </div>
 
-        {/* Global Live Search Results Dropdown / Panel */}
+        {/* Global Live Search Results Panel */}
         {searchResults.isSearching && (
           <div className="bg-surface-container-lowest border border-tertiary/30 rounded-xl p-3 shadow-pixel-sm space-y-2">
             <div className="flex items-center justify-between pb-1.5 border-b border-tertiary/15">
@@ -463,7 +472,11 @@ export function ConversationSidebar() {
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={avatarSrc(r.avatarId || 'avatar-06')} alt="" className="w-8 h-8 rounded-lg pixelated border border-tertiary/30 shrink-0" />
+                          <img
+                            src={avatarSrc(r.avatarId || 'avatar-06')}
+                            alt=""
+                            className="w-8 h-8 rounded-lg pixelated border border-tertiary/30 shrink-0"
+                          />
                           <div className="min-w-0">
                             <p className="font-display text-[13px] font-bold text-on-surface truncate">#{r.name}</p>
                             <p className="font-body-sm text-[11px] text-on-surface-variant truncate">
@@ -477,7 +490,7 @@ export function ConversationSidebar() {
                   })}
                 </div>
               ) : (
-                <p className="font-mono text-label-sm text-on-surface-variant py-2 text-center">NO ROOMS FOUND. Try another #room search.</p>
+                <p className="font-mono text-label-sm text-on-surface-variant py-2 text-center">NO ROOMS FOUND</p>
               )
             ) : searchResults.users.length > 0 ? (
               <div className="space-y-1.5 max-h-60 overflow-y-auto">
@@ -514,7 +527,7 @@ export function ConversationSidebar() {
                 })}
               </div>
             ) : (
-              <p className="font-mono text-label-sm text-on-surface-variant py-2 text-center">NO PLAYERS FOUND. Try another name or @username.</p>
+              <p className="font-mono text-label-sm text-on-surface-variant py-2 text-center">NO PLAYERS FOUND</p>
             )}
           </div>
         )}
@@ -551,6 +564,7 @@ export function ConversationSidebar() {
         )}
 
         <div className="pt-2 space-y-3">
+          {/* TALKS Header & Filter Buttons */}
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <span className="font-mono text-label-sm uppercase tracking-wider text-tertiary font-bold">Talks</span>
@@ -558,13 +572,9 @@ export function ConversationSidebar() {
             </div>
             <button
               type="button"
-              onClick={() => {
-                setNewSectionName('');
-                setSectionError('');
-                setCreateSectionOpen(true);
-              }}
-              className="flex items-center gap-1 font-mono text-[10px] text-primary hover:text-tertiary font-bold uppercase py-0.5 px-2 rounded bg-surface border border-tertiary/20 hover:bg-secondary-container/30 transition-all press"
-              title="Create custom chat section folder"
+              onClick={() => setCreateModalOpen(true)}
+              className="flex items-center gap-1 font-mono text-[10px] text-primary hover:text-tertiary font-bold uppercase py-0.5 px-2 rounded bg-surface border border-tertiary/25 hover:bg-secondary-container/30 transition-all shadow-pixel-xs press"
+              title="Create custom chat folder"
             >
               <span className="material-symbols-outlined text-[13px]">create_new_folder</span>
               <span>+ Folder</span>
@@ -575,10 +585,13 @@ export function ConversationSidebar() {
             {['all', 'direct', 'group'].map((f) => (
               <button
                 key={f}
-                onClick={() => setFilter(f)}
+                onClick={() => {
+                  setFilter(f);
+                  setSelectedFolderId(null);
+                }}
                 className={`px-2.5 py-1 rounded font-mono text-label-sm font-bold border transition-all ${
-                  filter === f
-                    ? 'bg-secondary-container text-on-secondary-container border-tertiary/30'
+                  filter === f && selectedFolderId === null
+                    ? 'bg-secondary-container text-on-secondary-container border-tertiary/30 shadow-pixel-xs'
                     : 'border-transparent text-on-surface-variant hover:border-tertiary/20'
                 }`}
               >
@@ -590,8 +603,8 @@ export function ConversationSidebar() {
           {error && <ErrorText>{error}</ErrorText>}
           {loading && <p className="font-mono text-label-sm text-on-surface-variant px-1 py-3">Loading conversations…</p>}
 
-          {/* PINNED SECTION */}
-          {!loading && pinnedList.length > 0 && (
+          {/* PINNED CONVERSATIONS */}
+          {!loading && pinnedList.length > 0 && selectedFolderId === null && (
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5 px-1 text-primary">
                 <span className="material-symbols-outlined text-[14px]">keep</span>
@@ -612,88 +625,158 @@ export function ConversationSidebar() {
             </div>
           )}
 
-          {/* CUSTOM CHAT SECTIONS */}
-          {!loading && sectionGroups.map(({ section, convos: sectionConvos }) => {
-            const isCollapsed = collapsedSections.has(section._id);
-            return (
-              <div key={section._id} className="space-y-1.5 pt-1">
-                <div className="flex items-center justify-between px-1 group/sec">
+          {/* MY FOLDERS SECTION */}
+          {!loading && sections.length > 0 && (
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between px-1">
+                <span className="font-mono text-[10px] uppercase font-bold tracking-wider text-tertiary">
+                  My Folders ({sections.length})
+                </span>
+                {selectedFolderId && (
                   <button
                     type="button"
-                    onClick={() => toggleCollapse(section._id)}
-                    className="flex items-center gap-1 text-tertiary hover:text-on-surface transition-colors min-w-0"
+                    onClick={() => setSelectedFolderId(null)}
+                    className="font-mono text-[10px] text-primary hover:underline font-bold"
                   >
-                    <span className="material-symbols-outlined text-[15px] transition-transform">
-                      {isCollapsed ? 'chevron_right' : 'expand_more'}
-                    </span>
-                    <span className="material-symbols-outlined text-[15px] text-primary">folder</span>
-                    <span className="font-mono text-[10px] uppercase font-bold tracking-wider truncate">
-                      {section.name} ({sectionConvos.length})
-                    </span>
+                    View All
                   </button>
-
-                  {/* Section Actions: Rename & Delete */}
-                  <div className="flex items-center gap-1 opacity-0 group-hover/sec:opacity-100 transition-opacity">
-                    <button
-                      type="button"
-                      onClick={() => setRenameModal({ open: true, section, name: section.name })}
-                      className="p-1 hover:text-primary text-tertiary/60 transition-colors"
-                      title={`Rename "${section.name}"`}
-                      aria-label={`Rename "${section.name}" section`}
-                    >
-                      <span className="material-symbols-outlined text-[14px]">edit</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteModal({ open: true, section })}
-                      className="p-1 hover:text-error text-tertiary/60 transition-colors"
-                      title={`Delete "${section.name}" section`}
-                      aria-label={`Delete "${section.name}" section`}
-                    >
-                      <span className="material-symbols-outlined text-[14px]">delete</span>
-                    </button>
-                  </div>
-                </div>
-
-                {!isCollapsed && (
-                  <div className="space-y-1 pl-1">
-                    {sectionConvos.length === 0 ? (
-                      <p className="font-mono text-[10px] text-on-surface-variant/70 italic px-2 py-1">
-                        Empty folder. Move chats here to organize.
-                      </p>
-                    ) : (
-                      sectionConvos.map((c) => (
-                        <ConversationRow
-                          key={c._id}
-                          c={c}
-                          user={user}
-                          isOnline={isOnline}
-                          isPinned={false}
-                          onTogglePin={togglePin}
-                          busyPinId={busyPinId}
-                          typingUsers={typingConvos[c._id]}
-                        />
-                      ))
-                    )}
-                  </div>
                 )}
               </div>
-            );
-          })}
 
-          {/* ALL / RECENT (UNASSIGNED) SECTION */}
-          {!loading && (
+              {sectionGroups
+                .filter(({ section }) => !selectedFolderId || String(section._id) === selectedFolderId)
+                .map(({ section, convos: sectionConvos }) => {
+                  const sectionId = String(section._id);
+                  const isLocked = section.isLocked || section.hasPasscode;
+                  const isUnlocked = unlockedSections.has(sectionId);
+                  const isCollapsed = collapsedSections.has(sectionId);
+                  const isSelected = selectedFolderId === sectionId;
+
+                  return (
+                    <div
+                      key={section._id}
+                      className={`rounded-xl border transition-all p-1.5 ${
+                        isSelected
+                          ? 'border-primary bg-secondary-container/20 shadow-pixel-xs'
+                          : 'border-tertiary/20 bg-surface-container-lowest/50'
+                      }`}
+                    >
+                      {/* Folder Header Row */}
+                      <div className="flex items-center justify-between gap-1 group/sec">
+                        <button
+                          type="button"
+                          onClick={() => toggleCollapse(section)}
+                          className="flex items-center gap-1.5 text-on-surface hover:text-primary transition-colors min-w-0 flex-1 text-left"
+                        >
+                          <span className="material-symbols-outlined text-[15px] text-tertiary shrink-0">
+                            {isCollapsed ? 'chevron_right' : 'expand_more'}
+                          </span>
+                          <span className="material-symbols-outlined text-[16px] text-primary shrink-0">
+                            {isLocked ? (isUnlocked ? 'lock_open' : 'lock') : 'folder'}
+                          </span>
+                          <span className="font-mono text-[11px] font-bold uppercase tracking-wider truncate">
+                            {section.name}
+                          </span>
+                          <span className="px-1.5 py-0.2 bg-surface text-tertiary text-[9px] font-mono font-bold rounded-full border border-tertiary/20 shrink-0">
+                            {sectionConvos.length}
+                          </span>
+                        </button>
+
+                        {/* Folder Action Buttons */}
+                        <div className="flex items-center gap-0.5 opacity-80 group-hover/sec:opacity-100 transition-opacity">
+                          {isLocked && isUnlocked && (
+                            <button
+                              type="button"
+                              onClick={() => handleRelockFolder(sectionId)}
+                              className="p-1 hover:text-primary text-tertiary/70 transition-colors"
+                              title="Lock folder now"
+                              aria-label="Lock folder now"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">lock</span>
+                            </button>
+                          )}
+
+                          {/* Options menu trigger */}
+                          <FolderContextMenu
+                            section={section}
+                            onRename={() => setRenameModal({ open: true, section })}
+                            onManageLock={() =>
+                              setLockModal({
+                                open: true,
+                                section,
+                                mode: isLocked ? 'CHANGE' : 'SET',
+                              })
+                            }
+                            onRemoveLock={() =>
+                              setLockModal({
+                                open: true,
+                                section,
+                                mode: 'REMOVE',
+                              })
+                            }
+                            onDelete={() => setDeleteModal({ open: true, section })}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Folder Contents (Conversations) */}
+                      {!isCollapsed && (
+                        <div className="space-y-1 pt-1.5 pl-1">
+                          {isLocked && !isUnlocked ? (
+                            <div className="p-3 bg-surface-container rounded-lg border border-tertiary/20 text-center space-y-2">
+                              <span className="material-symbols-outlined text-[20px] text-tertiary">lock</span>
+                              <p className="font-mono text-[11px] text-on-surface-variant font-bold">
+                                Folder is locked with a PIN
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => setUnlockModal({ open: true, section })}
+                                className="px-3 py-1 bg-primary text-surface-container font-mono text-[10px] font-bold rounded shadow-pixel-xs hover:brightness-105 transition-all press"
+                              >
+                                Unlock to View
+                              </button>
+                            </div>
+                          ) : sectionConvos.length === 0 ? (
+                            <p className="font-mono text-[10px] text-on-surface-variant/70 italic px-2 py-1">
+                              Empty folder. Use conversation options to move chats here.
+                            </p>
+                          ) : (
+                            sectionConvos.map((c) => (
+                              <ConversationRow
+                                key={c._id}
+                                c={c}
+                                user={user}
+                                isOnline={isOnline}
+                                isPinned={false}
+                                onTogglePin={togglePin}
+                                busyPinId={busyPinId}
+                                typingUsers={typingConvos[c._id]}
+                              />
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+
+          {/* ALL / RECENT (UNASSIGNED) CONVERSATIONS */}
+          {!loading && selectedFolderId === null && (
             <div className="space-y-1.5 pt-1">
               {(pinnedList.length > 0 || sections.length > 0) && (
                 <div className="flex items-center gap-1.5 px-1 text-tertiary">
                   <span className="font-mono text-[10px] uppercase font-bold tracking-wider">
-                    {sections.length > 0 ? `Other Talks (${unassignedList.length})` : `Recent (${unassignedList.length})`}
+                    {sections.length > 0 ? `Unfiled Talks (${unassignedList.length})` : `Recent (${unassignedList.length})`}
                   </span>
                 </div>
               )}
-              {unassignedList.length === 0 && pinnedList.length === 0 && sectionGroups.every((g) => g.convos.length === 0) && (
-                <EmptyState icon="forum" title="No conversations yet" hint="Search for a player or #room to start talking." />
-              )}
+              {unassignedList.length === 0 &&
+                pinnedList.length === 0 &&
+                sectionGroups.every((g) => g.convos.length === 0) && (
+                  <EmptyState icon="forum" title="No conversations yet" hint="Search for a player or #room to start talking." />
+                )}
               {unassignedList.map((c) => (
                 <ConversationRow
                   key={c._id}
@@ -710,7 +793,102 @@ export function ConversationSidebar() {
           )}
         </div>
       </div>
+
+      {/* MODALS */}
       {newOpen && <StartChatModal onClose={() => setNewOpen(false)} onCreated={() => { setNewOpen(false); load(); }} />}
+
+      {/* CREATE FOLDER MODAL */}
+      {createModalOpen && (
+        <CreateFolderModal
+          open={createModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+          onCreated={(newSec) => {
+            setSections((prev) => [...prev, newSec]);
+            if (newSec.isLocked) {
+              setUnlockedSections((prev) => new Set([...prev, String(newSec._id)]));
+            }
+            play('room-created');
+            setCreateModalOpen(false);
+          }}
+        />
+      )}
+
+      {/* RENAME FOLDER MODAL */}
+      {renameModal.open && (
+        <RenameFolderModal
+          open={renameModal.open}
+          section={renameModal.section}
+          onClose={() => setRenameModal({ open: false, section: null })}
+          onRenamed={(updatedSec) => {
+            setSections((prev) => prev.map((s) => (s._id === updatedSec._id ? updatedSec : s)));
+            play('click');
+            setRenameModal({ open: false, section: null });
+          }}
+        />
+      )}
+
+      {/* UNLOCK FOLDER MODAL */}
+      {unlockModal.open && (
+        <UnlockFolderModal
+          open={unlockModal.open}
+          section={unlockModal.section}
+          onClose={() => setUnlockModal({ open: false, section: null })}
+          onUnlocked={(sectionId) => {
+            setUnlockedSections((prev) => new Set([...prev, String(sectionId)]));
+            setCollapsedSections((prev) => {
+              const next = new Set(prev);
+              next.delete(String(sectionId));
+              return next;
+            });
+            play('room-created');
+            setUnlockModal({ open: false, section: null });
+          }}
+        />
+      )}
+
+      {/* MANAGE LOCK / PIN MODAL */}
+      {lockModal.open && (
+        <ManageLockModal
+          open={lockModal.open}
+          section={lockModal.section}
+          mode={lockModal.mode}
+          onClose={() => setLockModal({ open: false, section: null, mode: 'SET' })}
+          onUpdated={(updatedSec) => {
+            setSections((prev) => prev.map((s) => (s._id === updatedSec._id ? updatedSec : s)));
+            if (updatedSec.isLocked) {
+              setUnlockedSections((prev) => new Set([...prev, String(updatedSec._id)]));
+            } else {
+              setUnlockedSections((prev) => {
+                const next = new Set(prev);
+                next.delete(String(updatedSec._id));
+                return next;
+              });
+            }
+            play('click');
+            setLockModal({ open: false, section: null, mode: 'SET' });
+          }}
+        />
+      )}
+
+      {/* DELETE FOLDER MODAL */}
+      {deleteModal.open && (
+        <DeleteFolderModal
+          open={deleteModal.open}
+          section={deleteModal.section}
+          onClose={() => setDeleteModal({ open: false, section: null })}
+          onDeleted={(deletedId) => {
+            setSections((prev) => prev.filter((s) => s._id !== deletedId));
+            setConvos((prev) =>
+              prev.map((c) => (String(c.sectionId) === String(deletedId) ? { ...c, sectionId: null } : c))
+            );
+            if (selectedFolderId === String(deletedId)) setSelectedFolderId(null);
+            play('click');
+            setDeleteModal({ open: false, section: null });
+          }}
+        />
+      )}
+
+      {/* INVITATIONS MODAL */}
       {invitationsOpen && (
         <Modal
           open={invitationsOpen}
@@ -778,105 +956,544 @@ export function ConversationSidebar() {
           </div>
         </Modal>
       )}
+    </div>
+  );
+}
 
-      {/* CREATE SECTION MODAL */}
-      {createSectionOpen && (
-        <Modal
-          open={createSectionOpen}
-          onClose={() => !busySection && setCreateSectionOpen(false)}
-          kicker="CHAT ORGANIZER"
-          title="Create Chat Section"
-          maxW="max-w-md"
-        >
-          <form onSubmit={handleCreateSection} className="space-y-4">
-            <Field label="Section Name" required hint="e.g. Family, Friends, Work, College, Gaming">
-              <Input
-                autoFocus
-                value={newSectionName}
-                onChange={(e) => setNewSectionName(e.target.value)}
-                maxLength={40}
-                required
-                placeholder="Section name"
-              />
-            </Field>
-            {sectionError && <ErrorText>{sectionError}</ErrorText>}
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-tertiary/20">
-              <SecondaryButton type="button" disabled={busySection} onClick={() => setCreateSectionOpen(false)}>
-                Cancel
-              </SecondaryButton>
-              <PrimaryButton type="submit" disabled={busySection || !newSectionName.trim()}>
-                {busySection ? 'Creating…' : 'Create Section'}
-              </PrimaryButton>
-            </div>
-          </form>
-        </Modal>
-      )}
+// ---------------- Folder Context Menu Component ----------------
+function FolderContextMenu({ section, onRename, onManageLock, onRemoveLock, onDelete }) {
+  const [open, setOpen] = useState(false);
+  const isLocked = section.isLocked || section.hasPasscode;
 
-      {/* RENAME SECTION MODAL */}
-      {renameModal.open && (
-        <Modal
-          open={renameModal.open}
-          onClose={() => !busySection && setRenameModal({ open: false, section: null, name: '' })}
-          kicker="CHAT ORGANIZER"
-          title="Rename Section"
-          maxW="max-w-md"
-        >
-          <form onSubmit={handleRenameSection} className="space-y-4">
-            <Field label="New Section Name" required>
-              <Input
-                autoFocus
-                value={renameModal.name}
-                onChange={(e) => setRenameModal({ ...renameModal, name: e.target.value })}
-                maxLength={40}
-                required
-              />
-            </Field>
-            {sectionError && <ErrorText>{sectionError}</ErrorText>}
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-tertiary/20">
-              <SecondaryButton
-                type="button"
-                disabled={busySection}
-                onClick={() => setRenameModal({ open: false, section: null, name: '' })}
-              >
-                Cancel
-              </SecondaryButton>
-              <PrimaryButton type="submit" disabled={busySection || !renameModal.name.trim()}>
-                {busySection ? 'Saving…' : 'Save'}
-              </PrimaryButton>
-            </div>
-          </form>
-        </Modal>
-      )}
+  useEffect(() => {
+    if (!open) return undefined;
+    const onClickOutside = () => setOpen(false);
+    window.addEventListener('click', onClickOutside);
+    return () => window.removeEventListener('click', onClickOutside);
+  }, [open]);
 
-      {/* DELETE SECTION MODAL */}
-      {deleteModal.open && (
-        <Modal
-          open={deleteModal.open}
-          onClose={() => !busySection && setDeleteModal({ open: false, section: null })}
-          kicker="REMOVE FOLDER"
-          title={`Delete "${deleteModal.section?.name}"?`}
-          maxW="max-w-md"
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((prev) => !prev);
+        }}
+        className="p-1 hover:text-on-surface text-tertiary/70 rounded hover:bg-surface transition-colors"
+        title="Folder options"
+        aria-label={`Options for folder ${section.name}`}
+      >
+        <span className="material-symbols-outlined text-[15px]">more_vert</span>
+      </button>
+
+      {open && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="absolute right-0 top-full mt-1 w-44 bg-surface-container-lowest border border-tertiary/30 rounded-xl shadow-pixel-md z-30 py-1.5 animate-fadeIn"
         >
-          <div className="space-y-4">
-            <p className="font-body text-body-md text-on-surface-variant leading-relaxed">
-              This will remove the section from your sidebar. Your conversations will not be deleted.
-            </p>
-            {sectionError && <ErrorText>{sectionError}</ErrorText>}
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-tertiary/20">
-              <SecondaryButton type="button" disabled={busySection} onClick={() => setDeleteModal({ open: false, section: null })}>
-                Cancel
-              </SecondaryButton>
-              <DestructiveButton type="button" disabled={busySection} onClick={handleDeleteSection}>
-                {busySection ? 'Deleting…' : 'Delete Section'}
-              </DestructiveButton>
-            </div>
-          </div>
-        </Modal>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onRename();
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-1.5 text-left font-mono text-label-xs text-on-surface hover:bg-secondary-container/40 transition-colors"
+          >
+            <span className="material-symbols-outlined text-[15px] text-tertiary">edit</span>
+            <span>Rename Folder</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onManageLock();
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-1.5 text-left font-mono text-label-xs text-on-surface hover:bg-secondary-container/40 transition-colors"
+          >
+            <span className="material-symbols-outlined text-[15px] text-primary">
+              {isLocked ? 'key' : 'lock'}
+            </span>
+            <span>{isLocked ? 'Change PIN' : 'Lock Folder'}</span>
+          </button>
+
+          {isLocked && (
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onRemoveLock();
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-1.5 text-left font-mono text-label-xs text-on-surface hover:bg-secondary-container/40 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[15px] text-tertiary">lock_open</span>
+              <span>Remove Lock</span>
+            </button>
+          )}
+
+          <div className="my-1 border-t border-tertiary/15" />
+
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onDelete();
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-1.5 text-left font-mono text-label-xs text-error hover:bg-error/10 transition-colors"
+          >
+            <span className="material-symbols-outlined text-[15px]">delete</span>
+            <span>Delete Folder</span>
+          </button>
+        </div>
       )}
     </div>
   );
 }
 
+// ---------------- Create Folder Modal ----------------
+function CreateFolderModal({ open, onClose, onCreated }) {
+  const [name, setName] = useState('');
+  const [isLocked, setIsLocked] = useState(false);
+  const [passcode, setPasscode] = useState('');
+  const [confirmPasscode, setConfirmPasscode] = useState('');
+  const [showPasscode, setShowPasscode] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setError('Please provide a folder name');
+      return;
+    }
+
+    if (isLocked) {
+      if (!passcode || passcode.length < 4) {
+        setError('Folder PIN/password must be at least 4 characters');
+        return;
+      }
+      if (passcode !== confirmPasscode) {
+        setError('PIN/password confirmation does not match');
+        return;
+      }
+    }
+
+    setBusy(true);
+    setError('');
+    try {
+      const data = await chatSectionService.create({
+        name: trimmedName,
+        isLocked,
+        passcode: isLocked ? passcode : '',
+      });
+      onCreated(data.section);
+    } catch (err) {
+      setError(err.message || 'Failed to create folder');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={() => !busy && onClose()} kicker="CHAT ORGANIZER" title="Create Custom Folder" maxW="max-w-md">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Field label="Folder Name" required>
+          <Input
+            autoFocus
+            placeholder="e.g. Work, Friends, Private, Gaming"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={40}
+            required
+          />
+        </Field>
+
+        {/* Lock toggle */}
+        <div className="p-3 bg-surface-container rounded-xl border border-tertiary/20 space-y-3">
+          <label className="flex items-center gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={isLocked}
+              onChange={(e) => setIsLocked(e.target.checked)}
+              className="w-4 h-4 rounded border-tertiary text-primary focus:ring-primary"
+            />
+            <div className="min-w-0">
+              <span className="font-mono text-label-sm font-bold text-on-surface flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px] text-primary">lock</span>
+                <span>Lock this folder with PIN / Password</span>
+              </span>
+              <p className="font-body-sm text-[11px] text-on-surface-variant">
+                Requires authentication before conversations inside can be viewed.
+              </p>
+            </div>
+          </label>
+
+          {isLocked && (
+            <div className="space-y-3 pt-2 border-t border-tertiary/15 animate-fadeIn">
+              <Field label="Folder PIN / Password" required>
+                <div className="relative">
+                  <Input
+                    type={showPasscode ? 'text' : 'password'}
+                    placeholder="Enter at least 4 characters"
+                    value={passcode}
+                    onChange={(e) => setPasscode(e.target.value)}
+                    minLength={4}
+                    maxLength={32}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasscode((p) => !p)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary/70 hover:text-tertiary text-xs"
+                    tabIndex={-1}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">
+                      {showPasscode ? 'visibility_off' : 'visibility'}
+                    </span>
+                  </button>
+                </div>
+              </Field>
+
+              <Field label="Confirm PIN / Password" required>
+                <Input
+                  type={showPasscode ? 'text' : 'password'}
+                  placeholder="Re-enter PIN / password"
+                  value={confirmPasscode}
+                  onChange={(e) => setConfirmPasscode(e.target.value)}
+                  minLength={4}
+                  maxLength={32}
+                  required
+                />
+              </Field>
+            </div>
+          )}
+        </div>
+
+        {error && <ErrorText>{error}</ErrorText>}
+
+        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-tertiary/20">
+          <SecondaryButton type="button" disabled={busy} onClick={onClose}>
+            Cancel
+          </SecondaryButton>
+          <PrimaryButton type="submit" disabled={busy || !name.trim()}>
+            {busy ? 'Creating…' : 'Create Folder'}
+          </PrimaryButton>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+// ---------------- Rename Folder Modal ----------------
+function RenameFolderModal({ open, section, onClose, onRenamed }) {
+  const [name, setName] = useState(section?.name || '');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const trimmed = name.trim();
+    if (!trimmed || !section) return;
+
+    setBusy(true);
+    setError('');
+    try {
+      const data = await chatSectionService.rename(section._id, trimmed);
+      onRenamed(data.section);
+    } catch (err) {
+      setError(err.message || 'Failed to rename folder');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={() => !busy && onClose()} kicker="CHAT ORGANIZER" title="Rename Folder" maxW="max-w-md">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Field label="New Folder Name" required>
+          <Input
+            autoFocus
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={40}
+            required
+          />
+        </Field>
+        {error && <ErrorText>{error}</ErrorText>}
+        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-tertiary/20">
+          <SecondaryButton type="button" disabled={busy} onClick={onClose}>
+            Cancel
+          </SecondaryButton>
+          <PrimaryButton type="submit" disabled={busy || !name.trim()}>
+            {busy ? 'Saving…' : 'Save'}
+          </PrimaryButton>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+// ---------------- Unlock Folder Modal ----------------
+function UnlockFolderModal({ open, section, onClose, onUnlocked }) {
+  const [passcode, setPasscode] = useState('');
+  const [showPasscode, setShowPasscode] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!passcode || !section) return;
+
+    setBusy(true);
+    setError('');
+    try {
+      await chatSectionService.unlock(section._id, passcode);
+      onUnlocked(section._id);
+    } catch (err) {
+      setError(err.message || 'Incorrect PIN or password');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={() => !busy && onClose()}
+      kicker="PROTECTED FOLDER"
+      title={`Unlock "${section?.name}"`}
+      maxW="max-w-md"
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <p className="font-body-sm text-[12px] text-on-surface-variant">
+          This folder is secured with a PIN or password. Enter your credentials to view its contents.
+        </p>
+
+        <Field label="Folder PIN / Password" required>
+          <div className="relative">
+            <Input
+              autoFocus
+              type={showPasscode ? 'text' : 'password'}
+              placeholder="Enter folder PIN / password"
+              value={passcode}
+              onChange={(e) => setPasscode(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPasscode((p) => !p)}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary/70 hover:text-tertiary text-xs"
+              tabIndex={-1}
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                {showPasscode ? 'visibility_off' : 'visibility'}
+              </span>
+            </button>
+          </div>
+        </Field>
+
+        {error && <ErrorText>{error}</ErrorText>}
+
+        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-tertiary/20">
+          <SecondaryButton type="button" disabled={busy} onClick={onClose}>
+            Cancel
+          </SecondaryButton>
+          <PrimaryButton type="submit" disabled={busy || !passcode}>
+            {busy ? 'Verifying…' : 'Unlock Folder'}
+          </PrimaryButton>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+// ---------------- Manage Lock Modal (Set, Change, Remove) ----------------
+function ManageLockModal({ open, section, mode, onClose, onUpdated }) {
+  const isLocked = section?.isLocked || section?.hasPasscode;
+  const [currentPasscode, setCurrentPasscode] = useState('');
+  const [newPasscode, setNewPasscode] = useState('');
+  const [confirmPasscode, setConfirmPasscode] = useState('');
+  const [showPasscode, setShowPasscode] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const title =
+    mode === 'REMOVE' ? `Remove Lock from "${section?.name}"` : isLocked ? `Change PIN for "${section?.name}"` : `Lock "${section?.name}"`;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!section) return;
+
+    if (mode === 'REMOVE') {
+      if (isLocked && !currentPasscode) {
+        setError('Please enter your current PIN/password');
+        return;
+      }
+      setBusy(true);
+      setError('');
+      try {
+        const data = await chatSectionService.removeLock(section._id, currentPasscode);
+        onUpdated(data.section);
+      } catch (err) {
+        setError(err.message || 'Failed to remove lock');
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
+    // SET or CHANGE mode
+    if (isLocked && !currentPasscode) {
+      setError('Please enter your current PIN/password');
+      return;
+    }
+
+    if (!newPasscode || newPasscode.length < 4) {
+      setError('New PIN/password must be at least 4 characters');
+      return;
+    }
+
+    if (newPasscode !== confirmPasscode) {
+      setError('New PIN/password confirmation does not match');
+      return;
+    }
+
+    setBusy(true);
+    setError('');
+    try {
+      const data = await chatSectionService.setLock(section._id, {
+        currentPasscode,
+        newPasscode,
+      });
+      onUpdated(data.section);
+    } catch (err) {
+      setError(err.message || 'Failed to update folder lock');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={() => !busy && onClose()} kicker="FOLDER SECURITY" title={title} maxW="max-w-md">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {isLocked && (
+          <Field label="Current PIN / Password" required>
+            <Input
+              autoFocus
+              type={showPasscode ? 'text' : 'password'}
+              placeholder="Enter current PIN / password"
+              value={currentPasscode}
+              onChange={(e) => setCurrentPasscode(e.target.value)}
+              required
+            />
+          </Field>
+        )}
+
+        {mode !== 'REMOVE' && (
+          <>
+            <Field label={isLocked ? 'New PIN / Password' : 'Folder PIN / Password'} required>
+              <div className="relative">
+                <Input
+                  type={showPasscode ? 'text' : 'password'}
+                  placeholder="Enter at least 4 characters"
+                  value={newPasscode}
+                  onChange={(e) => setNewPasscode(e.target.value)}
+                  minLength={4}
+                  maxLength={32}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasscode((p) => !p)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary/70 hover:text-tertiary text-xs"
+                  tabIndex={-1}
+                >
+                  <span className="material-symbols-outlined text-[16px]">
+                    {showPasscode ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
+            </Field>
+
+            <Field label="Confirm New PIN / Password" required>
+              <Input
+                type={showPasscode ? 'text' : 'password'}
+                placeholder="Re-enter PIN / password"
+                value={confirmPasscode}
+                onChange={(e) => setConfirmPasscode(e.target.value)}
+                minLength={4}
+                maxLength={32}
+                required
+              />
+            </Field>
+          </>
+        )}
+
+        {error && <ErrorText>{error}</ErrorText>}
+
+        <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-tertiary/20">
+          <SecondaryButton type="button" disabled={busy} onClick={onClose}>
+            Cancel
+          </SecondaryButton>
+          <PrimaryButton
+            type="submit"
+            disabled={busy || (mode === 'REMOVE' ? isLocked && !currentPasscode : !newPasscode)}
+          >
+            {busy ? 'Saving…' : mode === 'REMOVE' ? 'Remove Lock' : isLocked ? 'Update PIN' : 'Set Lock'}
+          </PrimaryButton>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+// ---------------- Delete Folder Modal ----------------
+function DeleteFolderModal({ open, section, onClose, onDeleted }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleDelete = async () => {
+    if (!section) return;
+    setBusy(true);
+    setError('');
+    try {
+      await chatSectionService.delete(section._id);
+      onDeleted(section._id);
+    } catch (err) {
+      setError(err.message || 'Failed to delete folder');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={() => !busy && onClose()} kicker="REMOVE FOLDER" title={`Delete "${section?.name}"?`} maxW="max-w-md">
+      <div className="space-y-4">
+        <p className="font-body text-body-md text-on-surface-variant leading-relaxed">
+          Are you sure you want to delete the folder <span className="font-bold text-on-surface">"{section?.name}"</span>?
+        </p>
+        <div className="p-3 bg-secondary-container/30 border border-tertiary/20 rounded-xl">
+          <p className="font-mono text-[11px] text-tertiary">
+            🛡️ <span className="font-bold">Conversations will NOT be deleted.</span> Any direct chats or lounges inside this folder will safely return to your unfiled conversation list.
+          </p>
+        </div>
+        {error && <ErrorText>{error}</ErrorText>}
+        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-tertiary/20">
+          <SecondaryButton type="button" disabled={busy} onClick={onClose}>
+            Cancel
+          </SecondaryButton>
+          <DestructiveButton type="button" disabled={busy} onClick={handleDelete}>
+            {busy ? 'Deleting…' : 'Delete Folder'}
+          </DestructiveButton>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ---------------- Conversation Row ----------------
 function ConversationRow({ c, user, isOnline, isPinned, onTogglePin, busyPinId, typingUsers }) {
   const other = otherMember(c, user);
   const online = c.type === 'direct' ? isOnline(other?._id || other?.id) : undefined;
@@ -885,7 +1502,7 @@ function ConversationRow({ c, user, isOnline, isPinned, onTogglePin, busyPinId, 
 
   const myId = String(user?._id || user?.id || '');
   const activeTyping = Object.entries(typingUsers || {}).filter(([id]) => id && String(id) !== myId);
-  const typingName = activeTyping.length > 0 ? (activeTyping[0][1]?.displayName || activeTyping[0][1]?.username || 'Someone') : null;
+  const typingName = activeTyping.length > 0 ? activeTyping[0][1]?.displayName || activeTyping[0][1]?.username || 'Someone' : null;
 
   return (
     <div className="group relative flex items-center rounded-lg bg-surface-container-lowest/80 border border-tertiary/20 hover:border-tertiary transition-all shadow-pixel-sm hover:bg-surface-container-lowest">
@@ -899,7 +1516,10 @@ function ConversationRow({ c, user, isOnline, isPinned, onTogglePin, busyPinId, 
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-1">
             <p className="font-display text-[13px] text-on-surface font-bold truncate flex items-center gap-1.5">
-              <span>{c.type === 'group' && !conversationLabel(c, user).startsWith('#') ? '#' : ''}{conversationLabel(c, user)}</span>
+              <span>
+                {c.type === 'group' && !conversationLabel(c, user).startsWith('#') ? '#' : ''}
+                {conversationLabel(c, user)}
+              </span>
               {isMuted && <span className="text-[11px] opacity-75 shrink-0" title="Muted notifications">🔇</span>}
             </p>
             <span className="font-mono text-[10px] text-tertiary flex-shrink-0">{lastAt ? timeAgo(lastAt) : ''}</span>
@@ -935,9 +1555,7 @@ function ConversationRow({ c, user, isOnline, isPinned, onTogglePin, busyPinId, 
           isPinned ? 'opacity-100 text-primary' : 'opacity-0 group-hover:opacity-100'
         }`}
       >
-        <span className="material-symbols-outlined text-[16px]">
-          {isPinned ? 'keep' : 'keep_off'}
-        </span>
+        <span className="material-symbols-outlined text-[16px]">{isPinned ? 'keep' : 'keep_off'}</span>
       </button>
     </div>
   );
@@ -945,7 +1563,7 @@ function ConversationRow({ c, user, isOnline, isPinned, onTogglePin, busyPinId, 
 
 function SidebarLink({ href, icon, label, badge, count, active }) {
   const pathname = usePathname();
-  const isActive = active !== undefined ? active : (pathname === href || (href !== '/dashboard' && href !== '/' && pathname.startsWith(href)));
+  const isActive = active !== undefined ? active : pathname === href || (href !== '/dashboard' && href !== '/' && pathname.startsWith(href));
   return (
     <Link
       href={href}
@@ -1006,7 +1624,7 @@ export function StartChatModal({ onClose, onCreated }) {
     <Modal open onClose={onClose} kicker="DIRECT TRANSMISSION" title="Start a chat" maxW="max-w-md">
       <div className="space-y-3">
         <Input autoFocus placeholder="Search players by name or @username…" value={q} onChange={(e) => setQ(e.target.value)} />
-        <ErrorText>{error}</ErrorText>
+        {error && <ErrorText>{error}</ErrorText>}
         <div className="max-h-64 overflow-y-auto space-y-1.5">
           {results.map((u) => (
             <button
@@ -1029,4 +1647,3 @@ export function StartChatModal({ onClose, onCreated }) {
     </Modal>
   );
 }
-

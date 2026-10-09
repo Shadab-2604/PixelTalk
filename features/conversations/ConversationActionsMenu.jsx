@@ -368,6 +368,8 @@ function MoveToSectionModal({ open, onClose, conversationId, currentSectionId, o
   const [busyMove, setBusyMove] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
+  const [isLocked, setIsLocked] = useState(false);
+  const [passcode, setPasscode] = useState('');
   const [busyCreate, setBusyCreate] = useState(false);
   const [error, setError] = useState('');
 
@@ -377,7 +379,7 @@ function MoveToSectionModal({ open, onClose, conversationId, currentSectionId, o
       const data = await chatSectionService.list();
       setSections(data.sections || []);
     } catch (err) {
-      setError(err.message || 'Failed to load sections');
+      setError(err.message || 'Failed to load folders');
     } finally {
       setLoading(false);
     }
@@ -389,6 +391,8 @@ function MoveToSectionModal({ open, onClose, conversationId, currentSectionId, o
       setSelectedSectionId(currentSectionId || null);
       setCreating(false);
       setNewSectionName('');
+      setIsLocked(false);
+      setPasscode('');
       setError('');
     }
   }, [open, currentSectionId]);
@@ -397,18 +401,28 @@ function MoveToSectionModal({ open, onClose, conversationId, currentSectionId, o
     e.preventDefault();
     const trimmed = newSectionName.trim();
     if (!trimmed) return;
+    if (isLocked && (!passcode || passcode.length < 4)) {
+      setError('Folder PIN/password must be at least 4 characters');
+      return;
+    }
     setBusyCreate(true);
     setError('');
     try {
-      const data = await chatSectionService.create(trimmed);
+      const data = await chatSectionService.create({
+        name: trimmed,
+        isLocked,
+        passcode: isLocked ? passcode : '',
+      });
       sfx.success();
       setSections((prev) => [...prev, data.section]);
       setSelectedSectionId(data.section._id);
       setNewSectionName('');
+      setIsLocked(false);
+      setPasscode('');
       setCreating(false);
     } catch (err) {
       sfx.error();
-      setError(err.message || 'Failed to create section');
+      setError(err.message || 'Failed to create folder');
     } finally {
       setBusyCreate(false);
     }
@@ -436,12 +450,12 @@ function MoveToSectionModal({ open, onClose, conversationId, currentSectionId, o
       open={open}
       onClose={() => !busyMove && onClose()}
       kicker="CHAT ORGANIZER"
-      title="Move to Section"
+      title="Move to Folder"
       maxW="max-w-md"
     >
       <div className="space-y-4">
         <p className="font-body-sm text-[12px] text-on-surface-variant">
-          Organize this conversation into your personal chat folders. Sections are private and only visible to you.
+          Organize this conversation into your personal chat folders. Folders are strictly private to your account.
         </p>
 
         {error && <ErrorText>{error}</ErrorText>}
@@ -452,7 +466,7 @@ function MoveToSectionModal({ open, onClose, conversationId, currentSectionId, o
           </div>
         ) : (
           <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-            {/* Option: No Section */}
+            {/* Option: No Folder */}
             <button
               type="button"
               onClick={() => setSelectedSectionId(null)}
@@ -464,7 +478,7 @@ function MoveToSectionModal({ open, onClose, conversationId, currentSectionId, o
             >
               <div className="flex items-center gap-2.5">
                 <span className="material-symbols-outlined text-[18px]">folder_off</span>
-                <span className="font-mono text-label-sm">No Section (Unassigned)</span>
+                <span className="font-mono text-label-sm">No Folder (Unfiled)</span>
               </div>
               <span
                 className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
@@ -475,9 +489,10 @@ function MoveToSectionModal({ open, onClose, conversationId, currentSectionId, o
               </span>
             </button>
 
-            {/* Custom user sections */}
+            {/* Custom user folders */}
             {sections.map((s) => {
               const isSelected = String(selectedSectionId) === String(s._id);
+              const isSecLocked = s.isLocked || s.hasPasscode;
               return (
                 <button
                   key={s._id}
@@ -490,8 +505,15 @@ function MoveToSectionModal({ open, onClose, conversationId, currentSectionId, o
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className="material-symbols-outlined text-[18px] text-primary">folder</span>
+                    <span className="material-symbols-outlined text-[18px] text-primary">
+                      {isSecLocked ? 'lock' : 'folder'}
+                    </span>
                     <span className="font-mono text-label-sm">{s.name}</span>
+                    {isSecLocked && (
+                      <span className="text-[10px] font-mono font-bold text-tertiary bg-surface px-1.5 py-0.5 rounded border border-tertiary/20">
+                        LOCKED
+                      </span>
+                    )}
                   </div>
                   <span
                     className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
@@ -506,27 +528,53 @@ function MoveToSectionModal({ open, onClose, conversationId, currentSectionId, o
           </div>
         )}
 
-        {/* Inline Create Section */}
+        {/* Inline Create Folder */}
         {creating ? (
           <form onSubmit={handleCreateNewSection} className="p-3 bg-surface-container rounded-xl border border-tertiary/25 space-y-2.5">
             <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-tertiary block">
-              New Section Name
+              New Folder Name
             </span>
-            <div className="flex gap-2">
-              <Input
-                autoFocus
-                placeholder="e.g. Family, Work, Gaming"
-                value={newSectionName}
-                onChange={(e) => setNewSectionName(e.target.value)}
-                maxLength={40}
-                className="py-1.5 text-label-sm"
+            <Input
+              autoFocus
+              placeholder="e.g. Work, Friends, Private, Gaming"
+              value={newSectionName}
+              onChange={(e) => setNewSectionName(e.target.value)}
+              maxLength={40}
+              className="py-1.5 text-label-sm"
+            />
+
+            <label className="flex items-center gap-2 cursor-pointer pt-1 select-none">
+              <input
+                type="checkbox"
+                checked={isLocked}
+                onChange={(e) => setIsLocked(e.target.checked)}
+                className="w-3.5 h-3.5 rounded border-tertiary text-primary focus:ring-primary"
               />
-              <PrimaryButton type="submit" disabled={busyCreate || !newSectionName.trim()} className="px-3 text-label-xs shrink-0">
-                {busyCreate ? '…' : 'Add'}
-              </PrimaryButton>
-              <SecondaryButton type="button" onClick={() => setCreating(false)} className="px-2 text-label-xs shrink-0">
+              <span className="font-mono text-[11px] font-bold text-on-surface flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px] text-primary">lock</span>
+                <span>Lock with PIN / Password</span>
+              </span>
+            </label>
+
+            {isLocked && (
+              <Input
+                type="password"
+                placeholder="Enter PIN (min 4 chars)"
+                value={passcode}
+                onChange={(e) => setPasscode(e.target.value)}
+                minLength={4}
+                maxLength={32}
+                className="py-1 text-label-xs font-mono"
+              />
+            )}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <SecondaryButton type="button" onClick={() => setCreating(false)} className="px-2 text-label-xs">
                 Cancel
               </SecondaryButton>
+              <PrimaryButton type="submit" disabled={busyCreate || !newSectionName.trim()} className="px-3 text-label-xs">
+                {busyCreate ? '…' : 'Create & Select'}
+              </PrimaryButton>
             </div>
           </form>
         ) : (
@@ -536,7 +584,7 @@ function MoveToSectionModal({ open, onClose, conversationId, currentSectionId, o
             className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-dashed border-tertiary/40 bg-surface text-tertiary font-mono text-label-xs font-bold hover:bg-surface-container transition-all press"
           >
             <span className="material-symbols-outlined text-[16px]">create_new_folder</span>
-            <span>+ Create Section</span>
+            <span>+ Create Folder</span>
           </button>
         )}
 
@@ -545,7 +593,7 @@ function MoveToSectionModal({ open, onClose, conversationId, currentSectionId, o
             Cancel
           </SecondaryButton>
           <PrimaryButton type="button" disabled={busyMove || loading} onClick={handleSaveMove} className="px-4 py-2">
-            {busyMove ? 'Saving…' : 'Save Section'}
+            {busyMove ? 'Saving…' : 'Move to Folder'}
           </PrimaryButton>
         </div>
       </div>

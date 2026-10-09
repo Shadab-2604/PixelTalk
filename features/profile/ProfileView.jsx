@@ -314,7 +314,7 @@ export function ProfileView({ username = null, targetId = null }) {
 
   return (
     <AppShell wide sidebar={<><ConversationSidebar /><SidebarFooter /></>}>
-      <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6">
+      <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-24 sm:pb-28 lg:pb-10 space-y-6">
         {uploadError && (
           <div className="mb-2">
             <ErrorText>{uploadError}</ErrorText>
@@ -324,10 +324,10 @@ export function ProfileView({ username = null, targetId = null }) {
         {/* LOADING SKELETON */}
         {loading ? (
           <div className="bg-surface-container-lowest rounded-2xl border-2 border-tertiary shadow-pixel-sm overflow-hidden animate-pulse">
-            <div className="w-full h-28 min-[320px]:h-32 min-[375px]:h-36 min-[420px]:h-40 sm:h-44 md:h-52 lg:h-60 xl:h-[270px] 2xl:h-[300px] bg-surface-container border-b-2 border-tertiary/20" />
+            <div className="w-full h-32 min-[400px]:h-36 min-[480px]:h-44 sm:h-52 md:h-56 lg:h-64 xl:h-72 2xl:h-80 bg-surface-container border-b-2 border-tertiary/20" />
             <div className="px-3 sm:px-6 md:px-8 pb-5 sm:pb-6 pt-3 space-y-4 sm:space-y-5">
-              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 -mt-9 min-[320px]:-mt-10 min-[375px]:-mt-11 min-[420px]:-mt-12 sm:-mt-13 md:-mt-14 lg:-mt-16 xl:-mt-18">
-                <div className="w-18 h-18 min-[320px]:w-20 min-[320px]:h-20 min-[375px]:w-22 min-[375px]:h-22 min-[420px]:w-24 min-[420px]:h-24 sm:w-26 sm:h-26 md:w-28 md:h-28 lg:w-32 lg:h-32 xl:w-36 xl:h-36 rounded-2xl bg-surface-container border-4 border-surface shadow-pixel-md shrink-0" />
+              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 -mt-10 min-[400px]:-mt-11 sm:-mt-13 md:-mt-14 lg:-mt-16 xl:-mt-18">
+                <div className="w-20 h-20 min-[400px]:w-22 min-[400px]:h-22 sm:w-26 sm:h-26 md:w-28 md:h-28 lg:w-32 lg:h-32 xl:w-36 xl:h-36 rounded-2xl bg-surface-container border-4 border-surface shadow-pixel-md shrink-0" />
                 <div className="space-y-1.5 sm:space-y-2 flex-1 min-w-0">
                   <div className="h-5 sm:h-7 bg-surface-container rounded-lg w-40 sm:w-48 max-w-full" />
                   <div className="h-3.5 sm:h-4 bg-surface-container rounded w-24 sm:w-32" />
@@ -382,13 +382,13 @@ export function ProfileView({ username = null, targetId = null }) {
               * 1. UNIVERSAL RESPONSIVE BANNER CONTAINER
               * Respects private account masking: if restricted, displays minimal pixel horizon.
               * Height is fluid & responsive across all screen categories:
-              * - Small phones (240–374px): 112px–128px (`h-28 min-[320px]:h-32`)
-              * - Standard phones (375–479px): 144px–160px (`min-[375px]:h-36 min-[420px]:h-40`)
-              * - Tablets (480–1023px): 176px–208px (`sm:h-44 md:h-52`)
-              * - Desktop (1024–1599px): 240px–270px (`lg:h-60 xl:h-[270px]`)
-              * - Large desktop / ultrawide (1600px+): 300px (`2xl:h-[300px]`)
+              * - Small phones (240–374px): 128px (`h-32`)
+              * - Standard phones (375–479px): 144px–176px (`min-[400px]:h-36 min-[480px]:h-44`)
+              * - Tablets (480–1023px): 208px–224px (`sm:h-52 md:h-56`)
+              * - Desktop (1024–1599px): 256px–288px (`lg:h-64 xl:h-72`)
+              * - Large desktop / ultrawide (1600px+): 320px (`2xl:h-80`)
               */}
-            <div className="w-full h-28 min-[320px]:h-32 min-[375px]:h-36 min-[420px]:h-40 sm:h-44 md:h-52 lg:h-60 xl:h-[270px] 2xl:h-[300px] relative overflow-hidden bg-surface-container border-b-2 border-tertiary group transition-[height] duration-200">
+            <div className="w-full h-32 min-[400px]:h-36 min-[480px]:h-44 sm:h-52 md:h-56 lg:h-64 xl:h-72 2xl:h-80 relative overflow-hidden bg-surface-container border-b-2 border-tertiary group transition-[height] duration-200">
               {isPrivateRestricted ? (
                 <div className="w-full h-full bg-gradient-to-br from-surface-container-high via-surface-container-lowest to-surface-container flex items-center justify-center">
                   <span className="material-symbols-outlined text-tertiary/20 text-[56px] sm:text-[80px] select-none">lock</span>
@@ -471,12 +471,12 @@ export function ProfileView({ username = null, targetId = null }) {
               */}
             <div className="px-3 min-[360px]:px-4 sm:px-6 md:px-8 lg:px-10 pb-5 sm:pb-6 md:pb-8 pt-0 bg-surface">
               {/* Header Grid: Avatar on left, Actions on right (desktop) or stacked (mobile) */}
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-3.5 sm:gap-4 -mt-9 min-[320px]:-mt-10 min-[375px]:-mt-11 min-[420px]:-mt-12 sm:-mt-13 md:-mt-14 lg:-mt-16 xl:-mt-18 relative z-20">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-3.5 sm:gap-4 -mt-10 min-[400px]:-mt-11 sm:-mt-13 md:-mt-14 lg:-mt-16 xl:-mt-18 relative z-20">
                 {/* Avatar Frame + Identity Details */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 md:gap-5 min-w-0 flex-1">
-                  {/* Avatar Container: 72px–80px (small) -> 88px–96px (standard mobile) -> 104px–112px (tablet) -> 128px–144px (desktop) */}
+                  {/* Avatar Container: 80px (small) -> 88px–96px (standard mobile) -> 104px–112px (tablet) -> 128px–144px (desktop) */}
                   <div className="relative shrink-0">
-                    <div className="w-18 h-18 min-[320px]:w-20 min-[320px]:h-20 min-[375px]:w-22 min-[375px]:h-22 min-[420px]:w-24 min-[420px]:h-24 sm:w-26 sm:h-26 md:w-28 md:h-28 lg:w-32 lg:h-32 xl:w-36 xl:h-36 rounded-2xl bg-surface-container border-4 border-surface shadow-pixel-md overflow-hidden ring-2 ring-tertiary relative transition-all">
+                    <div className="w-20 h-20 min-[400px]:w-22 min-[400px]:h-22 sm:w-26 sm:h-26 md:w-28 md:h-28 lg:w-32 lg:h-32 xl:w-36 xl:h-36 rounded-2xl bg-surface-container border-4 border-surface shadow-pixel-md overflow-hidden ring-2 ring-tertiary relative transition-all">
                       <Avatar src={getUserAvatar(user)} alt={user?.displayName || user?.username} size={144} ring={false} className="!w-full !h-full" />
                       {uploadingAvatar && (
                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center">

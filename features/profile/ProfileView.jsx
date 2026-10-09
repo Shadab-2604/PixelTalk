@@ -326,9 +326,9 @@ export function ProfileView({ username = null, targetId = null }) {
           <div className="bg-surface-container-lowest rounded-2xl border-2 border-tertiary shadow-pixel-sm overflow-hidden animate-pulse">
             <div className="w-full h-32 min-[400px]:h-36 min-[480px]:h-44 sm:h-52 md:h-56 lg:h-64 xl:h-72 2xl:h-80 bg-surface-container border-b-2 border-tertiary/20" />
             <div className="px-3 sm:px-6 md:px-8 pb-5 sm:pb-6 pt-3 space-y-4 sm:space-y-5">
-              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 -mt-10 min-[400px]:-mt-11 sm:-mt-13 md:-mt-14 lg:-mt-16 xl:-mt-18">
-                <div className="w-20 h-20 min-[400px]:w-22 min-[400px]:h-22 sm:w-26 sm:h-26 md:w-28 md:h-28 lg:w-32 lg:h-32 xl:w-36 xl:h-36 rounded-2xl bg-surface-container border-4 border-surface shadow-pixel-md shrink-0" />
-                <div className="space-y-1.5 sm:space-y-2 flex-1 min-w-0">
+              <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+                <div className="w-20 h-20 min-[400px]:w-22 min-[400px]:h-22 sm:w-26 sm:h-26 md:w-28 md:h-28 lg:w-32 lg:h-32 xl:w-36 xl:h-36 rounded-2xl bg-surface-container border-4 border-surface shadow-pixel-md shrink-0 -mt-10 min-[400px]:-mt-11 sm:-mt-13 md:-mt-14 lg:-mt-16 xl:-mt-18" />
+                <div className="space-y-1.5 sm:space-y-2 flex-1 min-w-0 pt-1 sm:pt-2 md:pt-3">
                   <div className="h-5 sm:h-7 bg-surface-container rounded-lg w-40 sm:w-48 max-w-full" />
                   <div className="h-3.5 sm:h-4 bg-surface-container rounded w-24 sm:w-32" />
                 </div>
@@ -466,16 +466,16 @@ export function ProfileView({ username = null, targetId = null }) {
 
             {/*
               * 2. IDENTITY SECTION & PROPORTIONALLY RESERVED AVATAR SPACE
-              * Solves the mobile banner crunch: Avatar scales proportionally and overlaps
-              * cleanly across all breakpoints without covering the banner artwork or top badges.
+              * Avatar overlaps the lower banner edge cleanly.
+              * Display name, badges, handle, and status sit comfortably in the content area.
               */}
             <div className="px-3 min-[360px]:px-4 sm:px-6 md:px-8 lg:px-10 pb-5 sm:pb-6 md:pb-8 pt-0 bg-surface">
               {/* Header Grid: Avatar on left, Actions on right (desktop) or stacked (mobile) */}
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-3.5 sm:gap-4 -mt-10 min-[400px]:-mt-11 sm:-mt-13 md:-mt-14 lg:-mt-16 xl:-mt-18 relative z-20">
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-3.5 sm:gap-4 relative z-20">
                 {/* Avatar Frame + Identity Details */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 md:gap-5 min-w-0 flex-1">
-                  {/* Avatar Container: 80px (small) -> 88px–96px (standard mobile) -> 104px–112px (tablet) -> 128px–144px (desktop) */}
-                  <div className="relative shrink-0">
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 md:gap-5 min-w-0 flex-1">
+                  {/* Avatar Container with negative margin to overlap banner edge */}
+                  <div className="relative shrink-0 -mt-10 min-[400px]:-mt-11 sm:-mt-13 md:-mt-14 lg:-mt-16 xl:-mt-18">
                     <div className="w-20 h-20 min-[400px]:w-22 min-[400px]:h-22 sm:w-26 sm:h-26 md:w-28 md:h-28 lg:w-32 lg:h-32 xl:w-36 xl:h-36 rounded-2xl bg-surface-container border-4 border-surface shadow-pixel-md overflow-hidden ring-2 ring-tertiary relative transition-all">
                       <Avatar src={getUserAvatar(user)} alt={user?.displayName || user?.username} size={144} ring={false} className="!w-full !h-full" />
                       {uploadingAvatar && (
@@ -523,7 +523,7 @@ export function ProfileView({ username = null, targetId = null }) {
                   </div>
 
                   {/* Identity Text (Never hidden or overlapped) */}
-                  <div className="flex flex-col gap-1 min-w-0 flex-1">
+                  <div className="flex flex-col gap-1 min-w-0 flex-1 pt-1 sm:pt-2 md:pt-3">
                     <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                       <h1 className="font-headline-md sm:font-headline-lg text-body-lg min-[360px]:text-headline-sm sm:text-headline-md lg:text-headline-lg font-bold text-on-surface uppercase tracking-tight break-words overflow-hidden">
                         {user?.displayName || user?.username}
@@ -568,7 +568,7 @@ export function ProfileView({ username = null, targetId = null }) {
                 </div>
 
                 {/* Right Action Cluster: Edit Profile (Self) OR Follow/Message (Other) */}
-                <div className="flex items-center gap-2 self-stretch md:self-auto justify-end pt-1 md:pt-0 shrink-0">
+                <div className="flex items-center gap-2 self-stretch md:self-auto justify-end pt-1 md:pt-3 shrink-0">
                   {isSelf ? (
                     <button
                       type="button"

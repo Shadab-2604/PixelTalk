@@ -16,7 +16,7 @@
 'use client';
 
 import Link from 'next/link';
-import { LogoFull } from '@/components/Logo';
+import { LogoMark } from '@/components/Logo';
 import { Badge } from '@/components/ui';
 import { SignupForm } from '@/features/auth/AuthForms';
 
@@ -24,8 +24,8 @@ export default function SignupPage() {
   return (
     <main className="w-full max-w-[1440px] mx-auto min-h-screen p-6 md:p-10 lg:p-12 flex flex-col bg-pixel-grid">
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-14 h-14 flex-shrink-0 bg-surface-container-lowest p-1.5 rounded-xl border-2 border-tertiary/20 shadow-pixel-terracotta">
-          <LogoFull height={50} />
+        <div className="w-14 h-14 md:w-16 md:h-16 flex-shrink-0 bg-surface-container-lowest p-2 rounded-2xl border-2 border-tertiary/20 shadow-pixel-terracotta flex items-center justify-center">
+          <LogoMark size={52} className="w-full h-full" />
         </div>
         <div>
           <div className="flex items-center gap-2">

@@ -19,7 +19,7 @@ import { usePathname } from 'next/navigation';
 import { TopBar } from '@/components/TopBar';
 import { useAuth } from '@/hooks/useAuth';
 import { SidebarFooter } from '@/components/AppShell';
-import { LogoFull } from '@/components/Logo';
+import { LogoMark } from '@/components/Logo';
 import { Input, PrimaryButton, ErrorText, PasswordInput } from '@/components/ui';
 import { sfx } from '@/lib/sound';
 
@@ -161,8 +161,8 @@ function AdminLoginGate({ onLogin, onLogout }) {
     <div className="min-h-screen bg-surface-container bg-pixel-grid flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md bg-surface-container-lowest border-2 border-tertiary/40 rounded-2xl p-7 sm:p-9 shadow-pixel-lg relative">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-tertiary/15">
-          <div className="w-12 h-12 flex-shrink-0 bg-surface-container p-1 rounded-xl border border-tertiary/30 shadow-pixel-terracotta">
-            <LogoFull height={40} />
+          <div className="w-12 h-12 flex-shrink-0 bg-surface-container p-1.5 rounded-xl border border-tertiary/30 shadow-pixel-terracotta flex items-center justify-center">
+            <LogoMark size={36} className="w-full h-full" />
           </div>
           <div>
             <div className="flex items-center gap-2">

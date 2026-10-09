@@ -20,7 +20,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogoFull } from '@/components/Logo';
+import { LogoMark } from '@/components/Logo';
 import { Badge } from '@/components/ui';
 import { LoginForm } from '@/features/auth/AuthForms';
 import { useAuth } from '@/hooks/useAuth';
@@ -122,8 +122,8 @@ export default function LoginPage() {
         <section className="lg:col-span-7 flex flex-col justify-between space-y-8">
           <div className="flex flex-col space-y-4">
             <div className="inline-flex items-center gap-3">
-              <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 bg-surface-container-lowest p-1.5 rounded-xl border-2 border-tertiary/20 shadow-pixel-terracotta">
-                <LogoFull height={64} />
+              <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 bg-surface-container-lowest p-2 md:p-2.5 rounded-2xl border-2 border-tertiary/20 shadow-pixel-terracotta flex items-center justify-center">
+                <LogoMark size={64} className="w-full h-full" />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">

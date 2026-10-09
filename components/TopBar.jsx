@@ -23,6 +23,8 @@ import { avatarSrc, getUserAvatar } from '@/lib/avatars';
 import { useAuth } from '@/hooks/useAuth';
 import { useSound } from '@/hooks/useSound';
 import { CreateRoomModal } from '@/features/rooms/CreateRoomModal';
+import { NotificationBell } from '@/features/notifications/NotificationBell';
+import { AccountSwitcherModal } from '@/features/auth/AccountSwitcherModal';
 
 export function TopBar({ title, adminBadge = false, onToggleSidebar, showSidebarToggle = false }) {
   const { user, logout } = useAuth();
@@ -30,6 +32,7 @@ export function TopBar({ title, adminBadge = false, onToggleSidebar, showSidebar
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -72,6 +75,8 @@ export function TopBar({ title, adminBadge = false, onToggleSidebar, showSidebar
       </div>
 
       <div className="flex items-center gap-2">
+        <NotificationBell />
+
         <button
           onClick={toggle}
           title={enabled ? 'Sound effects: on' : 'Sound effects: off'}
@@ -104,6 +109,7 @@ export function TopBar({ title, adminBadge = false, onToggleSidebar, showSidebar
                 )}
               </div>
               <nav className="py-1.5">
+                <MenuItem icon="switch_account" label="Switch Account" onClick={() => { setMenuOpen(false); setSwitcherOpen(true); }} />
                 <MenuItem icon="settings" label="Settings" onClick={() => { setMenuOpen(false); router.push('/settings'); }} />
                 <MenuItem icon="person" label="Profile" onClick={() => { setMenuOpen(false); router.push('/profile'); }} />
                 {adminBadge && (
@@ -123,6 +129,7 @@ export function TopBar({ title, adminBadge = false, onToggleSidebar, showSidebar
       </div>
 
       <CreateRoomModal open={createOpen} onClose={() => setCreateOpen(false)} />
+      <AccountSwitcherModal isOpen={switcherOpen} onClose={() => setSwitcherOpen(false)} />
     </header>
   );
 }

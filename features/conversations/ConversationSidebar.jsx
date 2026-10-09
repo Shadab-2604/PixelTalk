@@ -206,12 +206,17 @@ export function ConversationSidebar() {
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible') load();
     };
+    const onAccountSwitched = () => {
+      load();
+    };
     document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pixeltalk:account_switched', onAccountSwitched);
     return () => {
       clearInterval(t);
       document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pixeltalk:account_switched', onAccountSwitched);
     };
-  }, []);
+  }, [user?._id]);
 
   // Realtime conversation updates
   useEffect(() => {

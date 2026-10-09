@@ -21,6 +21,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { useRouter } from 'next/navigation';
 import { authService } from '@/services/authService';
 import { syncSocketAuth, disconnectSocket } from '@/lib/socket';
+import { saveAccount, getSavedAccounts, removeSavedAccount, clearAllSavedAccounts, validateAccountSession } from '@/lib/accountSwitcher';
 
 const AuthContext = createContext(null);
 
@@ -33,6 +34,12 @@ export function AuthProvider({ children }) {
     try {
       const data = await authService.me();
       setUser(data.user);
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('pixeltalk_token');
+        if (token && data.user) {
+          saveAccount({ user: data.user, token });
+        }
+      }
       syncSocketAuth();
       return data.user;
     } catch {
@@ -52,6 +59,7 @@ export function AuthProvider({ children }) {
     if (data.token && typeof window !== 'undefined') {
       try {
         localStorage.setItem('pixeltalk_token', data.token);
+        saveAccount({ user: data.user, token: data.token });
       } catch {}
     }
     setUser(data.user);
@@ -64,6 +72,7 @@ export function AuthProvider({ children }) {
     if (data.token && typeof window !== 'undefined') {
       try {
         localStorage.setItem('pixeltalk_token', data.token);
+        saveAccount({ user: data.user, token: data.token });
       } catch {}
     }
     setUser(data.user);
@@ -71,11 +80,64 @@ export function AuthProvider({ children }) {
     return data.user;
   }, []);
 
-  const logout = useCallback(async () => {
+  const switchActiveAccount = useCallback(async (targetUserId) => {
+    const accounts = getSavedAccounts();
+    const target = accounts.find((a) => String(a.id || a._id) === String(targetUserId));
+    if (!target || !target.token) {
+      throw new Error('Selected account session not found. Please log in again.');
+    }
+
+    try {
+      // Validate session against backend before switching
+      const validatedUser = await validateAccountSession(target.token);
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('pixeltalk_token', target.token);
+      }
+
+      saveAccount({ user: validatedUser, token: target.token });
+      setUser(validatedUser);
+      syncSocketAuth(target.token);
+
+      // Trigger custom event so any active chat caches can reset cleanly
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('pixeltalk:account_switched', { detail: { user: validatedUser } }));
+      }
+
+      return validatedUser;
+    } catch (err) {
+      if (err.isSessionExpired) {
+        removeSavedAccount(targetUserId);
+      }
+      throw err;
+    }
+  }, []);
+
+  const logout = useCallback(async (options = { removeFromSwitcher: true }) => {
+    const currentUserId = user?._id || user?.id;
     try {
       await authService.logout();
     } finally {
       if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('pixeltalk_token');
+          if (options.removeFromSwitcher && currentUserId) {
+            removeSavedAccount(currentUserId);
+          }
+        } catch {}
+      }
+      disconnectSocket();
+      setUser(null);
+      router.push('/');
+    }
+  }, [user, router]);
+
+  const logoutAll = useCallback(async () => {
+    try {
+      await authService.logout();
+    } finally {
+      if (typeof window !== 'undefined') {
+        clearAllSavedAccounts();
         try {
           localStorage.removeItem('pixeltalk_token');
         } catch {}
@@ -87,7 +149,17 @@ export function AuthProvider({ children }) {
   }, [router]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refresh, setUser }}>
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      login,
+      register,
+      logout,
+      logoutAll,
+      switchActiveAccount,
+      refresh,
+      setUser,
+    }}>
       {children}
     </AuthContext.Provider>
   );

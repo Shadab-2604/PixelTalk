@@ -78,7 +78,19 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .pt-safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-top: env(safe-area-inset-bottom, 0px);
+}
+
+/* ---- Main Content App Viewport Height ---- */
+.h-main-app {
+  height: calc(100vh - 7.5rem - env(safe-area-inset-bottom, 0px));
+  height: calc(100dvh - 7.5rem - env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 1024px) {
+  .h-main-app {
+    height: calc(100vh - 4rem);
+    height: calc(100dvh - 4rem);
+  }
 }
 
 /* ---- Pixel grid textures (from the Stitch pages) ---- */

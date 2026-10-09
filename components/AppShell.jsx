@@ -62,7 +62,7 @@ export function AppShell({
   rightPanel = null,
   rightDrawerOpen = false,
   onCloseRightDrawer = null,
-  wide = false,
+  wide = true,
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -140,19 +140,23 @@ export function AppShell({
         {/* Sidebar: static on lg, drawer below */}
         {sidebarNode && (
           <>
-            <aside className="hidden lg:flex w-72 flex-shrink-0 flex-col border-r border-tertiary/20 bg-surface-container-low pixel-dither-pattern sticky top-16 h-[calc(100dvh-4rem)]">
+            <aside className="hidden lg:flex w-72 flex-shrink-0 flex-col border-r border-tertiary/20 bg-surface-container-low pixel-dither-pattern sticky top-16 h-main-app overflow-hidden">
               {sidebarNode}
             </aside>
             {drawerOpen && (
               <div className="lg:hidden fixed inset-0 z-40 flex">
                 <div className="absolute inset-0 bg-on-surface/40 backdrop-blur-sm" onClick={() => setDrawerOpen(false)} />
-                <aside className="relative w-72 max-w-[85vw] h-full bg-surface-container-low border-r-2 border-tertiary pixel-dither-pattern flex flex-col overflow-y-auto">
-                  <button
-                    onClick={() => setDrawerOpen(false)}
-                    className="self-end m-2 w-8 h-8 rounded-lg bg-surface-container border border-tertiary/30 text-tertiary flex items-center justify-center cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">close</span>
-                  </button>
+                <aside className="relative w-72 max-w-[85vw] h-full bg-surface-container-low border-r-2 border-tertiary pixel-dither-pattern flex flex-col overflow-hidden pb-safe-bottom">
+                  <div className="flex items-center justify-end p-2 shrink-0 border-b border-tertiary/15">
+                    <button
+                      onClick={() => setDrawerOpen(false)}
+                      className="w-8 h-8 rounded-lg bg-surface-container border border-tertiary/30 text-tertiary flex items-center justify-center cursor-pointer"
+                      title="Close menu"
+                      aria-label="Close menu"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                  </div>
                   {sidebarNode}
                 </aside>
               </div>
@@ -161,11 +165,11 @@ export function AppShell({
         )}
 
         {/* Main */}
-        <main className="flex-1 min-w-0 h-[calc(100dvh-4rem)] sticky top-16 overflow-y-auto">{children}</main>
+        <main className="flex-1 min-w-0 h-main-app sticky top-16 overflow-y-auto">{children}</main>
 
         {/* Optional right inspector (xl only desktop) */}
         {rightPanel && (
-          <aside className="hidden xl:flex w-80 xl:w-[330px] flex-shrink-0 border-l border-tertiary/20 bg-surface/80 sticky top-16 h-[calc(100dvh-4rem)] overflow-y-auto p-3.5">
+          <aside className="hidden xl:flex w-80 xl:w-[330px] flex-shrink-0 border-l border-tertiary/20 bg-surface/80 sticky top-16 h-main-app overflow-y-auto p-3.5">
             {rightPanel}
           </aside>
         )}
@@ -190,14 +194,14 @@ export function AppShell({
       </div>
 
       {/* Mobile bottom navigation */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 flex items-center justify-around bg-surface border-t border-tertiary/20 py-2 pt-safe-bottom">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 flex items-center justify-around bg-surface border-t border-tertiary/20 h-14 pb-safe-bottom">
         {MOBILE_NAV.map((n) => {
           const active = pathname === n.href || pathname.startsWith(n.href + '/');
           return (
             <Link
               key={n.href}
               href={n.href}
-              className={`flex flex-col items-center font-mono text-[10px] gap-0.5 px-3 py-1 ${
+              className={`flex flex-col items-center font-mono text-[10px] gap-0.5 px-1.5 sm:px-3 py-1 ${
                 active ? 'text-primary font-bold' : 'text-on-surface-variant'
               }`}
             >
@@ -207,7 +211,6 @@ export function AppShell({
           );
         })}
       </nav>
-      <div className="lg:hidden h-14" />
     </div>
   );
 }
@@ -217,7 +220,7 @@ export function SidebarFooter() {
   const online = useConnectionStatus();
   if (!user) return null;
   return (
-    <div className="p-3 bg-surface-container border-t border-tertiary/20 flex items-center justify-between mt-auto">
+    <div className="p-3 bg-surface-container border-t border-tertiary/20 flex items-center justify-between mt-auto shrink-0">
       <div className="flex items-center gap-2.5 min-w-0">
         <Avatar src={avatarSrc(user.avatarId)} alt={user.displayName} size={32} online />
         <div className="min-w-0">

@@ -107,12 +107,12 @@ export default function DashboardPage() {
 
         {/* Conversation stream */}
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <div className="flex items-center gap-2">
               <h2 className="font-display text-headline-md text-on-surface font-bold">Conversation Stream</h2>
               <Badge tone="brown">Active</Badge>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {[
                 ['all', 'All'],
                 ['direct', 'Direct'],

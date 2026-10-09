@@ -126,7 +126,7 @@ export default function LoginPage() {
                 <LogoMark size={64} className="w-full h-full" />
               </div>
               <div className="flex flex-col">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <h1 className="font-display text-headline-lg text-tertiary font-bold tracking-tight">PIXELTALK</h1>
                   <Badge tone="green">EST. 2025</Badge>
                 </div>

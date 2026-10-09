@@ -463,7 +463,7 @@ export function MessageList({
   let lastDay = null;
 
   return (
-    <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto p-4 space-y-4 relative">
+    <div ref={scrollRef} onScroll={onScroll} className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-4 relative">
       {loadingOlder && (
         <div className="sticky top-0 z-10 flex items-center justify-center gap-2 py-1.5 px-3 mx-auto w-fit bg-surface-container/90 backdrop-blur-sm rounded-full border border-tertiary/20 shadow-pixel-xs font-mono text-label-xs text-on-surface-variant">
           <span className="w-3 h-3 border-2 border-tertiary/30 border-t-primary-container animate-spin rounded-full inline-block" />

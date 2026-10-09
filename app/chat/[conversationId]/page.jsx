@@ -251,9 +251,9 @@ export default function ChatPage() {
         )
       }
     >
-      <div className="flex flex-col h-full bg-surface">
+      <div className="flex flex-col h-full min-h-0 bg-surface">
         {/* Chat header */}
-        <div className="h-16 px-4 border-b border-tertiary/15 bg-surface/95 flex items-center justify-between shrink-0 sticky top-0 z-10">
+        <div className="h-16 px-3 sm:px-4 border-b border-tertiary/15 bg-surface/95 flex items-center justify-between shrink-0 sticky top-0 z-10">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               type="button"
@@ -367,11 +367,11 @@ export default function ChatPage() {
 
         {/* Messages */}
         {loading ? (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 min-h-0 flex items-center justify-center">
             <Spinner />
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 min-h-0 flex flex-col">
             <EmptyState icon="waving_hand" title="Say hello!" hint="This is the beginning of your direct conversation." />
             <div className="mt-auto" />
           </div>
@@ -391,7 +391,7 @@ export default function ChatPage() {
         <TypingIndicator typingUsers={typingUsers} currentUserId={user} />
 
         {/* Composer */}
-        <div className="p-4 border-t border-tertiary/20 bg-surface-container/70 shrink-0 sticky bottom-0 pt-safe-bottom">
+        <div className="p-3 sm:p-4 border-t border-tertiary/20 bg-surface-container/70 shrink-0">
           <MessageComposer
             onSend={send}
             disabled={!conversation || loading}

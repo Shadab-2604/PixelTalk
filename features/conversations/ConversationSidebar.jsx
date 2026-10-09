@@ -471,8 +471,8 @@ export function ConversationSidebar() {
   const unread = convos.reduce((n, c) => n + (c.unreadCount || 0), 0);
 
   return (
-    <div className="flex flex-col h-full min-h-0">
-      <div className="p-4 flex flex-col gap-3 overflow-y-auto flex-1">
+    <div className="flex-1 min-h-0 flex flex-col">
+      <div className="p-4 flex flex-col gap-3 overflow-y-auto flex-1 min-h-0">
         {/* Search Input */}
         <div className="relative">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-tertiary/60 text-[18px]">

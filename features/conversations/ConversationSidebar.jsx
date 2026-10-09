@@ -28,6 +28,7 @@ import {
   conversationSubtitle,
   otherMember,
 } from '@/features/conversations/conversationUtils';
+import { ConversationActionsMenu } from '@/features/conversations/ConversationActionsMenu';
 import {
   Avatar,
   Badge,
@@ -352,8 +353,10 @@ export function ConversationSidebar() {
   }, [user]);
 
   const togglePin = async (e, conversationId) => {
-    e.preventDefault();
-    e.stopPropagation();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!conversationId || busyPinId) return;
     setBusyPinId(conversationId);
     play('click');
@@ -367,6 +370,48 @@ export function ConversationSidebar() {
     } finally {
       setBusyPinId(null);
     }
+  };
+
+  const handleConversationCleared = (convoId) => {
+    setConvos((prev) =>
+      prev.map((c) =>
+        String(c._id) === String(convoId)
+          ? { ...c, lastMessage: null, unreadCount: 0 }
+          : c
+      )
+    );
+    load();
+  };
+
+  const handleConversationDeleted = (convoId) => {
+    setConvos((prev) => prev.filter((c) => String(c._id) !== String(convoId)));
+    load();
+  };
+
+  const handleConversationMoved = (convoId, sectionId) => {
+    setConvos((prev) =>
+      prev.map((c) =>
+        String(c._id) === String(convoId) ? { ...c, sectionId } : c
+      )
+    );
+    load();
+  };
+
+  const handleConversationMuteToggled = async () => {
+    try {
+      const u = await userService.me();
+      if (u && u.user) setUser(u.user);
+    } catch {
+      load();
+    }
+  };
+
+  const handleConversationReadToggled = (convoId, count) => {
+    setConvos((prev) =>
+      prev.map((c) =>
+        String(c._id) === String(convoId) ? { ...c, unreadCount: count } : c
+      )
+    );
   };
 
   const startDirectFromSearch = async (targetUserId) => {
@@ -625,6 +670,11 @@ export function ConversationSidebar() {
                   onTogglePin={togglePin}
                   busyPinId={busyPinId}
                   typingUsers={typingConvos[c._id]}
+                  onCleared={handleConversationCleared}
+                  onDeleted={handleConversationDeleted}
+                  onSectionMoved={handleConversationMoved}
+                  onToggledMute={handleConversationMuteToggled}
+                  onToggledRead={handleConversationReadToggled}
                 />
               ))}
             </div>
@@ -756,6 +806,11 @@ export function ConversationSidebar() {
                                 onTogglePin={togglePin}
                                 busyPinId={busyPinId}
                                 typingUsers={typingConvos[c._id]}
+                                onCleared={handleConversationCleared}
+                                onDeleted={handleConversationDeleted}
+                                onSectionMoved={handleConversationMoved}
+                                onToggledMute={handleConversationMuteToggled}
+                                onToggledRead={handleConversationReadToggled}
                               />
                             ))
                           )}
@@ -792,6 +847,11 @@ export function ConversationSidebar() {
                   onTogglePin={togglePin}
                   busyPinId={busyPinId}
                   typingUsers={typingConvos[c._id]}
+                  onCleared={handleConversationCleared}
+                  onDeleted={handleConversationDeleted}
+                  onSectionMoved={handleConversationMoved}
+                  onToggledMute={handleConversationMuteToggled}
+                  onToggledRead={handleConversationReadToggled}
                 />
               ))}
             </div>
@@ -1499,7 +1559,20 @@ function DeleteFolderModal({ open, section, onClose, onDeleted }) {
 }
 
 // ---------------- Conversation Row ----------------
-function ConversationRow({ c, user, isOnline, isPinned, onTogglePin, busyPinId, typingUsers }) {
+function ConversationRow({
+  c,
+  user,
+  isOnline,
+  isPinned,
+  onTogglePin,
+  busyPinId,
+  typingUsers,
+  onCleared,
+  onDeleted,
+  onSectionMoved,
+  onToggledMute,
+  onToggledRead,
+}) {
   const other = otherMember(c, user);
   const online = c.type === 'direct' ? isOnline(other?._id || other?.id) : undefined;
   const lastAt = c.lastMessage?.createdAt || c.lastMessageAt || c.updatedAt;
@@ -1507,7 +1580,10 @@ function ConversationRow({ c, user, isOnline, isPinned, onTogglePin, busyPinId, 
 
   const myId = String(user?._id || user?.id || '');
   const activeTyping = Object.entries(typingUsers || {}).filter(([id]) => id && String(id) !== myId);
-  const typingName = activeTyping.length > 0 ? activeTyping[0][1]?.displayName || activeTyping[0][1]?.username || 'Someone' : null;
+  const typingName =
+    activeTyping.length > 0
+      ? activeTyping[0][1]?.displayName || activeTyping[0][1]?.username || 'Someone'
+      : null;
 
   return (
     <div className="group relative flex items-center rounded-lg bg-surface-container-lowest/80 border border-tertiary/20 hover:border-tertiary transition-all shadow-pixel-sm hover:bg-surface-container-lowest">
@@ -1549,19 +1625,33 @@ function ConversationRow({ c, user, isOnline, isPinned, onTogglePin, busyPinId, 
         )}
       </Link>
 
-      {/* Pin / Unpin Action Button */}
-      <button
-        type="button"
-        onClick={(e) => onTogglePin(e, c._id)}
-        disabled={busyPinId === c._id}
-        title={isPinned ? 'Unpin conversation' : 'Pin conversation'}
-        aria-label={isPinned ? 'Unpin conversation' : 'Pin conversation'}
-        className={`px-2 py-3 text-tertiary/40 hover:text-primary transition-opacity ${
-          isPinned ? 'opacity-100 text-primary' : 'opacity-0 group-hover:opacity-100'
-        }`}
-      >
-        <span className="material-symbols-outlined text-[16px]">{isPinned ? 'keep' : 'keep_off'}</span>
-      </button>
+      {/* Action Controls: Pin status indicator & Three-Dot Context Menu */}
+      <div className="flex items-center gap-0.5 pr-1 shrink-0">
+        {isPinned && (
+          <button
+            type="button"
+            onClick={(e) => onTogglePin(e, c._id)}
+            disabled={busyPinId === c._id}
+            title="Pinned conversation (click to unpin)"
+            aria-label="Pinned conversation"
+            className="p-1 text-primary hover:text-primary-container transition-colors"
+          >
+            <span className="material-symbols-outlined text-[15px]">keep</span>
+          </button>
+        )}
+
+        <ConversationActionsMenu
+          conversation={{ ...c, isPinned }}
+          currentUser={user}
+          buttonStyle="row"
+          onCleared={() => onCleared?.(c._id)}
+          onDeleted={() => onDeleted?.(c._id)}
+          onSectionMoved={(sectionId) => onSectionMoved?.(c._id, sectionId)}
+          onToggledPin={(convoId) => onTogglePin?.(null, convoId)}
+          onToggledMute={(convoId) => onToggledMute?.(convoId)}
+          onToggledRead={(count) => onToggledRead?.(c._id, count)}
+        />
+      </div>
     </div>
   );
 }

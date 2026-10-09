@@ -30,6 +30,7 @@ export const messageService = {
     return data?.media || data;
   },
   markRead: (conversationId) => post(`/conversations/${conversationId}/read`),
+  markUnread: (conversationId) => post(`/conversations/${conversationId}/unread`),
   edit: (id, content) => patch(`/messages/${id}`, { content }),
   remove: (id) => del(`/messages/${id}`),
   react: (id, emoji) => post(`/messages/${id}/react`, { emoji }),

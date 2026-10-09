@@ -15,11 +15,13 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { conversationService } from '@/services/conversationService';
 import { messageService } from '@/services/messageService';
 import { userService } from '@/services/userService';
 import { chatSectionService } from '@/services/chatSectionService';
+import { useFloatingMenuPosition } from '@/hooks/useFloatingMenuPosition';
 import {
   Modal,
   PrimaryButton,
@@ -44,8 +46,20 @@ export function ConversationActionsMenu({
   buttonStyle = 'row', // 'row' (sidebar row 3-dots) | 'header' (chat header 3-dots) | 'panel' (inspector buttons)
 }) {
   const router = useRouter();
-  const menuRef = useRef(null);
+  const triggerRef = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const { coords } = useFloatingMenuPosition(menuOpen, triggerRef, {
+    estimatedHeight: 350,
+    menuWidth: 224,
+    margin: 6,
+    onClose: () => setMenuOpen(false),
+  });
 
   // Modals state
   const [clearModalOpen, setClearModalOpen] = useState(false);
@@ -287,7 +301,6 @@ export function ConversationActionsMenu({
     <>
       {buttonStyle === 'row' ? (
         <div
-          ref={menuRef}
           className={`relative inline-flex items-center ${className}`}
           onClick={(e) => {
             e.stopPropagation();
@@ -295,6 +308,7 @@ export function ConversationActionsMenu({
         >
           {/* Three-dot Trigger Button: Desktop hover / Touch always visible */}
           <button
+            ref={triggerRef}
             type="button"
             onClick={(e) => {
               e.preventDefault();
@@ -313,12 +327,12 @@ export function ConversationActionsMenu({
             <span className="material-symbols-outlined text-[18px]">more_vert</span>
           </button>
 
-          {/* Context Dropdown Menu */}
-          {menuOpen && (
-            <>
+          {/* Context Dropdown Menu rendered via Viewport-Aware Portal */}
+          {menuOpen && mounted && createPortal(
+            <div className="fixed inset-0 z-50 pointer-events-auto">
               {/* Dismiss backdrop */}
               <div
-                className="fixed inset-0 z-40"
+                className="fixed inset-0 bg-transparent"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -327,8 +341,16 @@ export function ConversationActionsMenu({
               />
 
               <div
+                style={{
+                  position: 'fixed',
+                  top: coords.top,
+                  bottom: coords.bottom,
+                  left: coords.left,
+                  right: coords.right,
+                  maxHeight: `${coords.maxHeight}px`,
+                }}
                 onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 top-full mt-1 z-50 w-56 rounded-xl bg-surface-container-lowest border-2 border-tertiary shadow-pixel-lg p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 duration-100 text-left select-none"
+                className="z-50 w-56 rounded-xl bg-surface-container-lowest border-2 border-tertiary shadow-pixel-lg p-1.5 space-y-0.5 overflow-y-auto animate-in fade-in zoom-in-95 duration-100 text-left select-none"
               >
                 {/* Header title */}
                 <div className="px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-tertiary truncate border-b border-tertiary/15 mb-1">
@@ -492,12 +514,14 @@ export function ConversationActionsMenu({
                   </>
                 )}
               </div>
-            </>
+            </div>,
+            document.body
           )}
         </div>
       ) : buttonStyle === 'header' ? (
         <div className={`relative inline-block ${className}`}>
           <button
+            ref={triggerRef}
             type="button"
             onClick={() => setMenuOpen((o) => !o)}
             title="Chat Options"
@@ -507,13 +531,27 @@ export function ConversationActionsMenu({
             <span className="material-symbols-outlined text-[20px]">more_vert</span>
           </button>
 
-          {menuOpen && (
-            <>
+          {menuOpen && mounted && createPortal(
+            <div className="fixed inset-0 z-50 pointer-events-auto">
               {/* Dismiss backdrop */}
-              <div className="fixed inset-0 z-30" onClick={() => setMenuOpen(false)} />
+              <div
+                className="fixed inset-0 bg-transparent"
+                onClick={() => setMenuOpen(false)}
+              />
 
               {/* Dropdown Menu */}
-              <div className="absolute right-0 top-full mt-1.5 z-40 w-56 rounded-xl bg-surface border-2 border-tertiary shadow-pixel-lg p-1.5 space-y-1 text-left">
+              <div
+                style={{
+                  position: 'fixed',
+                  top: coords.top,
+                  bottom: coords.bottom,
+                  left: coords.left,
+                  right: coords.right,
+                  maxHeight: `${coords.maxHeight}px`,
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="z-50 w-56 rounded-xl bg-surface border-2 border-tertiary shadow-pixel-lg p-1.5 space-y-1 overflow-y-auto text-left select-none animate-in fade-in zoom-in-95 duration-100"
+              >
                 <div className="px-3 py-1 border-b border-tertiary/15 font-mono text-[10px] font-bold uppercase tracking-wider text-tertiary">
                   {conversationName}
                 </div>
@@ -612,7 +650,8 @@ export function ConversationActionsMenu({
                   </>
                 )}
               </div>
-            </>
+            </div>,
+            document.body
           )}
         </div>
       ) : (

@@ -16,12 +16,14 @@
 
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { conversationService } from '@/services/conversationService';
 import { userService } from '@/services/userService';
 import { chatSectionService } from '@/services/chatSectionService';
+import { useFloatingMenuPosition } from '@/hooks/useFloatingMenuPosition';
 import {
   conversationLabel,
   conversationAvatarId,
@@ -1028,18 +1030,34 @@ export function ConversationSidebar() {
 // ---------------- Folder Context Menu Component ----------------
 function FolderContextMenu({ section, onRename, onManageLock, onRemoveLock, onDelete }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const triggerRef = useRef(null);
   const isLocked = section.isLocked || section.hasPasscode;
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const { coords } = useFloatingMenuPosition(open, triggerRef, {
+    estimatedHeight: 200,
+    menuWidth: 176,
+    margin: 4,
+    onClose: () => setOpen(false),
+  });
+
+  useEffect(() => {
     if (!open) return undefined;
-    const onClickOutside = () => setOpen(false);
-    window.addEventListener('click', onClickOutside);
-    return () => window.removeEventListener('click', onClickOutside);
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open]);
 
   return (
-    <div className="relative">
+    <div className="relative inline-flex items-center">
       <button
+        ref={triggerRef}
         type="button"
         onClick={(e) => {
           e.stopPropagation();
@@ -1048,69 +1066,91 @@ function FolderContextMenu({ section, onRename, onManageLock, onRemoveLock, onDe
         className="p-1 hover:text-on-surface text-tertiary/70 rounded hover:bg-surface transition-colors"
         title="Folder options"
         aria-label={`Options for folder ${section.name}`}
+        aria-expanded={open}
       >
         <span className="material-symbols-outlined text-[15px]">more_vert</span>
       </button>
 
-      {open && (
-        <div
-          onClick={(e) => e.stopPropagation()}
-          className="absolute right-0 top-full mt-1 w-44 bg-surface-container-lowest border border-tertiary/30 rounded-xl shadow-pixel-md z-30 py-1.5 animate-fadeIn"
-        >
-          <button
-            type="button"
-            onClick={() => {
+      {open && mounted && createPortal(
+        <div className="fixed inset-0 z-50 pointer-events-auto">
+          {/* Dismiss backdrop */}
+          <div
+            className="fixed inset-0 bg-transparent"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               setOpen(false);
-              onRename();
             }}
-            className="w-full flex items-center gap-2.5 px-3 py-1.5 text-left font-mono text-label-xs text-on-surface hover:bg-secondary-container/40 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[15px] text-tertiary">edit</span>
-            <span>Rename Folder</span>
-          </button>
+          />
 
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(false);
-              onManageLock();
+          <div
+            style={{
+              position: 'fixed',
+              top: coords.top,
+              bottom: coords.bottom,
+              left: coords.left,
+              right: coords.right,
+              maxHeight: `${coords.maxHeight}px`,
             }}
-            className="w-full flex items-center gap-2.5 px-3 py-1.5 text-left font-mono text-label-xs text-on-surface hover:bg-secondary-container/40 transition-colors"
+            onClick={(e) => e.stopPropagation()}
+            className="z-50 w-44 bg-surface-container-lowest border border-tertiary/30 rounded-xl shadow-pixel-md py-1.5 overflow-y-auto animate-in fade-in zoom-in-95 duration-100 select-none text-left"
           >
-            <span className="material-symbols-outlined text-[15px] text-primary">
-              {isLocked ? 'key' : 'lock'}
-            </span>
-            <span>{isLocked ? 'Change PIN' : 'Lock Folder'}</span>
-          </button>
-
-          {isLocked && (
             <button
               type="button"
               onClick={() => {
                 setOpen(false);
-                onRemoveLock();
+                onRename();
               }}
-              className="w-full flex items-center gap-2.5 px-3 py-1.5 text-left font-mono text-label-xs text-on-surface hover:bg-secondary-container/40 transition-colors"
+              className="w-full flex items-center gap-2.5 px-3 py-1.5 text-left font-mono text-label-xs text-on-surface hover:bg-secondary-container/40 transition-colors press"
             >
-              <span className="material-symbols-outlined text-[15px] text-tertiary">lock_open</span>
-              <span>Remove Lock</span>
+              <span className="material-symbols-outlined text-[15px] text-tertiary">edit</span>
+              <span>Rename Folder</span>
             </button>
-          )}
 
-          <div className="my-1 border-t border-tertiary/15" />
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onManageLock();
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-1.5 text-left font-mono text-label-xs text-on-surface hover:bg-secondary-container/40 transition-colors press"
+            >
+              <span className="material-symbols-outlined text-[15px] text-primary">
+                {isLocked ? 'key' : 'lock'}
+              </span>
+              <span>{isLocked ? 'Change PIN' : 'Lock Folder'}</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(false);
-              onDelete();
-            }}
-            className="w-full flex items-center gap-2.5 px-3 py-1.5 text-left font-mono text-label-xs text-error hover:bg-error/10 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[15px]">delete</span>
-            <span>Delete Folder</span>
-          </button>
-        </div>
+            {isLocked && (
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onRemoveLock();
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-1.5 text-left font-mono text-label-xs text-on-surface hover:bg-secondary-container/40 transition-colors press"
+              >
+                <span className="material-symbols-outlined text-[15px] text-tertiary">lock_open</span>
+                <span>Remove Lock</span>
+              </button>
+            )}
+
+            <div className="my-1 border-t border-tertiary/15" />
+
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onDelete();
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-1.5 text-left font-mono text-label-xs text-error hover:bg-error/10 transition-colors press"
+            >
+              <span className="material-symbols-outlined text-[15px]">delete</span>
+              <span>Delete Folder</span>
+            </button>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

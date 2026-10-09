@@ -454,7 +454,40 @@ export function MessageList({
         const msgId = m._id || m.id;
         const isHighlighted = highlightedId === msgId;
         const mediaInfo = !deleted ? getMediaInfo(m) : null;
-        const reactionGroups = !deleted ? groupReactions(m.reactions, currentUser?._id || currentUser?.id) : [];
+        const isSystem = m.messageType === 'system';
+
+        if (isSystem) {
+          return (
+            <div
+              key={msgId}
+              ref={(el) => {
+                if (el) messageRefs.current[msgId] = el;
+              }}
+              style={{ contentVisibility: 'auto', containIntrinsicSize: '0 40px' }}
+              className={`my-3 flex flex-col items-center justify-center transition-colors ${isHighlighted ? 'bg-primary/10 p-1 ring-2 ring-primary rounded-lg' : ''}`}
+            >
+              {showDay && (
+                <div className="flex items-center justify-center my-2 w-full">
+                  <div className="h-[1px] bg-tertiary/15 flex-1 max-w-xs" />
+                  <span className="px-4 font-mono text-label-sm text-tertiary bg-surface-container-high py-0.5 rounded-full border border-tertiary/20">
+                    {day}
+                  </span>
+                  <div className="h-[1px] bg-tertiary/15 flex-1 max-w-xs" />
+                </div>
+              )}
+
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface-container/60 border border-tertiary/20 shadow-pixel-xs select-none max-w-full">
+                <span className="material-symbols-outlined text-[14px] text-tertiary shrink-0">person_add</span>
+                <span className="font-mono text-label-xs font-semibold text-on-surface-variant truncate">
+                  {m.content || `${m.systemEvent?.actorUsername || m.senderId?.username || 'Player'} joined the room`}
+                </span>
+                <span className="font-mono text-[10px] text-outline ml-1 shrink-0">
+                  {timeShort(m.createdAt)}
+                </span>
+              </div>
+            </div>
+          );
+        }
 
         return (
           <div

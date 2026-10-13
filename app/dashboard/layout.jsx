@@ -9,17 +9,20 @@
  */
 
 export const metadata = {
-  title: 'Lounge Hub & Dashboard | PixelTalk',
-  description:
-    'Your PixelTalk dashboard with quick access to recent chats, active rooms, and direct messages.',
-  alternates: {
-    canonical: '/dashboard',
-  },
-  openGraph: {
-    title: 'Lounge Hub & Dashboard — PixelTalk',
-    description:
-      'Your PixelTalk dashboard with quick access to recent chats, active rooms, and direct messages.',
-    url: '/dashboard',
+  title: 'Dashboard',
+  description: 'Your PixelTalk dashboard.',
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'none',
+      'max-snippet': -1,
+    },
   },
 };
 

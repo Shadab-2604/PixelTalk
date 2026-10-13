@@ -10,16 +10,16 @@
  */
 
 export const metadata = {
-  title: 'Create Account — Join PixelTalk',
+  title: 'Create Account',
   description:
-    'Join the PixelTalk retro community. Create an account, customize your 8-bit avatar, and join live chat lounges.',
+    'Join PixelTalk to start real-time messaging and group chats with custom retro avatars and low-noise lounges.',
   alternates: {
     canonical: '/register',
   },
   openGraph: {
-    title: 'Create Account — Join PixelTalk',
+    title: 'Create Account',
     description:
-      'Join the PixelTalk retro community. Create an account, customize your 8-bit avatar, and join live chat lounges.',
+      'Join PixelTalk to start real-time messaging and group chats with custom retro avatars and low-noise lounges.',
     url: '/register',
   },
 };

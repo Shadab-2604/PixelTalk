@@ -23,25 +23,26 @@ const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://pixel-talk-qofh.ver
 export const metadata = {
   metadataBase: new URL(APP_URL),
   title: {
-    default: 'PixelTalk — Real-Time Pixel-Infused Messaging',
+    default: 'PixelTalk – Real-Time Messaging & Group Chat',
     template: '%s | PixelTalk',
   },
-  description: 'Real-time pixel-infused messaging. Low-noise lounges, frictionless text, and tactile retro-micro visuals.',
+  description:
+    'Discover PixelTalk, a modern messaging app for real-time conversations and group chats. Low-noise lounges, instant text, and tactile retro visuals.',
   applicationName: 'PixelTalk',
   keywords: [
-    'chat',
-    'messaging',
-    'pixel art',
+    'PixelTalk',
+    'Pixel Talk',
+    'PixelTalk app',
+    'Pixel Talk messaging app',
+    'PixelTalk chat app',
+    'real-time messaging',
+    'group chat',
     'retro chat',
-    'realtime messenger',
-    'rooms',
-    'lounges',
-    'encrypted chat',
-    'web messenger',
+    'pixel art messenger',
   ],
   authors: [{ name: 'PixelTalk Team', url: APP_URL }],
-  creator: 'PixelTalk Labs',
-  publisher: 'PixelTalk Studios',
+  creator: 'PixelTalk',
+  publisher: 'PixelTalk',
   formatDetection: {
     email: false,
     address: false,
@@ -60,26 +61,43 @@ export const metadata = {
     apple: '/logo/icon-mark.svg',
   },
   openGraph: {
-    title: 'PixelTalk — Real-Time Pixel-Infused Messaging',
-    description: 'Real-time pixel-infused messaging. Low-noise lounges, frictionless text, tactile retro-micro visuals.',
+    title: 'PixelTalk – Real-Time Messaging & Group Chat',
+    description:
+      'Discover PixelTalk, a modern messaging app for real-time conversations and group chats. Low-noise lounges, instant text, and tactile retro visuals.',
     url: APP_URL,
     siteName: 'PixelTalk',
     locale: 'en_US',
     type: 'website',
     images: [
       {
-        url: '/og-image.svg',
+        url: '/opengraph-image',
         width: 1200,
         height: 630,
-        alt: 'PixelTalk — Real-Time Pixel-Infused Messaging',
+        type: 'image/png',
+        alt: 'PixelTalk – Real-Time Messaging & Group Chat',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'PixelTalk — Real-Time Pixel-Infused Messaging',
-    description: 'Real-time pixel-infused messaging. Low-noise lounges, frictionless text, tactile retro-micro visuals.',
-    images: ['/og-image.svg'],
+    title: 'PixelTalk – Real-Time Messaging & Group Chat',
+    description:
+      'Discover PixelTalk, a modern messaging app for real-time conversations and group chats. Low-noise lounges, instant text, and tactile retro visuals.',
+    images: ['/opengraph-image'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
   },
 };
 
@@ -93,71 +111,44 @@ const structuredData = {
   '@context': 'https://schema.org',
   '@graph': [
     {
+      '@type': 'WebSite',
+      '@id': `${APP_URL}/#website`,
+      url: APP_URL,
+      name: 'PixelTalk',
+      alternateName: ['Pixel Talk', 'PixelTalk App', 'Pixel Talk Messaging App'],
+      description:
+        'A modern messaging app for real-time conversations and group chats with tactile retro aesthetics.',
+      publisher: {
+        '@type': 'Organization',
+        '@id': `${APP_URL}/#organization`,
+        name: 'PixelTalk',
+        url: APP_URL,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${APP_URL}/logo/icon-mark.svg`,
+        },
+      },
+      inLanguage: 'en-US',
+    },
+    {
       '@type': 'WebApplication',
       '@id': `${APP_URL}/#app`,
       name: 'PixelTalk',
+      alternateName: ['Pixel Talk', 'PixelTalk App'],
       url: APP_URL,
       description:
-        'Real-time pixel-infused retro messenger. Low-noise lounges, frictionless text, and tactile 8-bit visuals.',
+        'Real-time messaging and group chat platform featuring low-noise lounges, instant text, and tactile retro pixel visuals.',
       applicationCategory: 'CommunicationApplication',
       operatingSystem: 'All modern web browsers (Chrome, Firefox, Safari, Edge)',
       browserRequirements: 'Requires JavaScript. Requires HTML5.',
-      softwareVersion: '1.0.4',
       offers: {
         '@type': 'Offer',
         price: '0',
         priceCurrency: 'USD',
       },
-      creator: {
-        '@type': 'Organization',
+      author: {
         '@id': `${APP_URL}/#organization`,
-        name: 'PixelTalk Labs',
-        url: APP_URL,
-        logo: `${APP_URL}/logo/icon-mark.svg`,
       },
-    },
-    {
-      '@type': 'LocalBusiness',
-      '@id': `${APP_URL}/#business`,
-      name: 'PixelTalk Studios',
-      description: 'Creators of pixel-crafted real-time communication software and retro community lounges.',
-      url: APP_URL,
-      telephone: '+1-415-555-0142',
-      priceRange: 'Free',
-      image: `${APP_URL}/logo/icon-mark.svg`,
-      address: {
-        '@type': 'PostalAddress',
-        streetAddress: '742 Evergreen Pixel Blvd',
-        addressLocality: 'San Francisco',
-        addressRegion: 'CA',
-        postalCode: '94107',
-        addressCountry: 'US',
-      },
-      geo: {
-        '@type': 'GeoCoordinates',
-        latitude: 37.7749,
-        longitude: -122.4194,
-      },
-      openingHoursSpecification: [
-        {
-          '@type': 'OpeningHoursSpecification',
-          dayOfWeek: [
-            'Monday',
-            'Tuesday',
-            'Wednesday',
-            'Thursday',
-            'Friday',
-            'Saturday',
-            'Sunday',
-          ],
-          opens: '00:00',
-          closes: '23:59',
-        },
-      ],
-      sameAs: [
-        'https://github.com/pixeltalk',
-        'https://twitter.com/pixeltalk',
-      ],
     },
   ],
 };

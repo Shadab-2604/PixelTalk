@@ -15,16 +15,16 @@ import { Badge } from '@/components/ui';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 export const metadata = {
-  title: 'About PixelTalk — The Retro Real-Time Messenger',
+  title: 'About the Retro Real-Time Messenger',
   description:
-    'Discover the story and design philosophy behind PixelTalk: a tactile, low-noise retro communication platform built for modern communities.',
+    'Discover the story and design philosophy behind PixelTalk: a tactile, low-noise retro real-time messaging app and group chat lounge.',
   alternates: {
     canonical: '/about',
   },
   openGraph: {
-    title: 'About PixelTalk — The Retro Real-Time Messenger',
+    title: 'About the Retro Real-Time Messenger',
     description:
-      'Discover the story and design philosophy behind PixelTalk: a tactile, low-noise retro communication platform built for modern communities.',
+      'Discover the story and design philosophy behind PixelTalk: a tactile, low-noise retro real-time messaging app and group chat lounge.',
     url: '/about',
   },
 };

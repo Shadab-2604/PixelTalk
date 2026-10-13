@@ -15,14 +15,14 @@ import { Badge } from '@/components/ui';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 export const metadata = {
-  title: 'Terms of Service — PixelTalk',
+  title: 'Terms of Service',
   description:
     'Guidelines, community standards, and terms of service for PixelTalk lounges, direct messaging, and voice rooms.',
   alternates: {
     canonical: '/terms',
   },
   openGraph: {
-    title: 'Terms of Service — PixelTalk',
+    title: 'Terms of Service',
     description:
       'Guidelines, community standards, and terms of service for PixelTalk lounges, direct messaging, and voice rooms.',
     url: '/terms',

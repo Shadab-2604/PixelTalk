@@ -63,6 +63,7 @@ export default async function Image() {
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <div
                 style={{
+                  display: 'flex',
                   fontSize: '34px',
                   fontWeight: 900,
                   color: '#6E3511',
@@ -71,13 +72,15 @@ export default async function Image() {
               >
                 PIXELTALK
               </div>
-              <div style={{ fontSize: '16px', color: '#597928', fontWeight: 700 }}>
+              <div style={{ display: 'flex', fontSize: '16px', color: '#597928', fontWeight: 700 }}>
                 EST. 2025 • RETRO MESSENGER
               </div>
             </div>
           </div>
           <div
             style={{
+              display: 'flex',
+              alignItems: 'center',
               padding: '10px 22px',
               backgroundColor: '#597928',
               color: '#F8F4EC',
@@ -96,6 +99,8 @@ export default async function Image() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '960px' }}>
           <div
             style={{
+              display: 'flex',
+              flexDirection: 'column',
               fontSize: '62px',
               fontWeight: 900,
               color: '#2A170B',
@@ -103,11 +108,10 @@ export default async function Image() {
               letterSpacing: '-1.5px',
             }}
           >
-            A little pixel.
-            <br />
-            A lot of talk.
+            <div style={{ display: 'flex' }}>A little pixel.</div>
+            <div style={{ display: 'flex' }}>A lot of talk.</div>
           </div>
-          <div style={{ fontSize: '26px', color: '#6E3511', fontWeight: 600 }}>
+          <div style={{ display: 'flex', fontSize: '26px', color: '#6E3511', fontWeight: 600 }}>
             Low-noise community lounges, frictionless text, and tactile 8-bit visuals.
           </div>
         </div>
@@ -121,10 +125,10 @@ export default async function Image() {
             paddingTop: '20px',
           }}
         >
-          <div style={{ fontSize: '20px', fontWeight: 800, color: '#6E3511' }}>
+          <div style={{ display: 'flex', fontSize: '20px', fontWeight: 800, color: '#6E3511' }}>
             pixel-talk-qofh.vercel.app
           </div>
-          <div style={{ fontSize: '18px', color: '#597928', fontWeight: 700 }}>
+          <div style={{ display: 'flex', fontSize: '18px', color: '#597928', fontWeight: 700 }}>
             Encrypted Direct Messaging • Themed Lounges • Open Community
           </div>
         </div>

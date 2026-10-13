@@ -11,42 +11,36 @@
  */
 export default function sitemap() {
   const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://pixel-talk-qofh.vercel.app').replace(/\/+$/, '');
-  const now = new Date();
+  const lastMod = new Date('2026-10-13T00:00:00.000Z');
 
   return [
     {
       url: `${baseUrl}`,
-      lastModified: now,
+      lastModified: lastMod,
       changeFrequency: 'weekly',
       priority: 1.0,
     },
     {
       url: `${baseUrl}/about`,
-      lastModified: now,
+      lastModified: lastMod,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/register`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/signup`,
-      lastModified: now,
+      lastModified: lastMod,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/privacy`,
-      lastModified: now,
+      lastModified: lastMod,
       changeFrequency: 'monthly',
       priority: 0.5,
     },
     {
       url: `${baseUrl}/terms`,
-      lastModified: now,
+      lastModified: lastMod,
       changeFrequency: 'monthly',
       priority: 0.5,
     },

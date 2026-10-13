@@ -9,17 +9,20 @@
  */
 
 export const metadata = {
-  title: 'Player Profile | PixelTalk',
-  description:
-    'View member bio, status, badge collection, and activity across PixelTalk.',
-  alternates: {
-    canonical: '/profile',
-  },
-  openGraph: {
-    title: 'Player Profile — PixelTalk',
-    description:
-      'View member bio, status, badge collection, and activity across PixelTalk.',
-    url: '/profile',
+  title: 'Player Profile',
+  description: 'PixelTalk user profile.',
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'none',
+      'max-snippet': -1,
+    },
   },
 };
 

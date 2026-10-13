@@ -9,17 +9,20 @@
  */
 
 export const metadata = {
-  title: 'Direct Messages | PixelTalk',
-  description:
-    'Private, low-noise direct messaging in real time with end-to-end conversation controls.',
-  alternates: {
-    canonical: '/chat',
-  },
-  openGraph: {
-    title: 'Direct Messages — PixelTalk',
-    description:
-      'Private, low-noise direct messaging in real time with end-to-end conversation controls.',
-    url: '/chat',
+  title: 'Direct Messages',
+  description: 'Private direct messaging on PixelTalk.',
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'none',
+      'max-snippet': -1,
+    },
   },
 };
 

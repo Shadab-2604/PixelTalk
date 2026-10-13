@@ -9,17 +9,20 @@
  */
 
 export const metadata = {
-  title: 'Community Rooms & Retro Lounges | PixelTalk',
-  description:
-    'Browse open rooms, themed lounges, and retro-aesthetic hangouts across the PixelTalk network.',
-  alternates: {
-    canonical: '/rooms',
-  },
-  openGraph: {
-    title: 'Community Rooms & Retro Lounges — PixelTalk',
-    description:
-      'Browse open rooms, themed lounges, and retro-aesthetic hangouts across the PixelTalk network.',
-    url: '/rooms',
+  title: 'Community Rooms & Lounges',
+  description: 'Community rooms and lounges on PixelTalk.',
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'none',
+      'max-snippet': -1,
+    },
   },
 };
 

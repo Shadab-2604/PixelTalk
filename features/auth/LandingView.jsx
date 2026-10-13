@@ -140,7 +140,7 @@ export function LandingView() {
                 <span className="material-symbols-outlined text-[20px]" aria-hidden="true">forum</span>
               </div>
               <div>
-                <h2 className="font-display text-headline-sm text-on-surface font-semibold">Welcome to the quiet, cozy corner of real-time talk.</h2>
+                <h2 className="font-display text-headline-sm text-on-surface font-semibold">Welcome to the quiet, cozy corner of real-time messaging &amp; group chat.</h2>
                 <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Low-noise voice lounges, frictionless text, and tactile retro-micro visuals.</p>
               </div>
             </div>
@@ -186,7 +186,7 @@ export function LandingView() {
           <span>•</span>
           <span>v{APP_VERSION}</span>
           <span>•</span>
-          <span className="text-tertiary">Real-Time Retro Network</span>
+          <span className="text-tertiary">Real-Time Messaging App</span>
         </div>
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5">

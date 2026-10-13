@@ -15,14 +15,14 @@ import { Badge } from '@/components/ui';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 export const metadata = {
-  title: 'Privacy Policy — PixelTalk',
+  title: 'Privacy Policy',
   description:
     'Learn how PixelTalk protects your data, handles real-time messages, and respects digital privacy without intrusive advertising or tracking.',
   alternates: {
     canonical: '/privacy',
   },
   openGraph: {
-    title: 'Privacy Policy — PixelTalk',
+    title: 'Privacy Policy',
     description:
       'Learn how PixelTalk protects your data, handles real-time messages, and respects digital privacy without intrusive advertising or tracking.',
     url: '/privacy',

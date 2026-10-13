@@ -9,17 +9,20 @@
  */
 
 export const metadata = {
-  title: 'Account & App Settings | PixelTalk',
-  description:
-    'Manage your appearance, theme preferences, notification sounds, and security keys on PixelTalk.',
-  alternates: {
-    canonical: '/settings',
-  },
-  openGraph: {
-    title: 'Account & App Settings — PixelTalk',
-    description:
-      'Manage your appearance, theme preferences, notification sounds, and security keys on PixelTalk.',
-    url: '/settings',
+  title: 'Settings',
+  description: 'PixelTalk account and appearance settings.',
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'none',
+      'max-snippet': -1,
+    },
   },
 };
 

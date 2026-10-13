@@ -15,16 +15,16 @@
 import { LandingView } from '@/features/auth/LandingView';
 
 export const metadata = {
-  title: 'PixelTalk — Real-Time Pixel-Infused Messaging',
+  title: 'PixelTalk – Real-Time Messaging & Group Chat',
   description:
-    'Real-time pixel-infused messaging. Low-noise lounges, frictionless text, and tactile retro-micro visuals for focused communities.',
+    'Discover PixelTalk, a modern messaging app for real-time conversations and group chats. Low-noise lounges, instant text, and tactile retro visuals.',
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'PixelTalk — Real-Time Pixel-Infused Messaging',
+    title: 'PixelTalk – Real-Time Messaging & Group Chat',
     description:
-      'Real-time pixel-infused messaging. Low-noise lounges, frictionless text, and tactile retro-micro visuals for focused communities.',
+      'Discover PixelTalk, a modern messaging app for real-time conversations and group chats. Low-noise lounges, instant text, and tactile retro visuals.',
     url: '/',
   },
 };

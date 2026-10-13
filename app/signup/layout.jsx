@@ -10,17 +10,21 @@
  */
 
 export const metadata = {
-  title: 'Sign Up — PixelTalk',
+  title: 'Sign Up',
   description:
     'Sign up for PixelTalk. Low-noise lounges, real-time messaging, and pixel-styled community rooms.',
   alternates: {
-    canonical: '/signup',
+    canonical: '/register',
+  },
+  robots: {
+    index: false,
+    follow: true,
   },
   openGraph: {
-    title: 'Sign Up — PixelTalk',
+    title: 'Sign Up',
     description:
       'Sign up for PixelTalk. Low-noise lounges, real-time messaging, and pixel-styled community rooms.',
-    url: '/signup',
+    url: '/register',
   },
 };
 

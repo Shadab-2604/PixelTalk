@@ -270,7 +270,11 @@ export default function ChatPage() {
                 className="flex items-center gap-2 sm:gap-3 min-w-0 hover:opacity-85 transition-opacity cursor-pointer"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={avatarSrc(conversationAvatarId(conversation, user))} alt="" className="w-10 h-10 rounded-lg bg-surface-container border-2 border-tertiary pixelated shadow-pixel-sm-solid shrink-0" />
+                <img
+                  src={avatarSrc(conversationAvatarId(conversation, user))}
+                  alt={`${conversationLabel(conversation, user)} avatar`}
+                  className="w-10 h-10 rounded-lg bg-surface-container border-2 border-tertiary pixelated shadow-pixel-sm-solid shrink-0"
+                />
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h1 className="font-display text-headline-sm font-bold text-on-surface tracking-tight truncate">
@@ -298,7 +302,11 @@ export default function ChatPage() {
             ) : (
               <>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={avatarSrc(conversationAvatarId(conversation, user))} alt="" className="w-10 h-10 rounded-lg bg-surface-container border-2 border-tertiary pixelated shadow-pixel-sm-solid shrink-0" />
+                <img
+                  src={avatarSrc(conversationAvatarId(conversation, user))}
+                  alt={`${conversationLabel(conversation, user)} avatar`}
+                  className="w-10 h-10 rounded-lg bg-surface-container border-2 border-tertiary pixelated shadow-pixel-sm-solid shrink-0"
+                />
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h1 className="font-display text-headline-sm font-bold text-on-surface tracking-tight truncate">
@@ -332,7 +340,7 @@ export default function ChatPage() {
                   type="button"
                   onClick={() => startCall({ targetUser: other, conversationId, isVideo: false })}
                   disabled={callState !== 'IDLE'}
-                  className="p-2 rounded-lg bg-surface-container hover:bg-secondary-container/50 text-on-surface border-[1.5px] border-[#6E3511]/30 shadow-[1.5px_1.5px_0px_rgba(110,53,17,0.2)] hover:border-[#6E3511] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center transition-all disabled:opacity-40"
+                  className="p-2 rounded-lg bg-surface-container hover:bg-secondary-container/50 text-on-surface border-[1.5px] border-brown/30 shadow-[1.5px_1.5px_0px_var(--pt-shadow-soft)] hover:border-brown active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center transition-all disabled:opacity-40"
                   title="Start Voice Call"
                   aria-label="Start Voice Call"
                 >
@@ -342,7 +350,7 @@ export default function ChatPage() {
                   type="button"
                   onClick={() => startCall({ targetUser: other, conversationId, isVideo: true })}
                   disabled={callState !== 'IDLE'}
-                  className="p-2 rounded-lg bg-surface-container hover:bg-secondary-container/50 text-on-surface border-[1.5px] border-[#6E3511]/30 shadow-[1.5px_1.5px_0px_rgba(110,53,17,0.2)] hover:border-[#6E3511] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center transition-all disabled:opacity-40"
+                  className="p-2 rounded-lg bg-surface-container hover:bg-secondary-container/50 text-on-surface border-[1.5px] border-brown/30 shadow-[1.5px_1.5px_0px_var(--pt-shadow-soft)] hover:border-brown active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center transition-all disabled:opacity-40"
                   title="Start Video Call"
                   aria-label="Start Video Call"
                 >

@@ -92,7 +92,7 @@ export default function AdminGroupsPage() {
 
       <div className="bg-surface-container-low p-3 rounded-xl border border-tertiary/20 shadow-pixel-sm flex items-center gap-3">
         <div className="flex-1 relative">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-tertiary/60 text-[18px]">search</span>
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-tertiary text-[18px]">search</span>
           <Input
             className="pl-9 py-1.5 font-mono text-sm"
             placeholder="Search community lounges by name…"
@@ -125,7 +125,11 @@ export default function AdminGroupsPage() {
                 }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={avatarSrc(g.avatarId || 'avatar-06')} alt="" className="w-11 h-11 rounded-lg border-[1.5px] border-tertiary pixelated shrink-0" />
+                <img
+                  src={avatarSrc(g.avatarId || 'avatar-06')}
+                  alt={g.name ? `${g.name} group crest` : 'Group crest'}
+                  className="w-11 h-11 rounded-lg border-[1.5px] border-tertiary pixelated shrink-0"
+                />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-display text-headline-sm font-bold text-on-surface truncate">{g.name}</h3>
@@ -136,7 +140,7 @@ export default function AdminGroupsPage() {
                     Owner: @{g.createdBy?.username || 'unknown'} • {g.members?.length || 0} members • created {dateShort(g.createdAt)}
                   </p>
                 </div>
-                <span className="material-symbols-outlined text-tertiary/40">chevron_right</span>
+                <span className="material-symbols-outlined text-tertiary">chevron_right</span>
               </button>
             ))}
 
@@ -215,7 +219,7 @@ export default function AdminGroupsPage() {
             </div>
           ) : (
             <div className="bg-surface-container-low rounded-xl border border-tertiary/30 shadow-pixel-md p-6 flex flex-col items-center justify-center min-h-[300px] text-center">
-              <span className="material-symbols-outlined text-tertiary/40 text-4xl mb-2">meeting_room</span>
+              <span className="material-symbols-outlined text-tertiary text-4xl mb-2">meeting_room</span>
               <p className="font-mono text-label-sm text-on-surface-variant">Select a community room to inspect metadata</p>
             </div>
           )}

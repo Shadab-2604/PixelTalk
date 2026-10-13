@@ -42,6 +42,7 @@ import { getUserAvatar, getUserBanner } from '@/lib/avatars';
 import { dateShort } from '@/lib/format';
 import { sfx } from '@/lib/sound';
 import { Avatar, Modal, Field, Input, Textarea, PrimaryButton, SecondaryButton, ErrorText, Spinner, PresencePip } from '@/components/ui';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { AvatarSelector } from '@/features/auth/AuthForms';
 import { MediaCropCameraModal } from '@/components/MediaCropCameraModal';
 import { EditBannerModal } from '@/components/EditBannerModal';
@@ -315,6 +316,14 @@ export function ProfileView({ username = null, targetId = null }) {
   return (
     <AppShell wide sidebar={<><ConversationSidebar /><SidebarFooter /></>}>
       <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-24 sm:pb-28 lg:pb-10 space-y-6">
+        <Breadcrumbs
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'Profiles', href: '/dashboard' },
+            { label: user?.displayName || user?.username || 'Player' },
+          ]}
+          className="mb-2"
+        />
         {uploadError && (
           <div className="mb-2">
             <ErrorText>{uploadError}</ErrorText>
@@ -391,13 +400,13 @@ export function ProfileView({ username = null, targetId = null }) {
             <div className="w-full h-32 min-[400px]:h-36 min-[480px]:h-44 sm:h-52 md:h-56 lg:h-64 xl:h-72 2xl:h-80 relative overflow-hidden bg-surface-container border-b-2 border-tertiary group transition-[height] duration-200">
               {isPrivateRestricted ? (
                 <div className="w-full h-full bg-gradient-to-br from-surface-container-high via-surface-container-lowest to-surface-container flex items-center justify-center">
-                  <span className="material-symbols-outlined text-tertiary/20 text-[56px] sm:text-[80px] select-none">lock</span>
+                  <span className="material-symbols-outlined text-tertiary/80 text-[56px] sm:text-[80px] select-none">lock</span>
                 </div>
               ) : (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={getUserBanner(user)}
-                  alt="Profile Banner"
+                  alt={user?.displayName ? `${user.displayName}'s profile banner` : 'Player profile banner'}
                   className="w-full h-full object-cover object-[center_35%] select-none"
                 />
               )}
@@ -500,9 +509,9 @@ export function ProfileView({ username = null, targetId = null }) {
                           type="button"
                           onClick={() => setAvatarModalOpen(true)}
                           disabled={uploadingAvatar}
-                          aria-label="Upload custom photo or snap camera"
+                          aria-label={user?.avatarUrl ? 'Change custom photo (crop / camera)' : 'Upload photo (crop / camera)'}
                           className="w-6 h-6 min-[375px]:w-7 min-[375px]:h-7 sm:w-8 sm:h-8 rounded-md bg-surface border border-tertiary/40 shadow-pixel-xs flex items-center justify-center hover:bg-surface-container text-tertiary active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
-                          title={user?.avatarUrl ? 'Change Photo (Crop / Camera)' : 'Upload Photo (Crop / Camera)'}
+                          title={user?.avatarUrl ? 'Change photo (crop / camera)' : 'Upload photo (crop / camera)'}
                         >
                           <span className="material-symbols-outlined text-[13px] min-[375px]:text-[15px] sm:text-[17px]">photo_camera</span>
                         </button>
@@ -513,7 +522,7 @@ export function ProfileView({ username = null, targetId = null }) {
                             disabled={uploadingAvatar}
                             aria-label="Remove custom profile picture"
                             className="w-6 h-6 min-[375px]:w-7 min-[375px]:h-7 sm:w-8 sm:h-8 rounded-md bg-error-container border border-error/40 text-on-error-container shadow-pixel-xs flex items-center justify-center hover:bg-error-container/80 active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
-                            title="Remove Custom Photo"
+                            title="Remove custom photo"
                           >
                             <span className="material-symbols-outlined text-[12px] min-[375px]:text-[14px] sm:text-[16px]">delete</span>
                           </button>
@@ -722,14 +731,14 @@ export function ProfileView({ username = null, targetId = null }) {
 
                   <div className="grid grid-cols-2 gap-2.5 sm:gap-4 pt-1">
                     <div className="p-3 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs">
-                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Visibility</span>
+                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary uppercase font-bold tracking-wider">Visibility</span>
                       <span className="font-mono text-label-sm min-[360px]:text-label-md sm:text-headline-sm font-bold text-tertiary mt-0.5 sm:mt-1 flex items-center justify-center gap-1">
                         <span className="material-symbols-outlined text-[13px] sm:text-[16px]">lock</span>
                         Private
                       </span>
                     </div>
                     <div className="p-3 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs">
-                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Joined</span>
+                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary uppercase font-bold tracking-wider">Joined</span>
                       <span className="font-mono text-label-sm min-[360px]:text-label-md sm:text-headline-sm font-bold text-on-surface mt-0.5 sm:mt-1 block truncate">
                         {dateShort(user?.createdAt)}
                       </span>
@@ -760,7 +769,7 @@ export function ProfileView({ username = null, targetId = null }) {
                       onClick={() => setFollowListModal({ open: true, type: 'followers' })}
                       className="p-2.5 min-[360px]:p-3 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs hover:border-tertiary transition-all press cursor-pointer min-w-0"
                     >
-                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Followers</span>
+                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary uppercase font-bold tracking-wider">Followers</span>
                       <span className="font-mono text-label-sm min-[360px]:text-label-md sm:text-headline-sm font-bold text-on-surface mt-0.5 sm:mt-1 block truncate">{followCounts.followersCount}</span>
                     </button>
                     <button
@@ -768,30 +777,30 @@ export function ProfileView({ username = null, targetId = null }) {
                       onClick={() => setFollowListModal({ open: true, type: 'following' })}
                       className="p-2.5 min-[360px]:p-3 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs hover:border-tertiary transition-all press cursor-pointer min-w-0"
                     >
-                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Following</span>
+                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary uppercase font-bold tracking-wider">Following</span>
                       <span className="font-mono text-label-sm min-[360px]:text-label-md sm:text-headline-sm font-bold text-on-surface mt-0.5 sm:mt-1 block truncate">{followCounts.followingCount}</span>
                     </button>
                     <div className="p-2.5 min-[360px]:p-3 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs min-w-0">
-                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Presence</span>
+                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary uppercase font-bold tracking-wider">Presence</span>
                       <span className="font-mono text-label-sm min-[360px]:text-label-md sm:text-headline-sm font-bold text-on-surface capitalize flex items-center justify-center gap-1.5 mt-0.5 sm:mt-1 truncate">
                         <PresencePip online={user?.presence === 'online'} away={user?.presence === 'away'} />
                         <span className="truncate">{user?.presence || 'offline'}</span>
                       </span>
                     </div>
                     <div className="p-2.5 min-[360px]:p-3 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs min-w-0">
-                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Status</span>
+                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary uppercase font-bold tracking-wider">Status</span>
                       <span className="font-mono text-label-sm min-[360px]:text-label-md sm:text-headline-sm font-bold text-primary uppercase mt-0.5 sm:mt-1 block truncate">
                         {user?.status || 'ACTIVE'}
                       </span>
                     </div>
                     <div className="p-2.5 min-[360px]:p-3 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs min-w-0">
-                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Joined</span>
+                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary uppercase font-bold tracking-wider">Joined</span>
                       <span className="font-mono text-label-sm min-[360px]:text-label-md sm:text-headline-sm font-bold text-on-surface mt-0.5 sm:mt-1 block truncate">
                         {dateShort(user?.createdAt)}
                       </span>
                     </div>
                     <div className="p-2.5 min-[360px]:p-3 sm:p-4 bg-surface rounded-xl border border-tertiary/20 text-center shadow-pixel-xs min-w-0">
-                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary/70 uppercase font-bold tracking-wider">Identifier</span>
+                      <span className="block font-mono text-[9px] min-[360px]:text-[10px] sm:text-[11px] text-tertiary uppercase font-bold tracking-wider">Identifier</span>
                       <span className="font-mono text-label-sm min-[360px]:text-label-md sm:text-headline-sm font-bold text-tertiary mt-0.5 sm:mt-1 block truncate">
                         #{(user?.id || user?._id || '').slice(-4).toUpperCase()}
                       </span>

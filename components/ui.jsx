@@ -75,14 +75,16 @@ export function GhostButton({ children, className = '', ...props }) {
 
 export function IconButton({ icon, title, className = '', ...props }) {
   return (
-    <button
+    <span
+      role="button"
+      tabIndex={0}
       title={title}
       aria-label={title}
-      className={`w-9 h-9 flex items-center justify-center rounded-lg border border-tertiary/20 bg-surface-container-low text-on-surface-variant hover:bg-surface-container transition-all press shadow-pixel-sm ${className}`}
+      className={`inline-flex w-9 h-9 items-center justify-center rounded-lg border border-tertiary/20 bg-surface-container-low text-on-surface-variant hover:bg-surface-container transition-all press shadow-pixel-sm focus:outline-none focus:ring-2 focus:ring-primary/60 ${className}`}
       {...props}
     >
       <span className="material-symbols-outlined text-[20px]">{icon}</span>
-    </button>
+    </span>
   );
 }
 
@@ -91,7 +93,7 @@ export function IconButton({ icon, title, className = '', ...props }) {
 export function Input({ className = '', ...props }) {
   return (
     <input
-      className={`w-full px-3.5 py-2.5 bg-surface text-on-surface font-body text-base sm:text-body-md rounded-[10px] border-[1.5px] border-tertiary/30 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all placeholder:text-outline-variant ${className}`}
+      className={`w-full px-3.5 py-2.5 bg-surface text-on-surface font-body text-base sm:text-body-md rounded-[10px] border-[1.5px] border-tertiary/30 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all placeholder:text-on-surface-variant ${className}`}
       {...props}
     />
   );
@@ -103,18 +105,25 @@ export function PasswordInput({ className = '', ...props }) {
     <div className="relative w-full">
       <input
         type={show ? 'text' : 'password'}
-        className={`w-full pl-3.5 pr-10 py-2.5 bg-surface text-on-surface font-body text-base sm:text-body-md rounded-[10px] border-[1.5px] border-tertiary/30 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all placeholder:text-outline-variant ${className}`}
+        className={`w-full pl-3.5 pr-10 py-2.5 bg-surface text-on-surface font-body text-base sm:text-body-md rounded-[10px] border-[1.5px] border-tertiary/30 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all placeholder:text-on-surface-variant ${className}`}
         {...props}
       />
-      <button
-        type="button"
+      <span
+        role="button"
+        tabIndex={0}
         onClick={() => setShow((s) => !s)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setShow((s) => !s);
+          }
+        }}
         aria-label={show ? 'Hide password' : 'Show password'}
         title={show ? 'Hide password' : 'Show password'}
-        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary/70 hover:text-tertiary p-1 flex items-center justify-center rounded focus:outline-none"
+        className="inline-flex items-center justify-center w-8 h-8 text-tertiary hover:text-tertiary cursor-pointer rounded focus:outline-none focus:ring-2 focus:ring-primary/60"
       >
         <span className="material-symbols-outlined text-[20px]">{show ? 'visibility_off' : 'visibility'}</span>
-      </button>
+      </span>
     </div>
   );
 }
@@ -122,7 +131,7 @@ export function PasswordInput({ className = '', ...props }) {
 export function Textarea({ className = '', ...props }) {
   return (
     <textarea
-      className={`w-full px-3.5 py-2.5 bg-surface text-on-surface font-body text-base sm:text-body-md rounded-[10px] border-[1.5px] border-tertiary/30 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all resize-none ${className}`}
+      className={`w-full px-3.5 py-2.5 bg-surface text-on-surface font-body text-base sm:text-body-md rounded-[10px] border-[1.5px] border-tertiary/30 focus:border-primary-container focus:ring-1 focus:ring-primary-container outline-none transition-all resize-none placeholder:text-on-surface-variant ${className}`}
       {...props}
     />
   );
@@ -155,27 +164,27 @@ export function Field({ label, required, hint, children }) {
 
 /* ---------- Pixel checkbox / radio ---------- */
 
-export function PixelCheckbox({ checked, onChange, label }) {
+export function PixelCheckbox({ checked, onChange, label, children, ariaLabel }) {
   return (
     <button
       type="button"
       onClick={() => onChange && onChange(!checked)}
       className="inline-flex items-center gap-2 select-none min-h-[32px]"
       aria-pressed={checked}
+      aria-label={ariaLabel || label || (checked ? 'Checked' : 'Unchecked')}
     >
       <span
         className={`w-4 h-4 rounded-[2px] border-[1.5px] border-tertiary bg-surface-container flex items-center justify-center transition-all ${
           checked ? 'shadow-pixel-sm' : ''
         }`}
+        aria-hidden
       >
         {checked && <span className="w-2 h-2 bg-primary-container" />}
       </span>
       {label && <span className="font-body-sm text-body-sm text-on-surface">{label}</span>}
     </button>
   );
-}
-
-export function PixelRadio({ checked, onChange, label, description }) {
+}export function PixelRadio({ checked, onChange, label, description, children, ariaLabel }) {
   return (
     <button
       type="button"
@@ -184,6 +193,7 @@ export function PixelRadio({ checked, onChange, label, description }) {
         checked ? 'border-primary-container bg-secondary-container/20 shadow-pixel-sm' : 'border-tertiary/30 bg-surface-container-lowest hover:border-tertiary/60'
       }`}
       aria-pressed={checked}
+      aria-label={ariaLabel || label || (checked ? 'Selected' : 'Option')}
     >
       <span className="w-4 h-4 bg-surface border-[1.5px] border-tertiary flex items-center justify-center flex-shrink-0">
         {checked && <span className="w-2 h-2 bg-primary-container" />}
@@ -205,6 +215,7 @@ export function PixelToggle({ checked, onChange, size = 'md' }) {
       type="button"
       role="switch"
       aria-checked={checked}
+      aria-label={checked ? 'Turn off' : 'Turn on'}
       onClick={() => onChange && onChange(!checked)}
       className={`relative inline-flex items-center ${dims} rounded-none border-2 border-tertiary transition-all press shadow-pixel-sm-solid ${
         checked ? 'bg-primary-container' : 'bg-surface-dim'
@@ -214,6 +225,7 @@ export function PixelToggle({ checked, onChange, size = 'md' }) {
         className={`absolute top-[2px] left-[2px] bg-surface-container border-2 border-tertiary ${knob} transition-all ${
           checked ? shift : 'translate-x-0'
         }`}
+        aria-hidden
       />
     </button>
   );
@@ -254,14 +266,16 @@ export function Avatar({ src, alt = '', size = 36, online, className = '', ring 
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
-        alt={alt}
+        alt={alt || 'Avatar'}
         width={size}
         height={size}
         className={`w-full h-full object-cover rounded-lg ${isSvg ? 'pixelated' : ''} ${ring ? 'border-[1.5px] border-tertiary/40' : ''}`}
         style={isSvg ? { imageRendering: 'pixelated' } : {}}
+        decoding="async"
       />
       {online !== undefined && (
         <span
+          aria-hidden
           className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border-[1.5px] border-surface-container ${
             online ? 'bg-primary-container' : 'bg-brown/40'
           }`}
@@ -334,7 +348,22 @@ export function Modal({ open, onClose, title, kicker, children, maxW = 'max-w-xl
               {title}
             </h2>
           </div>
-          <IconButton icon="close" title="Close" aria-label="Close dialog" onClick={onClose} />
+          <span
+            role="button"
+            tabIndex={0}
+            aria-label="Close dialog"
+            title="Close dialog"
+            className="inline-flex w-9 h-9 items-center justify-center rounded-lg border border-tertiary/20 bg-surface-container-low text-on-surface-variant hover:bg-surface-container transition-all press shadow-pixel-sm focus:outline-none focus:ring-2 focus:ring-primary/60"
+            onClick={onClose}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClose();
+              }
+            }}
+          >
+            <span className="material-symbols-outlined text-[18px]">close</span>
+          </span>
         </div>
         <div className="mt-5">{children}</div>
       </div>

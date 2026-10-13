@@ -112,7 +112,7 @@ export default function AdminUsersPage() {
       {/* Filters */}
       <div className="bg-surface-container-low p-3 rounded-xl border border-tertiary/20 shadow-pixel-sm flex flex-wrap items-center gap-3">
         <div className="flex-1 min-w-[220px] relative">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-tertiary/60 text-[18px]">search</span>
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-tertiary text-[18px]">search</span>
           <Input
             className="pl-9 py-1.5 font-mono text-sm"
             placeholder="Search username, display name, email…"
@@ -290,7 +290,7 @@ export default function AdminUsersPage() {
             />
           ) : (
             <div className="bg-surface-container-low rounded-xl border border-tertiary/30 shadow-pixel-md p-6 flex flex-col items-center justify-center min-h-[300px] text-center">
-              <span className="material-symbols-outlined text-tertiary/40 text-4xl mb-2">person_search</span>
+              <span className="material-symbols-outlined text-tertiary text-4xl mb-2">person_search</span>
               <p className="font-mono text-label-sm text-on-surface-variant">Select a player row to inspect account details</p>
             </div>
           )}

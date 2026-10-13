@@ -176,7 +176,7 @@ export function LoginForm() {
                   onChange={(e) => setForgotEmail(e.target.value)}
                   required
                 />
-                <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-tertiary/50">
+                <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-tertiary">
                   <span className="material-symbols-outlined text-[18px]">email</span>
                 </span>
               </div>
@@ -296,7 +296,7 @@ export function LoginForm() {
             onChange={(e) => setForm({ ...form, identifier: e.target.value })}
             required
           />
-          <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-tertiary/50">
+          <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-tertiary">
             <span className="material-symbols-outlined text-[18px]">alternate_email</span>
           </span>
         </div>
@@ -607,7 +607,7 @@ export function AvatarSelector({ value, onChange }) {
             }`}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={avatarSrc(id)} alt={id} className="w-full aspect-square rounded-md pixelated" />
+            <img src={avatarSrc(id)} alt={`Retro avatar choice ${id}`} className="w-full aspect-square rounded-md pixelated" />
             {value === id && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary-container border border-surface-container" />}
           </button>
         ))}

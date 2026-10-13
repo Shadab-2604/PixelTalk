@@ -1,0 +1,48 @@
+# PixelTalk
+
+> Real-time pixel-infused messaging application. Low-noise lounges, frictionless text, and tactile retro-micro visuals. Built for focused communities, creators, and teams who value calm, authentic communication.
+
+## Core Information
+- Website: https://pixel-talk-qofh.vercel.app
+- Application Type: Real-time web messenger & community lounge
+- Platform: Modern web browsers (Desktop & Mobile)
+- Version: 1.0.4
+- Architecture: Next.js 14 (App Router) + Node.js Express + Socket.IO + MongoDB Atlas + Redis Cloud + WebRTC
+
+## Key Features
+- **Direct Messaging (`/chat`)**: 1-on-1 encrypted conversations with instant delivery, read receipts, typing indicators, and message reactions.
+- **Community Lounges (`/rooms`)**: Public, invite-only, and passcode-protected themed rooms with live member presence and retro aesthetics.
+- **Voice & Video Calling**: Low-latency WebRTC peer-to-peer audio and video calling with spatial audio filters.
+- **Tactile Pixel UI**: Hand-crafted 8-bit retro theme, custom avatar catalog, animated pixel landscapes, and zero generic bloat.
+- **Zero Noise Philosophy**: No algorithmic feeds, intrusive tracking, or engagement traps. Pure, intentional communication.
+
+## Public Navigation & URLs
+- Home / Sign-In: https://pixel-talk-qofh.vercel.app/
+- Player Registration: https://pixel-talk-qofh.vercel.app/register
+- Player Signup: https://pixel-talk-qofh.vercel.app/signup
+- About PixelTalk: https://pixel-talk-qofh.vercel.app/about
+- Privacy Policy: https://pixel-talk-qofh.vercel.app/privacy
+- Terms of Service: https://pixel-talk-qofh.vercel.app/terms
+- Sitemap: https://pixel-talk-qofh.vercel.app/sitemap.xml
+- Robots Policy: https://pixel-talk-qofh.vercel.app/robots.txt
+
+## Authenticated Core Routes
+- Player Dashboard: `/dashboard`
+- Direct Messages: `/chat` & `/chat/[conversationId]`
+- Community Rooms: `/rooms` & `/rooms/[conversationId]`
+- Player Profile: `/profile` & `/profile/[username]`
+- App Settings: `/settings`
+- Restricted Admin Console: `/admin`
+
+## API Endpoints (REST & WebSocket)
+- `POST /api/auth/register` - Create new player account (requires email OTP verification)
+- `POST /api/auth/login` - Authenticate player session (sets HttpOnly cookie)
+- `POST /api/auth/logout` - Invalidate session tokens
+- `GET /api/conversations` - List active direct conversations
+- `GET /api/conversations/rooms` - Discover active community rooms
+- `GET /api/messages/:conversationId` - Fetch paginated conversation history
+- `POST /api/messages` - Send new real-time message
+- `GET /api/health` - System diagnostics, uptime, and database connectivity
+
+## Full Documentation
+- Extended Specification: https://pixel-talk-qofh.vercel.app/llms-full.txt

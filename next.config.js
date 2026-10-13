@@ -2,7 +2,11 @@
  * File: next.config.js
  *
  * Responsibility:
- * Next.js application runtime configuration settings and compiler options.
+ * Next.js application runtime configuration settings and compiler options:
+ * - Disables production source maps to protect intellectual property and shrink payload
+ * - Enables SWC minification and Gzip/Brotli compression to shrink JS bundles
+ * - Strips sensitive debugging console statements in production builds
+ * - Configures strict security response headers and Webpack fallbacks
  *
  * Layer:
  * Frontend / Configuration
@@ -11,6 +15,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
+  poweredByHeader: false,
+  productionBrowserSourceMaps: false,
+  swcMinify: true,
+  compress: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
+  },
   experimental: {
     serverComponentsExternalPackages: [
       'socket.io-client',
@@ -66,4 +77,3 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
-

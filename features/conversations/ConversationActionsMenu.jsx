@@ -318,7 +318,7 @@ export function ConversationActionsMenu({
             title="Options"
             aria-label={`Options for ${conversationName}`}
             aria-expanded={menuOpen}
-            className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-tertiary/70 hover:text-on-surface hover:bg-surface-container transition-all press shrink-0 ${
+            className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-lg text-tertiary hover:text-on-surface hover:bg-surface-container transition-all press shrink-0 ${
               menuOpen
                 ? 'opacity-100 bg-surface-container text-on-surface'
                 : 'max-md:opacity-100 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'
@@ -386,7 +386,7 @@ export function ConversationActionsMenu({
                     </span>
                     <span>Move to Folder</span>
                   </span>
-                  <span className="material-symbols-outlined text-[14px] text-tertiary/60">
+                  <span className="material-symbols-outlined text-[14px] text-tertiary">
                     chevron_right
                   </span>
                 </button>
@@ -570,7 +570,7 @@ export function ConversationActionsMenu({
                     </span>
                     <span>Move to Folder</span>
                   </span>
-                  <span className="material-symbols-outlined text-[14px] text-tertiary/60">
+                  <span className="material-symbols-outlined text-[14px] text-tertiary">
                     chevron_right
                   </span>
                 </button>

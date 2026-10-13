@@ -122,7 +122,7 @@ export function MediaLightBoxModal({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={getUserAvatar(activeItem.senderAvatar || activeItem.senderId)}
-            alt=""
+            alt={activeItem.senderName ? `${activeItem.senderName} avatar` : 'Sender avatar'}
             className="w-10 h-10 rounded-lg border border-white/20 bg-surface-variant pixelated object-cover shrink-0"
           />
           <div className="min-w-0 font-mono">
@@ -265,7 +265,7 @@ export function MediaLightBoxModal({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={itemUrl}
-                    alt=""
+                    alt={item.fileName || `Media item ${idx + 1}`}
                     className="w-full h-full object-cover rounded-md"
                   />
                 </button>

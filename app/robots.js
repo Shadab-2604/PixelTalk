@@ -3,18 +3,30 @@
  *
  * Responsibility:
  * Generates dynamic robots.txt search engine crawling policy:
- * Allows public indexation of landing and signup pages while disallowing
- * private user inboxes, rooms, profile data, settings, and admin consoles.
+ * - Allows public indexing of landing, signup, about, privacy, and terms pages
+ * - Disallows private user inboxes, direct chat threads, rooms, settings, and admin consoles
+ * - Directs automated agents to sitemap.xml and llms.txt
  *
  * Layer:
  * Frontend / SEO
  */
 export default function robots() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pixeltalk.shad.dev';
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://pixel-talk-qofh.vercel.app').replace(/\/+$/, '');
   return {
     rules: {
       userAgent: '*',
-      allow: ['/', '/signup', '/register'],
+      allow: [
+        '/',
+        '/signup',
+        '/register',
+        '/about',
+        '/privacy',
+        '/terms',
+        '/icon.svg',
+        '/og-image.svg',
+        '/llms.txt',
+        '/llms-full.txt',
+      ],
       disallow: [
         '/chat/',
         '/rooms/',
@@ -28,5 +40,6 @@ export default function robots() {
       ],
     },
     sitemap: `${baseUrl}/sitemap.xml`,
+    host: baseUrl,
   };
 }

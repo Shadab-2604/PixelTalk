@@ -159,7 +159,7 @@ export function CreateRoomModal({ open, onClose }) {
            * WHY: Establishes immediate group visual identity before details.
            * HOW: Allows toggling between retro pixel sprites and custom Cloudinary photo.
            */}
-          <section className="bg-surface-container-lowest border-2 border-tertiary/30 rounded-xl p-4 sm:p-5 shadow-[2px_2px_0_0_#6E3511]">
+          <section className="bg-surface-container-lowest border-2 border-tertiary/30 rounded-xl p-4 sm:p-5 shadow-[2px_2px_0_0_var(--pt-shadow)]">
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-tertiary/15">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-primary-container inline-block" />
@@ -173,7 +173,7 @@ export function CreateRoomModal({ open, onClose }) {
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 items-start">
               {/* Crest Avatar Preview */}
               <div className="flex flex-col items-center gap-2 shrink-0 self-center sm:self-start">
-                <div className="relative w-24 h-24 bg-surface-container rounded-xl border-2 border-[#6E3511] p-1 shadow-[2px_2px_0_0_#6E3511]">
+                <div className="relative w-24 h-24 bg-surface-container rounded-xl border-2 border-brown p-1 shadow-[2px_2px_0_0_var(--pt-shadow)]">
                   <div className="w-full h-full bg-surface-variant rounded-lg overflow-hidden flex items-center justify-center border border-dashed border-tertiary/40">
                     {avatarMode === 'custom' && customPhoto?.avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -183,7 +183,7 @@ export function CreateRoomModal({ open, onClose }) {
                       <img src={avatarSrc(avatarId)} alt="Selected retro avatar" className="w-full h-full object-cover pixelated" />
                     )}
                   </div>
-                  <div className="absolute -bottom-1.5 -right-1.5 bg-primary-container text-surface-container w-5 h-5 rounded flex items-center justify-center border border-[#6E3511] shadow-[1px_1px_0_0_#6E3511]">
+                  <div className="absolute -bottom-1.5 -right-1.5 bg-primary-container text-surface-container w-5 h-5 rounded flex items-center justify-center border border-brown shadow-[1px_1px_0_0_var(--pt-shadow)]">
                     <span className="material-symbols-outlined text-[13px] font-bold">done</span>
                   </div>
                 </div>
@@ -198,7 +198,7 @@ export function CreateRoomModal({ open, onClose }) {
                     onClick={() => setAvatarMode('retro')}
                     className={`px-3 py-1.5 rounded-lg font-mono text-label-xs font-bold uppercase transition-all flex items-center gap-1.5 ${
                       avatarMode === 'retro'
-                        ? 'bg-secondary-container text-on-secondary-container border border-tertiary/40 shadow-[1px_1px_0_0_#6E3511]'
+                        ? 'bg-secondary-container text-on-secondary-container border border-tertiary/40 shadow-[1px_1px_0_0_var(--pt-shadow)]'
                         : 'bg-surface text-tertiary border border-tertiary/20 hover:bg-surface-container'
                     }`}
                   >
@@ -214,7 +214,7 @@ export function CreateRoomModal({ open, onClose }) {
                     }}
                     className={`px-3 py-1.5 rounded-lg font-mono text-label-xs font-bold uppercase transition-all flex items-center gap-1.5 ${
                       avatarMode === 'custom'
-                        ? 'bg-secondary-container text-on-secondary-container border border-tertiary/40 shadow-[1px_1px_0_0_#6E3511]'
+                        ? 'bg-secondary-container text-on-secondary-container border border-tertiary/40 shadow-[1px_1px_0_0_var(--pt-shadow)]'
                         : 'bg-surface text-tertiary border border-tertiary/20 hover:bg-surface-container'
                     }`}
                   >
@@ -252,12 +252,12 @@ export function CreateRoomModal({ open, onClose }) {
                             onClick={() => setAvatarId(id)}
                             className={`p-0.5 rounded-lg border-2 transition-all relative aspect-square ${
                               isSelected
-                                ? 'border-primary bg-secondary-container/40 shadow-[1px_1px_0_0_#426010] ring-1 ring-primary'
+                                ? 'border-primary bg-secondary-container/40 shadow-[1px_1px_0_0_var(--pt-shadow-accent)] ring-1 ring-primary'
                                 : 'border-tertiary/25 hover:border-tertiary/60 bg-surface'
                             }`}
                           >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={avatarSrc(id)} alt={id} className="w-full h-full object-cover rounded pixelated" />
+                            <img src={avatarSrc(id)} alt={`Room crest choice ${id}`} className="w-full h-full object-cover rounded pixelated" />
                             {isSelected && (
                               <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-primary rounded-full text-on-primary flex items-center justify-center text-[9px] font-bold">
                                 ✓
@@ -292,7 +292,7 @@ export function CreateRoomModal({ open, onClose }) {
            * ============================================================
            * WHAT: Name with prefix, Description with character counter.
            */}
-          <section className="bg-surface-container-lowest border-2 border-tertiary/30 rounded-xl p-4 sm:p-5 shadow-[2px_2px_0_0_#6E3511]">
+          <section className="bg-surface-container-lowest border-2 border-tertiary/30 rounded-xl p-4 sm:p-5 shadow-[2px_2px_0_0_var(--pt-shadow)]">
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-tertiary/15">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-secondary inline-block" />
@@ -316,7 +316,7 @@ export function CreateRoomModal({ open, onClose }) {
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-tertiary font-bold text-base">#</span>
                   <input
                     id="room-name"
-                    className="w-full pl-8 pr-4 py-2.5 bg-surface-bright border-2 border-[#6E3511]/40 rounded-lg text-body-md font-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:shadow-[2px_2px_0_0_#426010] transition-all"
+                    className="w-full pl-8 pr-4 py-2.5 bg-surface-bright border-2 border-brown/40 rounded-lg text-body-md font-body-md text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary focus:shadow-[2px_2px_0_0_var(--pt-shadow-accent)] transition-all"
                     placeholder="e.g. PixelTalk Developers"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -337,7 +337,7 @@ export function CreateRoomModal({ open, onClose }) {
                 <textarea
                   id="room-desc"
                   rows={2}
-                  className="w-full px-3 py-2 bg-surface-bright border-2 border-[#6E3511]/40 rounded-lg text-body-md font-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:shadow-[2px_2px_0_0_#426010] transition-all resize-none"
+                  className="w-full px-3 py-2 bg-surface-bright border-2 border-brown/40 rounded-lg text-body-md font-body-md text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary focus:shadow-[2px_2px_0_0_var(--pt-shadow-accent)] transition-all resize-none"
                   placeholder="What is this group about? Share guidelines, squad vibes, and goals..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -355,7 +355,7 @@ export function CreateRoomModal({ open, onClose }) {
            * Selected state has green container highlight, primary border, check indicator.
            * Includes clear note: "Invited users must accept before joining."
            */}
-          <section className="bg-surface-container-lowest border-2 border-tertiary/30 rounded-xl p-4 sm:p-5 shadow-[2px_2px_0_0_#6E3511]">
+          <section className="bg-surface-container-lowest border-2 border-tertiary/30 rounded-xl p-4 sm:p-5 shadow-[2px_2px_0_0_var(--pt-shadow)]">
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-tertiary/15">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-tertiary inline-block" />
@@ -378,14 +378,14 @@ export function CreateRoomModal({ open, onClose }) {
                     onClick={() => setAdminOnlyChat(false)}
                     className={`relative rounded-xl p-3.5 cursor-pointer transition-all flex items-start gap-3 border-2 ${
                       !adminOnlyChat
-                        ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_#426010]'
+                        ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_var(--pt-shadow-accent)]'
                         : 'bg-surface border-tertiary/30 hover:border-tertiary/60 hover:bg-surface-container-low'
                     }`}
                   >
                     <div
                       className={`w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5 border ${
                         !adminOnlyChat
-                          ? 'bg-primary text-on-primary border-[#6E3511]'
+                          ? 'bg-primary text-on-primary border-brown'
                           : 'bg-surface border-tertiary/40'
                       }`}
                     >
@@ -406,14 +406,14 @@ export function CreateRoomModal({ open, onClose }) {
                     onClick={() => setAdminOnlyChat(true)}
                     className={`relative rounded-xl p-3.5 cursor-pointer transition-all flex items-start gap-3 border-2 ${
                       adminOnlyChat
-                        ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_#426010]'
+                        ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_var(--pt-shadow-accent)]'
                         : 'bg-surface border-tertiary/30 hover:border-tertiary/60 hover:bg-surface-container-low'
                     }`}
                   >
                     <div
                       className={`w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5 border ${
                         adminOnlyChat
-                          ? 'bg-primary text-on-primary border-[#6E3511]'
+                          ? 'bg-primary text-on-primary border-brown'
                           : 'bg-surface border-tertiary/40'
                       }`}
                     >
@@ -442,14 +442,14 @@ export function CreateRoomModal({ open, onClose }) {
                     onClick={() => setInvitePermission('ANY_MEMBER')}
                     className={`relative rounded-xl p-3.5 cursor-pointer transition-all flex items-start gap-3 border-2 ${
                       invitePermission === 'ANY_MEMBER'
-                        ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_#426010]'
+                        ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_var(--pt-shadow-accent)]'
                         : 'bg-surface border-tertiary/30 hover:border-tertiary/60 hover:bg-surface-container-low'
                     }`}
                   >
                     <div
                       className={`w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5 border ${
                         invitePermission === 'ANY_MEMBER'
-                          ? 'bg-primary text-on-primary border-[#6E3511]'
+                          ? 'bg-primary text-on-primary border-brown'
                           : 'bg-surface border-tertiary/40'
                       }`}
                     >
@@ -470,14 +470,14 @@ export function CreateRoomModal({ open, onClose }) {
                     onClick={() => setInvitePermission('ADMINS_ONLY')}
                     className={`relative rounded-xl p-3.5 cursor-pointer transition-all flex items-start gap-3 border-2 ${
                       invitePermission === 'ADMINS_ONLY'
-                        ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_#426010]'
+                        ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_var(--pt-shadow-accent)]'
                         : 'bg-surface border-tertiary/30 hover:border-tertiary/60 hover:bg-surface-container-low'
                     }`}
                   >
                     <div
                       className={`w-5 h-5 rounded flex items-center justify-center shrink-0 mt-0.5 border ${
                         invitePermission === 'ADMINS_ONLY'
-                          ? 'bg-primary text-on-primary border-[#6E3511]'
+                          ? 'bg-primary text-on-primary border-brown'
                           : 'bg-surface border-tertiary/40'
                       }`}
                     >
@@ -497,7 +497,7 @@ export function CreateRoomModal({ open, onClose }) {
 
               {/* Invitation Consent Notification Callout */}
               <div className="bg-surface-container-low border border-tertiary/30 rounded-xl p-3.5 flex items-start gap-3">
-                <div className="w-8 h-8 rounded bg-surface-container text-tertiary flex items-center justify-center shrink-0 border border-tertiary/40 shadow-[1px_1px_0_0_#844721]">
+                <div className="w-8 h-8 rounded bg-surface-container text-tertiary flex items-center justify-center shrink-0 border border-tertiary/40 shadow-[1px_1px_0_0_var(--pt-shadow-terracotta)]">
                   <span className="material-symbols-outlined text-[18px]">verified_user</span>
                 </div>
                 <div className="space-y-0.5">
@@ -519,7 +519,7 @@ export function CreateRoomModal({ open, onClose }) {
            * WHAT: Options for Open/Public, Password Protected, or Invite-Only access.
            * Allows setting room passcode during creation.
            */}
-          <section className="bg-surface-container-lowest border-2 border-tertiary/30 rounded-xl p-4 sm:p-5 shadow-[2px_2px_0_0_#6E3511]">
+          <section className="bg-surface-container-lowest border-2 border-tertiary/30 rounded-xl p-4 sm:p-5 shadow-[2px_2px_0_0_var(--pt-shadow)]">
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-tertiary/15">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 bg-primary inline-block" />
@@ -540,7 +540,7 @@ export function CreateRoomModal({ open, onClose }) {
                   }}
                   className={`relative rounded-xl p-3.5 cursor-pointer transition-all flex flex-col justify-between border-2 ${
                     privacy === 'public'
-                      ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_#426010]'
+                      ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_var(--pt-shadow-accent)]'
                       : 'bg-surface border-tertiary/30 hover:border-tertiary/60 hover:bg-surface-container-low'
                   }`}
                 >
@@ -552,7 +552,7 @@ export function CreateRoomModal({ open, onClose }) {
                       <div
                         className={`w-5 h-5 rounded flex items-center justify-center border ${
                           privacy === 'public'
-                            ? 'bg-primary text-on-primary border-[#6E3511]'
+                            ? 'bg-primary text-on-primary border-brown'
                             : 'bg-surface border-tertiary/40'
                         }`}
                       >
@@ -573,19 +573,19 @@ export function CreateRoomModal({ open, onClose }) {
                   onClick={() => setPrivacy('private')}
                   className={`relative rounded-xl p-3.5 cursor-pointer transition-all flex flex-col justify-between border-2 ${
                     privacy === 'private'
-                      ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_#426010]'
+                      ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_var(--pt-shadow-accent)]'
                       : 'bg-surface border-tertiary/30 hover:border-tertiary/60 hover:bg-surface-container-low'
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <div className="w-7 h-7 rounded bg-primary-container text-surface-container flex items-center justify-center border border-[#6E3511]">
+                      <div className="w-7 h-7 rounded bg-primary-container text-surface-container flex items-center justify-center border border-brown">
                         <span className="material-symbols-outlined text-[16px]">lock</span>
                       </div>
                       <div
                         className={`w-5 h-5 rounded flex items-center justify-center border ${
                           privacy === 'private'
-                            ? 'bg-primary text-on-primary border-[#6E3511]'
+                            ? 'bg-primary text-on-primary border-brown'
                             : 'bg-surface border-tertiary/40'
                         }`}
                       >
@@ -609,7 +609,7 @@ export function CreateRoomModal({ open, onClose }) {
                   }}
                   className={`relative rounded-xl p-3.5 cursor-pointer transition-all flex flex-col justify-between border-2 ${
                     privacy === 'invite'
-                      ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_#426010]'
+                      ? 'bg-secondary-container/50 border-primary shadow-[2px_2px_0_0_var(--pt-shadow-accent)]'
                       : 'bg-surface border-tertiary/30 hover:border-tertiary/60 hover:bg-surface-container-low'
                   }`}
                 >
@@ -621,7 +621,7 @@ export function CreateRoomModal({ open, onClose }) {
                       <div
                         className={`w-5 h-5 rounded flex items-center justify-center border ${
                           privacy === 'invite'
-                            ? 'bg-primary text-on-primary border-[#6E3511]'
+                            ? 'bg-primary text-on-primary border-brown'
                             : 'bg-surface border-tertiary/40'
                         }`}
                       >
@@ -672,7 +672,7 @@ export function CreateRoomModal({ open, onClose }) {
            * 5. LIVE GROUP RULES SUMMARY & PREVIEW (Stitch Summary Strip)
            * ============================================================
            */}
-          <section className="bg-surface-container border-2 border-[#6E3511] rounded-xl p-4 shadow-[2px_2px_0_0_#6E3511]">
+          <section className="bg-surface-container border-2 border-brown rounded-xl p-4 shadow-[2px_2px_0_0_var(--pt-shadow)]">
             <div className="flex items-center gap-2 mb-2.5">
               <span className="material-symbols-outlined text-[18px] text-tertiary">gavel</span>
               <h4 className="font-mono text-label-sm font-bold text-tertiary uppercase tracking-wider">

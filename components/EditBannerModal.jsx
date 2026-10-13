@@ -141,11 +141,11 @@ export function EditBannerModal({
             </span>
           </div>
 
-          <div className="relative aspect-[3/1] sm:aspect-[3.5/1] w-full rounded-xl overflow-hidden border-2 border-[#6E3511] bg-surface-container shadow-[2px_2px_0_0_#6E3511]">
+          <div className="relative aspect-[3/1] sm:aspect-[3.5/1] w-full rounded-xl overflow-hidden border-2 border-brown bg-surface-container shadow-[2px_2px_0_0_var(--pt-shadow)]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={previewSrc}
-              alt="Banner Preview"
+              alt="Profile banner live preview"
               className="w-full h-full object-cover object-center"
             />
             {/* Contextual overlay simulation */}
@@ -195,7 +195,7 @@ export function EditBannerModal({
                   onClick={() => handleSelectBuiltIn(theme.id)}
                   className={`group text-left rounded-lg p-1.5 border-2 transition-all relative flex flex-col gap-1 ${
                     isSelected
-                      ? 'border-primary bg-secondary-container/40 shadow-[2px_2px_0_0_#426010] ring-1 ring-primary'
+                      ? 'border-primary bg-secondary-container/40 shadow-[2px_2px_0_0_var(--pt-shadow-accent)] ring-1 ring-primary'
                       : 'border-tertiary/30 bg-surface hover:border-tertiary/60'
                   }`}
                 >
@@ -203,7 +203,7 @@ export function EditBannerModal({
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={bannerUrl}
-                      alt={theme.name}
+                      alt={`${theme.name} banner theme option`}
                       className="w-full h-full object-cover"
                       loading="lazy"
                     />
@@ -261,7 +261,7 @@ export function EditBannerModal({
                   onClose();
                   if (onOpenUploadCustom) onOpenUploadCustom();
                 }}
-                className="px-3 py-1.5 rounded-lg bg-surface text-tertiary font-mono text-[11px] font-bold border border-tertiary/40 shadow-[1px_1px_0_0_#6E3511] hover:bg-surface-container flex items-center gap-1.5 active:translate-x-0.5 active:translate-y-0.5 transition-all"
+                className="px-3 py-1.5 rounded-lg bg-surface text-tertiary font-mono text-[11px] font-bold border border-tertiary/40 shadow-[1px_1px_0_0_var(--pt-shadow)] hover:bg-surface-container flex items-center gap-1.5 active:translate-x-0.5 active:translate-y-0.5 transition-all"
               >
                 <span className="material-symbols-outlined text-[15px]">upload</span>
                 <span>{user?.bannerUrl ? 'Replace Custom' : 'Upload Custom'}</span>

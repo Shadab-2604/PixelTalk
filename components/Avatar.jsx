@@ -41,7 +41,7 @@ export function PixelAvatar({ avatarId = 'avatar-01', avatarUrl, size = 48, pres
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
-        alt={avatarId}
+        alt={AVATARS.find((a) => a.id === avatarId)?.name || 'Pixel character avatar'}
         width={size}
         height={size}
         className={`w-full h-full rounded-lg bg-surface-container border border-tertiary/30 shadow-pixel-sm ${avatarUrl ? 'object-cover' : 'pixelated'}`}

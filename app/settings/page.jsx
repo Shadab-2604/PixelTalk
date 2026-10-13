@@ -25,6 +25,7 @@
 
 import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/AppShell';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { userService } from '@/services/userService';
 import { authService } from '@/services/authService';
 import { useAuth, useRequireAuth } from '@/hooks/useAuth';
@@ -137,6 +138,9 @@ export default function SettingsPage() {
 
   return (
     <AppShell wide>
+      <div className="max-w-7xl w-full mx-auto px-4 lg:px-6 pt-4">
+        <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Settings' }]} />
+      </div>
       <div className="max-w-7xl w-full mx-auto p-4 lg:p-6 flex flex-col md:flex-row gap-6">
         {/* Left settings navigation */}
         <aside className="w-full md:w-64 lg:w-72 shrink-0">
@@ -301,8 +305,8 @@ function ProfileSection({ user, form, setForm, unameStatus, status, onSave }) {
       <div className="bg-surface-container-lowest rounded-xl border border-tertiary/20 shadow-pixel-sm overflow-hidden">
         <div className="relative h-36 border-b-2 border-tertiary/30 bg-surface-container group">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={getUserBanner(user)} alt="Player Banner" className="w-full h-full object-cover" />
-          <div className="absolute bottom-2 left-4 text-label-sm font-mono text-surface font-bold tracking-widest bg-tertiary/80 px-2 py-0.5 rounded shadow z-10">
+          <img src={getUserBanner(user)} alt={user?.displayName ? `${user.displayName}'s banner` : 'Player banner'} className="w-full h-full object-cover" />
+          <div className="absolute bottom-2 left-4 text-label-sm font-mono text-surface font-bold tracking-widest bg-tertiary/90 px-2 py-0.5 rounded shadow z-10">
             PLAYER IDENTITY &amp; AVATAR
           </div>
 
@@ -377,7 +381,7 @@ function ProfileSection({ user, form, setForm, unameStatus, status, onSave }) {
               <div className="mb-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="font-display text-headline-lg text-tertiary font-bold">{user?.displayName}</h1>
-                  <span className="font-mono text-label-sm text-outline-variant">#{(user?.id || user?._id || '').slice(-4).toUpperCase()}</span>
+                  <span className="font-mono text-label-sm text-on-surface-variant">#{(user?.id || user?._id || '').slice(-4).toUpperCase()}</span>
                 </div>
                 <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
                   <span className="font-mono text-label-md text-primary font-bold">@{user?.username}</span>
@@ -520,6 +524,8 @@ function AppearanceSection({ user, setUser }) {
               key={value}
               type="button"
               onClick={() => setTheme(value)}
+              aria-pressed={theme === value}
+              aria-label={`${label} color theme`}
               className={`flex items-center gap-3 p-3.5 rounded-lg border-[1.5px] text-left transition-all ${
                 theme === value ? 'border-primary-container bg-secondary-container/30 shadow-pixel-sm' : 'border-tertiary/30 bg-surface hover:border-tertiary/60'
               }`}
@@ -1114,7 +1120,7 @@ function PrivacySection({ user, setUser }) {
     setRespondingId(requestId);
     setRequestError('');
     try {
-      await followService.respondRequest(requestId, action);
+      await conversationService.respondToInvitation(requestId, action);
       if (action === 'ACCEPTED') {
         sfx.success();
       } else {
@@ -1124,6 +1130,27 @@ function PrivacySection({ user, setUser }) {
     } catch (err) {
       sfx.error();
       setRequestError(err.message || `Failed to ${action.toLowerCase()} follow request`);
+    } finally {
+      setRespondingId(null);
+    }
+  };
+
+  // Fix: followService does not expose respondRequest; delegate to conversationService.respondToInvitation
+  const handleInvitationRespond = async (invitationId, action) => {
+    setRespondingId(invitationId);
+    setRequestError('');
+    try {
+      await conversationService.respondToInvitation(invitationId, action);
+      if (action === 'ACCEPTED') {
+        sfx.success();
+      } else {
+        sfx.click();
+      }
+      // Refresh pending requests after responding
+      await loadPending();
+    } catch (err) {
+      sfx.error();
+      setRequestError(err.message || `Failed to ${action.toLowerCase()} invitation`);
     } finally {
       setRespondingId(null);
     }
@@ -1242,7 +1269,7 @@ function PrivacySection({ user, setUser }) {
           <p className="font-mono text-label-sm text-on-surface-variant py-4 text-center">Loading requests…</p>
         ) : pendingRequests.length === 0 ? (
           <div className="p-6 bg-surface-container/40 rounded-xl border border-tertiary/15 text-center space-y-1">
-            <span className="material-symbols-outlined text-tertiary/50 text-[32px]">person_check</span>
+            <span className="material-symbols-outlined text-tertiary/80 text-[32px]">person_check</span>
             <p className="font-mono text-label-sm text-on-surface font-bold">No Pending Requests</p>
             <p className="font-body-sm text-[12px] text-on-surface-variant">
               When players request to follow your private account, they will appear here.

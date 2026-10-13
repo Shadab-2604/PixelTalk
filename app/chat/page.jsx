@@ -27,6 +27,7 @@ import { usePresence } from '@/hooks/usePresence';
 import { avatarSrc } from '@/lib/avatars';
 import { timeAgo } from '@/lib/format';
 import { Badge, Avatar, EmptyState } from '@/components/ui';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 export default function MessagesIndexPage() {
   useRequireAuth();
@@ -46,6 +47,7 @@ export default function MessagesIndexPage() {
   return (
     <AppShell sidebar={<><ConversationSidebar /><SidebarFooter /></>}>
       <div className="p-6 lg:p-8 bg-surface-container/60">
+        <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Direct Messages' }]} className="mb-4" />
         <h1 className="font-display text-headline-lg font-bold text-on-surface mb-1">Messages</h1>
         <p className="font-body-md text-body-md text-on-surface-variant mb-6">Your direct conversations.</p>
 
@@ -58,7 +60,12 @@ export default function MessagesIndexPage() {
             {convos.map((c) => (
               <Link key={c._id} href={`/chat/${c._id}`}>
                 <article className="bg-surface-container-lowest border-[1.5px] border-tertiary/30 hover:border-tertiary rounded-xl p-4 shadow-pixel-sm transition-all flex items-center gap-3.5">
-                  <Avatar src={avatarSrc(conversationAvatarId(c))} size={44} online={isOnline(c.otherUser?._id)} />
+                  <Avatar
+                    src={avatarSrc(conversationAvatarId(c))}
+                    alt={`${conversationLabel(c, user)} avatar`}
+                    size={44}
+                    online={isOnline(c.otherUser?._id)}
+                  />
                   <div className="min-w-0">
                     <p className="font-display text-headline-sm font-bold text-on-surface truncate">{conversationLabel(c, user)}</p>
                     <p className="font-mono text-label-sm text-tertiary truncate">@{c.otherUser?.username}</p>

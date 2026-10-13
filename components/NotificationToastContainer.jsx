@@ -98,7 +98,7 @@ function ToastItem({ toast, onClick, onDismiss }) {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={toast.avatarUrl || '/avatars/avatar-01.png'}
-        alt=""
+        alt={toast.senderName ? `${toast.senderName} avatar` : 'Notification sender avatar'}
         className="w-10 h-10 rounded-lg bg-surface-container border-2 border-tertiary pixelated shadow-pixel-xs shrink-0 mt-0.5 object-cover"
       />
 

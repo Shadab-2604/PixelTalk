@@ -30,6 +30,7 @@ import { useSound } from '@/hooks/useSound';
 import { avatarSrc } from '@/lib/avatars';
 import { timeAgo } from '@/lib/format';
 import { Badge, Avatar, EmptyState, PrimaryButton } from '@/components/ui';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 export default function DashboardPage() {
   useRequireAuth();
@@ -62,6 +63,7 @@ export default function DashboardPage() {
   return (
     <AppShell sidebar={<><ConversationSidebar /><SidebarFooter /></>}>
       <div className="p-6 lg:p-8 bg-surface-container/60 min-h-full">
+        <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Dashboard' }]} className="mb-4" />
         {/* Welcome hero */}
         <section className="mb-8 bg-surface border-[1.5px] border-tertiary rounded-xl p-6 lg:p-7 shadow-pixel-sm-solid relative overflow-hidden">
           <div className="absolute right-0 top-0 w-36 h-36 bg-secondary-container/20 pixel-dither-pattern pointer-events-none" />
@@ -168,7 +170,7 @@ export default function DashboardPage() {
                             {c.unreadCount} UNREAD
                           </span>
                         )}
-                        <span className="material-symbols-outlined text-tertiary/40 group-hover:text-tertiary transition-colors">arrow_forward</span>
+                        <span className="material-symbols-outlined text-tertiary/80 group-hover:text-tertiary transition-colors">arrow_forward</span>
                       </div>
                     </div>
                   </article>

@@ -205,7 +205,7 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
                 }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-[11px] uppercase font-bold whitespace-nowrap transition-all ${
                   tab === t.id
-                    ? 'bg-secondary-container text-on-secondary-container border border-tertiary/30 shadow-[1px_1px_0_0_#6E3511]'
+                    ? 'bg-secondary-container text-on-secondary-container border border-tertiary/30 shadow-[1px_1px_0_0_var(--pt-shadow)]'
                     : 'text-on-surface-variant hover:bg-surface-container'
                 }`}
               >
@@ -234,7 +234,7 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
               {/* Avatar Manager */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-surface-container-low rounded-xl border border-tertiary/25">
                 <div className="relative shrink-0">
-                  <div className="w-16 h-16 rounded-xl border-2 border-tertiary/40 overflow-hidden bg-surface-container shadow-[2px_2px_0_0_#6E3511]">
+                  <div className="w-16 h-16 rounded-xl border-2 border-tertiary/40 overflow-hidden bg-surface-container shadow-[2px_2px_0_0_var(--pt-shadow)]">
                     {avatarMode === 'custom' && customPhoto?.avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={customPhoto.avatarUrl} alt="Group crest" className="w-full h-full object-cover" />
@@ -254,14 +254,14 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
                     <button
                       type="button"
                       onClick={() => setPhotoModalOpen(true)}
-                      className="px-3 py-1 rounded-lg bg-surface border border-tertiary/40 text-tertiary font-mono text-[11px] font-bold shadow-[1px_1px_0_0_#6E3511] hover:bg-surface-variant active:translate-x-0.5 active:translate-y-0.5 transition-all"
+                      className="px-3 py-1 rounded-lg bg-surface border border-tertiary/40 text-tertiary font-mono text-[11px] font-bold shadow-[1px_1px_0_0_var(--pt-shadow)] hover:bg-surface-variant active:translate-x-0.5 active:translate-y-0.5 transition-all"
                     >
                       Change Photo
                     </button>
                     <button
                       type="button"
                       onClick={() => setAvatarMode('retro')}
-                      className={`px-3 py-1 rounded-lg border font-mono text-[11px] font-bold shadow-[1px_1px_0_0_#6E3511] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-1 ${
+                      className={`px-3 py-1 rounded-lg border font-mono text-[11px] font-bold shadow-[1px_1px_0_0_var(--pt-shadow)] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-1 ${
                         avatarMode === 'retro'
                           ? 'bg-secondary-container border-secondary/40 text-on-secondary-container'
                           : 'bg-surface border-tertiary/40 text-tertiary hover:bg-surface-variant'
@@ -300,12 +300,12 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
                         onClick={() => setAvatarId(id)}
                         className={`p-0.5 rounded-lg border-2 transition-all relative aspect-square ${
                           avatarId === id
-                            ? 'border-primary bg-secondary-container/50 shadow-[1px_1px_0_0_#426010] ring-1 ring-primary'
+                            ? 'border-primary bg-secondary-container/50 shadow-[1px_1px_0_0_var(--pt-shadow-accent)] ring-1 ring-primary'
                             : 'border-tertiary/25 hover:border-tertiary/60 bg-surface'
                         }`}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={avatarSrc(id)} alt={id} className="w-full h-full object-cover rounded pixelated" />
+                        <img src={avatarSrc(id)} alt={`Room crest choice ${id}`} className="w-full h-full object-cover rounded pixelated" />
                         {avatarId === id && (
                           <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-primary text-on-primary rounded-full flex items-center justify-center text-[9px] font-bold">
                             ✓
@@ -377,7 +377,7 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
                   onClick={() => setAdminOnlyChat(false)}
                   className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                     !adminOnlyChat
-                      ? 'border-primary bg-secondary-container/40 shadow-[2px_2px_0_0_#426010]'
+                      ? 'border-primary bg-secondary-container/40 shadow-[2px_2px_0_0_var(--pt-shadow-accent)]'
                       : 'border-tertiary/25 bg-surface hover:border-tertiary/60'
                   }`}
                 >
@@ -411,7 +411,7 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
                   onClick={() => setAdminOnlyChat(true)}
                   className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                     adminOnlyChat
-                      ? 'border-primary bg-secondary-container/40 shadow-[2px_2px_0_0_#426010]'
+                      ? 'border-primary bg-secondary-container/40 shadow-[2px_2px_0_0_var(--pt-shadow-accent)]'
                       : 'border-tertiary/25 bg-surface hover:border-tertiary/60'
                   }`}
                 >
@@ -475,7 +475,7 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
                   onClick={() => setInvitePermission('ANY_MEMBER')}
                   className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                     invitePermission === 'ANY_MEMBER'
-                      ? 'border-primary bg-secondary-container/40 shadow-[2px_2px_0_0_#426010]'
+                      ? 'border-primary bg-secondary-container/40 shadow-[2px_2px_0_0_var(--pt-shadow-accent)]'
                       : 'border-tertiary/25 bg-surface hover:border-tertiary/60'
                   }`}
                 >
@@ -511,7 +511,7 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
                   onClick={() => setInvitePermission('ADMINS_ONLY')}
                   className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                     invitePermission === 'ADMINS_ONLY'
-                      ? 'border-primary bg-secondary-container/40 shadow-[2px_2px_0_0_#426010]'
+                      ? 'border-primary bg-secondary-container/40 shadow-[2px_2px_0_0_var(--pt-shadow-accent)]'
                       : 'border-tertiary/25 bg-surface hover:border-tertiary/60'
                   }`}
                 >
@@ -579,9 +579,9 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
               {/* 4-Tier Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 {/* TIER 1: OWNER */}
-                <div className="bg-surface-bright rounded-xl border border-tertiary/30 p-2.5 shadow-[1px_1px_0_0_#6E3511] flex flex-col justify-between">
+                <div className="bg-surface-bright rounded-xl border border-tertiary/30 p-2.5 shadow-[1px_1px_0_0_var(--pt-shadow)] flex flex-col justify-between">
                   <div>
-                    <span className="font-mono text-[9px] px-1.5 py-0.5 bg-[#844721] text-[#FCECD8] rounded font-bold uppercase">
+                    <span className="font-mono text-[9px] px-1.5 py-0.5 bg-tertiary text-on-tertiary rounded font-bold uppercase">
                       Tier 01
                     </span>
                     <h5 className="font-mono text-label-sm font-bold text-on-surface mt-1.5">OWNER</h5>
@@ -592,7 +592,7 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
                 </div>
 
                 {/* TIER 2: ADMIN */}
-                <div className="bg-surface-bright rounded-xl border border-tertiary/30 p-2.5 shadow-[1px_1px_0_0_#6E3511] flex flex-col justify-between">
+                <div className="bg-surface-bright rounded-xl border border-tertiary/30 p-2.5 shadow-[1px_1px_0_0_var(--pt-shadow)] flex flex-col justify-between">
                   <div>
                     <span className="font-mono text-[9px] px-1.5 py-0.5 bg-secondary-container text-on-secondary-container rounded font-bold uppercase">
                       Tier 02
@@ -605,7 +605,7 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
                 </div>
 
                 {/* TIER 3: MODERATOR */}
-                <div className="bg-surface-bright rounded-xl border border-tertiary/30 p-2.5 shadow-[1px_1px_0_0_#6E3511] flex flex-col justify-between">
+                <div className="bg-surface-bright rounded-xl border border-tertiary/30 p-2.5 shadow-[1px_1px_0_0_var(--pt-shadow)] flex flex-col justify-between">
                   <div>
                     <span className="font-mono text-[9px] px-1.5 py-0.5 bg-surface-variant text-tertiary rounded font-bold uppercase">
                       Tier 03
@@ -618,7 +618,7 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
                 </div>
 
                 {/* TIER 4: MEMBER */}
-                <div className="bg-surface-bright rounded-xl border border-tertiary/30 p-2.5 shadow-[1px_1px_0_0_#6E3511] flex flex-col justify-between">
+                <div className="bg-surface-bright rounded-xl border border-tertiary/30 p-2.5 shadow-[1px_1px_0_0_var(--pt-shadow)] flex flex-col justify-between">
                   <div>
                     <span className="font-mono text-[9px] px-1.5 py-0.5 bg-surface-container text-tertiary rounded font-bold uppercase">
                       Tier 04
@@ -688,7 +688,7 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
                     Configure room privacy, set or edit secret passcodes, or remove password protection.
                   </p>
                 </div>
-                <span className="font-mono text-[10px] bg-primary-container text-surface-container font-bold px-2 py-0.5 rounded border border-[#6E3511] uppercase shrink-0">
+                <span className="font-mono text-[10px] bg-primary-container text-surface-container font-bold px-2 py-0.5 rounded border border-brown uppercase shrink-0">
                   Admin Only
                 </span>
               </div>
@@ -707,7 +707,7 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
                   <div
                     className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${
                       conversation?.privacy === 'private' || conversation?.hasPasscode
-                        ? 'bg-primary text-surface-container border-[#6E3511]'
+                        ? 'bg-primary text-surface-container border-brown'
                         : 'bg-surface-variant text-tertiary border-tertiary/30'
                     }`}
                   >
@@ -751,7 +751,7 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
                   }}
                   className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
                     privacy === 'public'
-                      ? 'border-primary bg-secondary-container/50 shadow-[2px_2px_0_0_#426010]'
+                      ? 'border-primary bg-secondary-container/50 shadow-[2px_2px_0_0_var(--pt-shadow-accent)]'
                       : 'border-tertiary/25 bg-surface hover:border-tertiary/60'
                   }`}
                 >
@@ -787,13 +787,13 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
                   }}
                   className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
                     privacy === 'private'
-                      ? 'border-primary bg-secondary-container/50 shadow-[2px_2px_0_0_#426010]'
+                      ? 'border-primary bg-secondary-container/50 shadow-[2px_2px_0_0_var(--pt-shadow-accent)]'
                       : 'border-tertiary/25 bg-surface hover:border-tertiary/60'
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <div className="w-6 h-6 rounded bg-primary-container text-surface-container flex items-center justify-center border border-[#6E3511]">
+                      <div className="w-6 h-6 rounded bg-primary-container text-surface-container flex items-center justify-center border border-brown">
                         <span className="material-symbols-outlined text-[15px]">lock</span>
                       </div>
                       <div
@@ -824,7 +824,7 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
                   }}
                   className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
                     privacy === 'invite'
-                      ? 'border-primary bg-secondary-container/50 shadow-[2px_2px_0_0_#426010]'
+                      ? 'border-primary bg-secondary-container/50 shadow-[2px_2px_0_0_var(--pt-shadow-accent)]'
                       : 'border-tertiary/25 bg-surface hover:border-tertiary/60'
                   }`}
                 >
@@ -936,9 +936,9 @@ export function RoomSettingsModal({ open, onClose, conversation, onUpdated, curr
            * WHY: Prevents accidental loss of edits across multi-section group configuration.
            */}
           <div
-            className={`transition-all duration-200 p-3 rounded-xl border-2 border-[#6E3511] flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[3px_3px_0_0_#6E3511] ${
+            className={`transition-all duration-200 p-3 rounded-xl border-2 border-brown flex flex-col sm:flex-row items-center justify-between gap-3 shadow-[3px_3px_0_0_var(--pt-shadow)] ${
               isDirty
-                ? 'bg-surface-container border-primary shadow-[3px_3px_0_0_#426010]'
+                ? 'bg-surface-container border-primary shadow-[3px_3px_0_0_var(--pt-shadow-accent)]'
                 : 'bg-surface-container-low border-tertiary/30'
             }`}
           >

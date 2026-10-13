@@ -173,7 +173,7 @@ export function CallOverlay() {
           {systemMessages.map((msg) => (
             <div
               key={msg.id}
-              className="bg-surface-container-high/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-tertiary/40 shadow-[2px_2px_0px_#6E3511] flex items-center gap-2 font-mono text-[11px] font-bold text-on-surface animate-fade-in"
+              className="bg-surface-container-high/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-tertiary/40 shadow-[2px_2px_0px_var(--pt-shadow)] flex items-center gap-2 font-mono text-[11px] font-bold text-on-surface animate-fade-in"
             >
               <span className="w-2 h-2 rounded-full bg-primary inline-block" />
               <span>{msg.text}</span>
@@ -184,7 +184,7 @@ export function CallOverlay() {
 
       {/* Democratic Ban Vote Prompt Banner */}
       {activeBanVote && isGroup && !isMinimized && (
-        <div className="fixed top-28 left-1/2 -translate-x-1/2 z-50 bg-surface-container-high border-2 border-error p-3.5 rounded-2xl shadow-[4px_4px_0px_#ba1a1a] max-w-sm w-full animate-bounce-in">
+        <div className="fixed top-28 left-1/2 -translate-x-1/2 z-50 bg-surface-container-high border-2 border-error p-3.5 rounded-2xl shadow-[4px_4px_0px_var(--pt-shadow-error)] max-w-sm w-full animate-bounce-in">
           <div className="flex items-start gap-2.5">
             <span className="material-symbols-outlined text-error text-xl shrink-0 mt-0.5">how_to_vote</span>
             <div className="min-w-0 flex-1">
@@ -198,7 +198,7 @@ export function CallOverlay() {
                 <button
                   type="button"
                   onClick={() => castBanVote(activeBanVote.targetUserId, true)}
-                  className="flex-1 py-1 px-3 bg-error text-on-error font-mono text-[11px] font-bold rounded-lg border border-tertiary shadow-[1px_1px_0px_#6E3511] press"
+                  className="flex-1 py-1 px-3 bg-error text-on-error font-mono text-[11px] font-bold rounded-lg border border-tertiary shadow-[1px_1px_0px_var(--pt-shadow)] press"
                 >
                   Vote Ban (Yes)
                 </button>
@@ -234,7 +234,7 @@ export function CallOverlay() {
             <div className="absolute bottom-14 right-0 w-3 h-3 border-b-2 border-r-2 border-tertiary pointer-events-none" />
 
             <div className="relative">
-              <div className="w-24 h-24 rounded-2xl bg-surface-container border-[3px] border-tertiary shadow-[3px_3px_0px_#6E3511] overflow-hidden relative">
+              <div className="w-24 h-24 rounded-2xl bg-surface-container border-[3px] border-tertiary shadow-[3px_3px_0px_var(--pt-shadow)] overflow-hidden relative">
                 <Avatar
                   src={getUserAvatar(callData.partnerUser)}
                   alt={partnerDisplayName}
@@ -257,7 +257,7 @@ export function CallOverlay() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2 px-3 py-1 bg-secondary-container/70 text-on-secondary-container rounded-full border border-tertiary/30 font-mono text-[11px] font-bold shadow-[1px_1px_0px_rgba(110,53,17,0.15)]">
+            <div className="flex items-center gap-2 px-3 py-1 bg-secondary-container/70 text-on-secondary-container rounded-full border border-tertiary/30 font-mono text-[11px] font-bold shadow-[1px_1px_0px_var(--pt-shadow-soft)]">
               <span className="material-symbols-outlined text-[16px] text-primary">
                 {callData.type === 'video' ? 'videocam' : 'call'}
               </span>
@@ -268,7 +268,7 @@ export function CallOverlay() {
               <button
                 type="button"
                 onClick={() => rejectCall('declined')}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-error text-on-error font-mono text-label-md font-bold border-2 border-tertiary shadow-[2px_2px_0px_#6E3511] hover:brightness-105 active:translate-x-0.5 active:translate-y-0.5 transition-all press"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-error text-on-error font-mono text-label-md font-bold border-2 border-tertiary shadow-[2px_2px_0px_var(--pt-shadow)] hover:brightness-105 active:translate-x-0.5 active:translate-y-0.5 transition-all press"
                 aria-label="Decline call"
               >
                 <span className="material-symbols-outlined text-[20px]">call_end</span>
@@ -277,7 +277,7 @@ export function CallOverlay() {
               <button
                 type="button"
                 onClick={acceptCall}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary-container text-surface-container font-mono text-label-md font-bold border-2 border-tertiary shadow-[2px_2px_0px_#6E3511] hover:brightness-105 active:translate-x-0.5 active:translate-y-0.5 transition-all press"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary-container text-surface-container font-mono text-label-md font-bold border-2 border-tertiary shadow-[2px_2px_0px_var(--pt-shadow)] hover:brightness-105 active:translate-x-0.5 active:translate-y-0.5 transition-all press"
                 aria-label="Accept call"
               >
                 <span className="material-symbols-outlined text-[20px]">call</span>
@@ -305,7 +305,7 @@ export function CallOverlay() {
             <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-tertiary pointer-events-none" />
 
             <div className="relative">
-              <div className="w-24 h-24 rounded-2xl bg-surface-container border-[3px] border-tertiary shadow-[3px_3px_0px_#6E3511] overflow-hidden relative">
+              <div className="w-24 h-24 rounded-2xl bg-surface-container border-[3px] border-tertiary shadow-[3px_3px_0px_var(--pt-shadow)] overflow-hidden relative">
                 <Avatar
                   src={getUserAvatar(callData.partnerUser)}
                   alt={partnerDisplayName}
@@ -334,7 +334,7 @@ export function CallOverlay() {
               <button
                 type="button"
                 onClick={cancelCall}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-error text-on-error font-mono text-label-md font-bold border-2 border-tertiary shadow-[2px_2px_0px_#6E3511] hover:brightness-105 active:translate-x-0.5 active:translate-y-0.5 transition-all press"
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-error text-on-error font-mono text-label-md font-bold border-2 border-tertiary shadow-[2px_2px_0px_var(--pt-shadow)] hover:brightness-105 active:translate-x-0.5 active:translate-y-0.5 transition-all press"
                 aria-label="Cancel call"
               >
                 <span className="material-symbols-outlined text-[20px]">call_end</span>
@@ -349,7 +349,7 @@ export function CallOverlay() {
       {/* 3. MINIMIZED FLOATING CALL DOCK PILL                           */}
       {/* ============================================================== */}
       {callState === 'CONNECTED' && isMinimized && callData && (
-        <div className="fixed bottom-6 right-6 z-50 bg-surface-container-high/95 backdrop-blur-md px-3.5 py-2 rounded-2xl border-2 border-tertiary shadow-[3px_3px_0px_#6E3511] flex items-center gap-3 animate-fade-in select-none">
+        <div className="fixed bottom-6 right-6 z-50 bg-surface-container-high/95 backdrop-blur-md px-3.5 py-2 rounded-2xl border-2 border-tertiary shadow-[3px_3px_0px_var(--pt-shadow)] flex items-center gap-3 animate-fade-in select-none">
           <div className="w-9 h-9 rounded-xl border border-tertiary overflow-hidden bg-surface-container relative shrink-0">
             {isGroup ? (
               <Avatar src={avatarSrc('avatar-06')} alt="" size={36} ring={false} />
@@ -377,7 +377,7 @@ export function CallOverlay() {
           <button
             type="button"
             onClick={toggleMute}
-            className={`p-1.5 rounded-lg border border-tertiary shadow-[1px_1px_0px_#6E3511] press ${
+            className={`p-1.5 rounded-lg border border-tertiary shadow-[1px_1px_0px_var(--pt-shadow)] press ${
               isMuted ? 'bg-error-container text-error' : 'bg-surface-container-lowest text-on-surface hover:bg-secondary-container/40'
             }`}
             title={isMuted ? 'Unmute microphone' : 'Mute microphone'}
@@ -391,7 +391,7 @@ export function CallOverlay() {
           <button
             type="button"
             onClick={toggleMinimize}
-            className="p-1.5 rounded-lg border border-tertiary bg-surface-container-lowest text-on-surface hover:bg-secondary-container/40 shadow-[1px_1px_0px_#6E3511] press"
+            className="p-1.5 rounded-lg border border-tertiary bg-surface-container-lowest text-on-surface hover:bg-secondary-container/40 shadow-[1px_1px_0px_var(--pt-shadow)] press"
             title="Expand Call Stage"
             aria-label="Expand call stage"
           >
@@ -401,7 +401,7 @@ export function CallOverlay() {
           <button
             type="button"
             onClick={endCall}
-            className="p-1.5 rounded-lg border border-tertiary bg-error text-on-error hover:brightness-105 shadow-[1px_1px_0px_#6E3511] press"
+            className="p-1.5 rounded-lg border border-tertiary bg-error text-on-error hover:brightness-105 shadow-[1px_1px_0px_var(--pt-shadow)] press"
             title="End Call"
             aria-label="End call"
           >
@@ -416,10 +416,10 @@ export function CallOverlay() {
       {callState === 'CONNECTED' && !isGroup && callData?.type === 'audio' && !isMinimized && (
         <div className="fixed inset-0 z-50 bg-background text-on-surface flex flex-col overflow-hidden h-screen h-[100dvh]">
           {/* Top Stage Header Bar */}
-          <header className="flex justify-between items-center w-full px-space-md py-space-sm h-14 z-40 bg-surface-container-high border-b border-tertiary/20 shadow-[0_2px_0px_0px_rgba(110,53,17,0.15)] shrink-0">
+          <header className="flex justify-between items-center w-full px-space-md py-space-sm h-14 z-40 bg-surface-container-high border-b border-tertiary/20 shadow-[0_2px_0px_0px_var(--pt-shadow-soft)] shrink-0">
             <div className="flex items-center gap-space-md min-w-0">
               <div className="flex items-center gap-space-xs cursor-pointer">
-                <div className="w-8 h-8 rounded-lg border-2 border-tertiary bg-surface-container flex items-center justify-center shadow-[1px_1px_0_0_#844721]">
+                <div className="w-8 h-8 rounded-lg border-2 border-tertiary bg-surface-container flex items-center justify-center shadow-[1px_1px_0_0_var(--pt-shadow-terracotta)]">
                   <span className="material-symbols-outlined text-primary text-[20px]">call</span>
                 </div>
                 <span className="font-headline-sm text-headline-sm font-bold text-primary tracking-tight hidden sm:inline">PixelTalk</span>
@@ -441,7 +441,7 @@ export function CallOverlay() {
             </div>
 
             <div className="flex items-center gap-space-sm">
-              <div className="flex items-center gap-1 font-label-sm text-label-sm bg-secondary-container text-on-secondary-container px-2.5 py-1 rounded border border-tertiary/30 font-bold shadow-[1px_1px_0px_rgba(110,53,17,0.15)]">
+              <div className="flex items-center gap-1 font-label-sm text-label-sm bg-secondary-container text-on-secondary-container px-2.5 py-1 rounded border border-tertiary/30 font-bold shadow-[1px_1px_0px_var(--pt-shadow-soft)]">
                 <span className="w-2 h-2 bg-primary animate-pulse inline-block" />
                 <span>LIVE {formatSeconds(callDuration)}</span>
               </div>
@@ -449,7 +449,7 @@ export function CallOverlay() {
               <button
                 type="button"
                 onClick={toggleMinimize}
-                className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface-variant border border-tertiary/30 flex items-center justify-center shadow-[1px_1px_0px_#6E3511] press"
+                className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface-variant border border-tertiary/30 flex items-center justify-center shadow-[1px_1px_0px_var(--pt-shadow)] press"
                 title="Minimize Call Stage"
                 aria-label="Minimize call stage"
               >
@@ -459,7 +459,7 @@ export function CallOverlay() {
               <button
                 type="button"
                 onClick={toggleFullscreen}
-                className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface-variant border border-tertiary/30 flex items-center justify-center shadow-[1px_1px_0px_#6E3511] press"
+                className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface-variant border border-tertiary/30 flex items-center justify-center shadow-[1px_1px_0px_var(--pt-shadow)] press"
                 title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
                 aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
               >
@@ -479,7 +479,7 @@ export function CallOverlay() {
             )}
 
             <div className="w-full flex-1 flex items-center justify-center my-auto">
-              <section className="w-full max-w-lg bg-surface-container-lowest rounded-2xl border-2 border-tertiary shadow-[4px_4px_0px_#6E3511] p-6 sm:p-8 flex flex-col items-center justify-center relative min-h-[360px]">
+              <section className="w-full max-w-lg bg-surface-container-lowest rounded-2xl border-2 border-tertiary shadow-[4px_4px_0px_var(--pt-shadow)] p-6 sm:p-8 flex flex-col items-center justify-center relative min-h-[360px]">
                 <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-tertiary pointer-events-none" />
                 <div className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-tertiary pointer-events-none" />
                 <div className="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-tertiary pointer-events-none" />
@@ -499,7 +499,7 @@ export function CallOverlay() {
                     <div className="w-2.5 bg-secondary border border-tertiary animate-pulse h-14" />
                   </div>
 
-                  <div className="relative p-1.5 bg-secondary-container rounded-2xl border-[3px] border-primary-container speaking-tile shadow-[3px_3px_0px_#6E3511]">
+                  <div className="relative p-1.5 bg-secondary-container rounded-2xl border-[3px] border-primary-container speaking-tile shadow-[3px_3px_0px_var(--pt-shadow)]">
                     <Avatar
                       src={getUserAvatar(callData.partnerUser)}
                       alt={partnerDisplayName}
@@ -518,7 +518,7 @@ export function CallOverlay() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 bg-surface-container px-3 py-1 rounded border border-tertiary/20 shadow-[1px_1px_0px_rgba(110,53,17,0.1)]">
+                <div className="flex items-center gap-1.5 bg-surface-container px-3 py-1 rounded border border-tertiary/20 shadow-[1px_1px_0px_var(--pt-shadow-soft)]">
                   <span className="material-symbols-outlined text-sm text-primary">mic</span>
                   <div className="flex items-end gap-0.5 h-3">
                     <div className="w-1 h-1.5 bg-primary" />
@@ -543,11 +543,11 @@ export function CallOverlay() {
 
             {/* Floating Docked Arcade Toolbar */}
             <div className="mt-4 flex-shrink-0 flex justify-center pb-2 w-full z-20">
-              <div className="bg-surface-container-high/95 backdrop-blur-md px-3.5 sm:px-4 py-2 rounded-2xl border-2 border-tertiary shadow-[3px_3px_0px_#6E3511] flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
+              <div className="bg-surface-container-high/95 backdrop-blur-md px-3.5 sm:px-4 py-2 rounded-2xl border-2 border-tertiary shadow-[3px_3px_0px_var(--pt-shadow)] flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
                 <button
                   type="button"
                   onClick={toggleMute}
-                  className={`px-3.5 py-2 rounded-xl border border-tertiary shadow-[2px_2px_0px_#6E3511] flex items-center gap-2 font-bold font-mono text-label-sm active:translate-x-0.5 active:translate-y-0.5 transition-all press ${
+                  className={`px-3.5 py-2 rounded-xl border border-tertiary shadow-[2px_2px_0px_var(--pt-shadow)] flex items-center gap-2 font-bold font-mono text-label-sm active:translate-x-0.5 active:translate-y-0.5 transition-all press ${
                     isMuted
                       ? 'bg-error-container text-error'
                       : 'bg-surface-container-lowest text-on-surface hover:bg-secondary-container/40'
@@ -560,7 +560,7 @@ export function CallOverlay() {
                   <span>{isMuted ? 'MUTED' : 'MIC'}</span>
                 </button>
 
-                <div className="hidden sm:flex items-center bg-surface-container-lowest px-2 py-1 rounded-xl border border-tertiary gap-1 shadow-[1px_1px_0px_#6E3511]">
+                <div className="hidden sm:flex items-center bg-surface-container-lowest px-2 py-1 rounded-xl border border-tertiary gap-1 shadow-[1px_1px_0px_var(--pt-shadow)]">
                   {['❤️', '👍', '🍄', '🔥', '⭐'].map((emoji) => (
                     <button
                       key={emoji}
@@ -577,7 +577,7 @@ export function CallOverlay() {
                 <button
                   type="button"
                   onClick={toggleMinimize}
-                  className="bg-surface-container-lowest hover:bg-surface-variant text-on-surface p-2 rounded-xl border border-tertiary shadow-[2px_2px_0px_#6E3511] press"
+                  className="bg-surface-container-lowest hover:bg-surface-variant text-on-surface p-2 rounded-xl border border-tertiary shadow-[2px_2px_0px_var(--pt-shadow)] press"
                   title="Minimize"
                   aria-label="Minimize call"
                 >
@@ -587,7 +587,7 @@ export function CallOverlay() {
                 <button
                   type="button"
                   onClick={toggleFullscreen}
-                  className="bg-surface-container-lowest hover:bg-surface-variant text-on-surface p-2 rounded-xl border border-tertiary shadow-[2px_2px_0px_#6E3511] press"
+                  className="bg-surface-container-lowest hover:bg-surface-variant text-on-surface p-2 rounded-xl border border-tertiary shadow-[2px_2px_0px_var(--pt-shadow)] press"
                   title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
                   aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                 >
@@ -599,7 +599,7 @@ export function CallOverlay() {
                 <button
                   type="button"
                   onClick={endCall}
-                  className="bg-error hover:bg-error/90 text-on-error px-4 sm:px-5 py-2 rounded-xl border-[1.5px] border-tertiary shadow-[3px_3px_0px_#6E3511] flex items-center gap-1.5 font-bold font-mono text-label-sm active:translate-x-0.5 active:translate-y-0.5 transition-all press"
+                  className="bg-error hover:bg-error/90 text-on-error px-4 sm:px-5 py-2 rounded-xl border-[1.5px] border-tertiary shadow-[3px_3px_0px_var(--pt-shadow)] flex items-center gap-1.5 font-bold font-mono text-label-sm active:translate-x-0.5 active:translate-y-0.5 transition-all press"
                   aria-label="Leave call"
                 >
                   <span className="material-symbols-outlined text-xl">call_end</span>
@@ -617,10 +617,10 @@ export function CallOverlay() {
       {callState === 'CONNECTED' && !isGroup && callData?.type === 'video' && !isMinimized && (
         <div className="fixed inset-0 z-50 bg-[#121a0e] text-on-surface flex flex-col overflow-hidden h-screen h-[100dvh]">
           {/* Top Stage Header Bar */}
-          <header className="flex justify-between items-center w-full px-space-md py-space-sm h-14 z-40 bg-surface-container-high border-b border-tertiary/20 shadow-[0_2px_0px_0px_rgba(110,53,17,0.15)] shrink-0">
+          <header className="flex justify-between items-center w-full px-space-md py-space-sm h-14 z-40 bg-surface-container-high border-b border-tertiary/20 shadow-[0_2px_0px_0px_var(--pt-shadow-soft)] shrink-0">
             <div className="flex items-center gap-space-md min-w-0">
               <div className="flex items-center gap-space-xs cursor-pointer">
-                <div className="w-8 h-8 rounded-lg border-2 border-tertiary bg-surface-container flex items-center justify-center shadow-[1px_1px_0_0_#844721]">
+                <div className="w-8 h-8 rounded-lg border-2 border-tertiary bg-surface-container flex items-center justify-center shadow-[1px_1px_0_0_var(--pt-shadow-terracotta)]">
                   <span className="material-symbols-outlined text-primary text-[20px]">videocam</span>
                 </div>
                 <span className="font-headline-sm text-headline-sm font-bold text-primary tracking-tight hidden sm:inline">PixelTalk</span>
@@ -642,7 +642,7 @@ export function CallOverlay() {
             </div>
 
             <div className="flex items-center gap-space-sm">
-              <div className="flex items-center gap-1 font-mono text-label-sm bg-secondary-container text-on-secondary-container px-2.5 py-1 rounded border border-tertiary/30 font-bold shadow-[1px_1px_0px_rgba(110,53,17,0.15)]">
+              <div className="flex items-center gap-1 font-mono text-label-sm bg-secondary-container text-on-secondary-container px-2.5 py-1 rounded border border-tertiary/30 font-bold shadow-[1px_1px_0px_var(--pt-shadow-soft)]">
                 <span className="w-2 h-2 bg-primary animate-ping inline-block" />
                 <span>{formatSeconds(callDuration)}</span>
               </div>
@@ -650,7 +650,7 @@ export function CallOverlay() {
               <button
                 type="button"
                 onClick={toggleMinimize}
-                className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface-variant border border-tertiary/30 flex items-center justify-center shadow-[1px_1px_0px_#6E3511] press"
+                className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface-variant border border-tertiary/30 flex items-center justify-center shadow-[1px_1px_0px_var(--pt-shadow)] press"
                 title="Minimize Video Call"
                 aria-label="Minimize video call"
               >
@@ -660,7 +660,7 @@ export function CallOverlay() {
               <button
                 type="button"
                 onClick={toggleFullscreen}
-                className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface-variant border border-tertiary/30 flex items-center justify-center shadow-[1px_1px_0px_#6E3511] press"
+                className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface-variant border border-tertiary/30 flex items-center justify-center shadow-[1px_1px_0px_var(--pt-shadow)] press"
                 title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
                 aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
               >
@@ -679,7 +679,7 @@ export function CallOverlay() {
               </div>
             )}
 
-            <div className="flex-1 relative rounded-2xl border-2 border-tertiary overflow-hidden bg-surface-container-lowest flex items-center justify-center shadow-[4px_4px_0px_#6E3511]">
+            <div className="flex-1 relative rounded-2xl border-2 border-tertiary overflow-hidden bg-surface-container-lowest flex items-center justify-center shadow-[4px_4px_0px_var(--pt-shadow)]">
               <div className="absolute inset-0 scanlines pointer-events-none opacity-25 z-10" />
 
               <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-primary z-20 pointer-events-none" />
@@ -695,7 +695,7 @@ export function CallOverlay() {
               />
 
               {/* Local Stream PIP Preview Card */}
-              <div className="absolute bottom-16 right-3 sm:bottom-16 sm:right-4 w-32 h-44 sm:w-44 sm:h-60 rounded-xl border-2 border-tertiary shadow-[3px_3px_0px_#6E3511] overflow-hidden bg-zinc-900 z-30">
+              <div className="absolute bottom-16 right-3 sm:bottom-16 sm:right-4 w-32 h-44 sm:w-44 sm:h-60 rounded-xl border-2 border-tertiary shadow-[3px_3px_0px_var(--pt-shadow)] overflow-hidden bg-zinc-900 z-30">
                 <video
                   ref={setLocalVideo}
                   autoPlay
@@ -745,11 +745,11 @@ export function CallOverlay() {
 
             {/* Floating Docked Arcade Toolbar */}
             <div className="mt-2.5 flex-shrink-0 flex justify-center pb-1 w-full z-30">
-              <div className="bg-surface-container-high/95 backdrop-blur-md px-3.5 sm:px-4 py-2 rounded-2xl border-2 border-tertiary shadow-[3px_3px_0px_#6E3511] flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
+              <div className="bg-surface-container-high/95 backdrop-blur-md px-3.5 sm:px-4 py-2 rounded-2xl border-2 border-tertiary shadow-[3px_3px_0px_var(--pt-shadow)] flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
                 <button
                   type="button"
                   onClick={toggleMute}
-                  className={`p-2.5 sm:p-3 rounded-xl border border-tertiary shadow-[2px_2px_0px_#6E3511] press ${
+                  className={`p-2.5 sm:p-3 rounded-xl border border-tertiary shadow-[2px_2px_0px_var(--pt-shadow)] press ${
                     isMuted ? 'bg-error-container text-error' : 'bg-surface-container-lowest text-on-surface hover:bg-secondary-container/40'
                   }`}
                   title={isMuted ? 'Unmute Mic' : 'Mute Mic'}
@@ -763,7 +763,7 @@ export function CallOverlay() {
                 <button
                   type="button"
                   onClick={toggleVideo}
-                  className={`p-2.5 sm:p-3 rounded-xl border border-tertiary shadow-[2px_2px_0px_#6E3511] press ${
+                  className={`p-2.5 sm:p-3 rounded-xl border border-tertiary shadow-[2px_2px_0px_var(--pt-shadow)] press ${
                     isVideoOff ? 'bg-error-container text-error' : 'bg-surface-container-lowest text-on-surface hover:bg-secondary-container/40'
                   }`}
                   title={isVideoOff ? 'Turn Camera On' : 'Turn Camera Off'}
@@ -778,7 +778,7 @@ export function CallOverlay() {
                   <button
                     type="button"
                     onClick={switchCamera}
-                    className="p-2.5 sm:p-3 rounded-xl border border-tertiary bg-surface-container-lowest text-on-surface shadow-[2px_2px_0px_#6E3511] hover:bg-secondary-container/40 press"
+                    className="p-2.5 sm:p-3 rounded-xl border border-tertiary bg-surface-container-lowest text-on-surface shadow-[2px_2px_0px_var(--pt-shadow)] hover:bg-secondary-container/40 press"
                     title="Switch Camera"
                     aria-label="Switch front or back camera"
                   >
@@ -786,7 +786,7 @@ export function CallOverlay() {
                   </button>
                 )}
 
-                <div className="hidden sm:flex items-center bg-surface-container-lowest px-2 py-1 rounded-xl border border-tertiary gap-1 shadow-[1px_1px_0px_#6E3511]">
+                <div className="hidden sm:flex items-center bg-surface-container-lowest px-2 py-1 rounded-xl border border-tertiary gap-1 shadow-[1px_1px_0px_var(--pt-shadow)]">
                   {['❤️', '👍', '🍄', '🔥', '⭐'].map((emoji) => (
                     <button
                       key={emoji}
@@ -803,7 +803,7 @@ export function CallOverlay() {
                 <button
                   type="button"
                   onClick={toggleFullscreen}
-                  className="p-2.5 sm:p-3 rounded-xl border border-tertiary bg-surface-container-lowest text-on-surface shadow-[2px_2px_0px_#6E3511] hover:bg-secondary-container/40 press"
+                  className="p-2.5 sm:p-3 rounded-xl border border-tertiary bg-surface-container-lowest text-on-surface shadow-[2px_2px_0px_var(--pt-shadow)] hover:bg-secondary-container/40 press"
                   title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
                   aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                 >
@@ -815,7 +815,7 @@ export function CallOverlay() {
                 <button
                   type="button"
                   onClick={endCall}
-                  className="px-4 sm:px-5 py-2.5 rounded-xl bg-error text-on-error font-mono text-label-sm font-bold border-2 border-tertiary shadow-[3px_3px_0px_#6E3511] hover:brightness-105 active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-1.5 press"
+                  className="px-4 sm:px-5 py-2.5 rounded-xl bg-error text-on-error font-mono text-label-sm font-bold border-2 border-tertiary shadow-[3px_3px_0px_var(--pt-shadow)] hover:brightness-105 active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-1.5 press"
                   aria-label="Leave call"
                 >
                   <span className="material-symbols-outlined text-[20px]">call_end</span>
@@ -885,7 +885,7 @@ export function CallOverlay() {
       {/* 8. CALL ERROR TOAST                                            */}
       {/* ============================================================== */}
       {callError && (
-        <div className="fixed bottom-6 right-6 z-50 p-3 bg-surface-container-high rounded-xl border-2 border-error text-on-surface font-mono text-label-sm shadow-[3px_3px_0px_#ba1a1a] flex items-center gap-2 animate-bounce-in">
+        <div className="fixed bottom-6 right-6 z-50 p-3 bg-surface-container-high rounded-xl border-2 border-error text-on-surface font-mono text-label-sm shadow-[3px_3px_0px_var(--pt-shadow-error)] flex items-center gap-2 animate-bounce-in">
           <span className="material-symbols-outlined text-error text-[18px]">error</span>
           <span>{callError}</span>
         </div>
@@ -921,15 +921,15 @@ function GroupVoiceStage({
   return (
     <div className="fixed inset-0 z-50 bg-background text-on-surface flex flex-col overflow-hidden h-screen h-[100dvh]">
       {/* Header */}
-      <header className="flex justify-between items-center w-full px-4 py-2.5 h-14 z-40 bg-surface-container-high border-b border-tertiary/20 shadow-[0_2px_0px_0px_rgba(110,53,17,0.15)] shrink-0">
+      <header className="flex justify-between items-center w-full px-4 py-2.5 h-14 z-40 bg-surface-container-high border-b border-tertiary/20 shadow-[0_2px_0px_0px_var(--pt-shadow-soft)] shrink-0">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-lg border-2 border-tertiary bg-surface-container flex items-center justify-center shadow-[1px_1px_0_0_#844721]">
+          <div className="w-8 h-8 rounded-lg border-2 border-tertiary bg-surface-container flex items-center justify-center shadow-[1px_1px_0_0_var(--pt-shadow-terracotta)]">
             <span className="material-symbols-outlined text-primary text-[20px]">groups</span>
           </div>
           <div className="min-w-0">
-            <h1 className="font-display text-[15px] font-bold text-on-surface truncate">
+            <h2 className="font-display text-[15px] font-bold text-on-surface truncate">
               #{roomName}
-            </h1>
+            </h2>
             <p className="font-mono text-[10px] text-tertiary flex items-center gap-1.5">
               <span className="w-2 h-2 bg-primary inline-block" />
               <span>GROUP VOICE • {participants.length} CONNECTED</span>
@@ -938,7 +938,7 @@ function GroupVoiceStage({
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 font-mono text-label-sm bg-secondary-container text-on-secondary-container px-2.5 py-1 rounded border border-tertiary/30 font-bold shadow-[1px_1px_0px_rgba(110,53,17,0.15)]">
+          <div className="flex items-center gap-1 font-mono text-label-sm bg-secondary-container text-on-secondary-container px-2.5 py-1 rounded border border-tertiary/30 font-bold shadow-[1px_1px_0px_var(--pt-shadow-soft)]">
             <span className="w-2 h-2 bg-primary animate-pulse inline-block" />
             <span>LIVE {formatSeconds(callDuration)}</span>
           </div>
@@ -946,7 +946,7 @@ function GroupVoiceStage({
           <button
             type="button"
             onClick={onMinimize}
-            className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface border border-tertiary/30 flex items-center justify-center shadow-[1px_1px_0px_#6E3511] press"
+            className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface border border-tertiary/30 flex items-center justify-center shadow-[1px_1px_0px_var(--pt-shadow)] press"
             title="Minimize"
           >
             <span className="material-symbols-outlined text-base">close_fullscreen</span>
@@ -955,7 +955,7 @@ function GroupVoiceStage({
           <button
             type="button"
             onClick={onFullscreen}
-            className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface border border-tertiary/30 flex items-center justify-center shadow-[1px_1px_0px_#6E3511] press"
+            className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface border border-tertiary/30 flex items-center justify-center shadow-[1px_1px_0px_var(--pt-shadow)] press"
             title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
           >
             <span className="material-symbols-outlined text-base">
@@ -985,7 +985,7 @@ function GroupVoiceStage({
             return (
               <div
                 key={p.userId}
-                className={`bg-surface-container-lowest border-2 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center text-center relative transition-all shadow-[3px_3px_0px_#6E3511] ${
+                className={`bg-surface-container-lowest border-2 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center text-center relative transition-all shadow-[3px_3px_0px_var(--pt-shadow)] ${
                   isSpeaking
                     ? 'border-primary ring-2 ring-primary bg-secondary-container/20 shadow-[0_0_15px_rgba(77,208,225,0.4)] speaking-tile'
                     : !isMutedState
@@ -1010,7 +1010,7 @@ function GroupVoiceStage({
                     </button>
 
                     {selectedUserMenu === p.userId && (
-                      <div className="absolute right-0 top-7 w-36 bg-surface-container-high border-2 border-tertiary rounded-xl shadow-[3px_3px_0px_#6E3511] p-1 flex flex-col gap-1 z-30 animate-fade-in text-left">
+                      <div className="absolute right-0 top-7 w-36 bg-surface-container-high border-2 border-tertiary rounded-xl shadow-[3px_3px_0px_var(--pt-shadow)] p-1 flex flex-col gap-1 z-30 animate-fade-in text-left">
                         <button
                           type="button"
                           onClick={() => {
@@ -1093,11 +1093,11 @@ function GroupVoiceStage({
 
         {/* Docked Controls Toolbar */}
         <div className="mt-4 flex-shrink-0 flex justify-center pb-2 w-full z-20">
-          <div className="bg-surface-container-high/95 backdrop-blur-md px-4 py-2 rounded-2xl border-2 border-tertiary shadow-[3px_3px_0px_#6E3511] flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
+          <div className="bg-surface-container-high/95 backdrop-blur-md px-4 py-2 rounded-2xl border-2 border-tertiary shadow-[3px_3px_0px_var(--pt-shadow)] flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
             <button
               type="button"
               onClick={onToggleMute}
-              className={`px-3.5 py-2 rounded-xl border border-tertiary shadow-[2px_2px_0px_#6E3511] flex items-center gap-2 font-bold font-mono text-label-sm active:translate-x-0.5 active:translate-y-0.5 transition-all press ${
+              className={`px-3.5 py-2 rounded-xl border border-tertiary shadow-[2px_2px_0px_var(--pt-shadow)] flex items-center gap-2 font-bold font-mono text-label-sm active:translate-x-0.5 active:translate-y-0.5 transition-all press ${
                 isMuted
                   ? 'bg-error-container text-error'
                   : 'bg-surface-container-lowest text-on-surface hover:bg-secondary-container/40'
@@ -1109,7 +1109,7 @@ function GroupVoiceStage({
               <span>{isMuted ? 'MUTED' : 'MIC'}</span>
             </button>
 
-            <div className="hidden sm:flex items-center bg-surface-container-lowest px-2 py-1 rounded-xl border border-tertiary gap-1 shadow-[1px_1px_0px_#6E3511]">
+            <div className="hidden sm:flex items-center bg-surface-container-lowest px-2 py-1 rounded-xl border border-tertiary gap-1 shadow-[1px_1px_0px_var(--pt-shadow)]">
               {['❤️', '👍', '🍄', '🔥', '⭐'].map((emoji) => (
                 <button
                   key={emoji}
@@ -1126,7 +1126,7 @@ function GroupVoiceStage({
             <button
               type="button"
               onClick={onMinimize}
-              className="bg-surface-container-lowest hover:bg-surface-variant text-on-surface p-2 rounded-xl border border-tertiary shadow-[2px_2px_0px_#6E3511] press"
+              className="bg-surface-container-lowest hover:bg-surface-variant text-on-surface p-2 rounded-xl border border-tertiary shadow-[2px_2px_0px_var(--pt-shadow)] press"
               title="Minimize"
             >
               <span className="material-symbols-outlined text-xl">close_fullscreen</span>
@@ -1135,7 +1135,7 @@ function GroupVoiceStage({
             <button
               type="button"
               onClick={onFullscreen}
-              className="bg-surface-container-lowest hover:bg-surface-variant text-on-surface p-2 rounded-xl border border-tertiary shadow-[2px_2px_0px_#6E3511] press"
+              className="bg-surface-container-lowest hover:bg-surface-variant text-on-surface p-2 rounded-xl border border-tertiary shadow-[2px_2px_0px_var(--pt-shadow)] press"
               title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
             >
               <span className="material-symbols-outlined text-xl">
@@ -1146,7 +1146,7 @@ function GroupVoiceStage({
             <button
               type="button"
               onClick={onLeave}
-              className="bg-error hover:bg-error/90 text-on-error px-4 sm:px-5 py-2 rounded-xl border-[1.5px] border-tertiary shadow-[3px_3px_0px_#6E3511] flex items-center gap-1.5 font-bold font-mono text-label-sm active:translate-x-0.5 active:translate-y-0.5 transition-all press"
+              className="bg-error hover:bg-error/90 text-on-error px-4 sm:px-5 py-2 rounded-xl border-[1.5px] border-tertiary shadow-[3px_3px_0px_var(--pt-shadow)] flex items-center gap-1.5 font-bold font-mono text-label-sm active:translate-x-0.5 active:translate-y-0.5 transition-all press"
             >
               <span className="material-symbols-outlined text-xl">call_end</span>
               <span>LEAVE ROOM CALL</span>
@@ -1215,15 +1215,15 @@ function GroupVideoStage({
   return (
     <div className="fixed inset-0 z-50 bg-[#121a0e] text-on-surface flex flex-col overflow-hidden h-screen h-[100dvh]">
       {/* Top Stage Header Bar */}
-      <header className="flex justify-between items-center w-full px-4 py-2.5 h-14 z-40 bg-surface-container-high border-b border-tertiary/20 shadow-[0_2px_0px_0px_rgba(110,53,17,0.15)] shrink-0">
+      <header className="flex justify-between items-center w-full px-4 py-2.5 h-14 z-40 bg-surface-container-high border-b border-tertiary/20 shadow-[0_2px_0px_0px_var(--pt-shadow-soft)] shrink-0">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-lg border-2 border-tertiary bg-surface-container flex items-center justify-center shadow-[1px_1px_0_0_#844721]">
+          <div className="w-8 h-8 rounded-lg border-2 border-tertiary bg-surface-container flex items-center justify-center shadow-[1px_1px_0_0_var(--pt-shadow-terracotta)]">
             <span className="material-symbols-outlined text-primary text-[20px]">videocam</span>
           </div>
           <div className="min-w-0">
-            <h1 className="font-display text-[15px] font-bold text-on-surface truncate">
+            <h2 className="font-display text-[15px] font-bold text-on-surface truncate">
               #{roomName}
-            </h1>
+            </h2>
             <p className="font-mono text-[10px] text-tertiary flex items-center gap-1.5">
               <span className="w-2 h-2 bg-primary inline-block" />
               <span>GROUP VIDEO • {participants.length} CONNECTED</span>
@@ -1239,7 +1239,7 @@ function GroupVideoStage({
               onClick={() => onSetViewMode('grid')}
               className={`px-2 py-1 rounded font-mono text-[10px] font-bold flex items-center gap-1 transition-all ${
                 viewMode === 'grid'
-                  ? 'bg-surface-container-lowest text-primary shadow-[1px_1px_0px_#6E3511]'
+                  ? 'bg-surface-container-lowest text-primary shadow-[1px_1px_0px_var(--pt-shadow)]'
                   : 'text-on-surface-variant hover:text-on-surface'
               }`}
             >
@@ -1251,7 +1251,7 @@ function GroupVideoStage({
               onClick={() => onSetViewMode('speaker')}
               className={`px-2 py-1 rounded font-mono text-[10px] font-bold flex items-center gap-1 transition-all ${
                 viewMode === 'speaker'
-                  ? 'bg-surface-container-lowest text-primary shadow-[1px_1px_0px_#6E3511]'
+                  ? 'bg-surface-container-lowest text-primary shadow-[1px_1px_0px_var(--pt-shadow)]'
                   : 'text-on-surface-variant hover:text-on-surface'
               }`}
             >
@@ -1260,7 +1260,7 @@ function GroupVideoStage({
             </button>
           </div>
 
-          <div className="flex items-center gap-1 font-mono text-label-sm bg-secondary-container text-on-secondary-container px-2.5 py-1 rounded border border-tertiary/30 font-bold shadow-[1px_1px_0px_rgba(110,53,17,0.15)]">
+          <div className="flex items-center gap-1 font-mono text-label-sm bg-secondary-container text-on-secondary-container px-2.5 py-1 rounded border border-tertiary/30 font-bold shadow-[1px_1px_0px_var(--pt-shadow-soft)]">
             <span className="w-2 h-2 bg-primary animate-ping inline-block" />
             <span>{formatSeconds(callDuration)}</span>
           </div>
@@ -1268,7 +1268,7 @@ function GroupVideoStage({
           <button
             type="button"
             onClick={onMinimize}
-            className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface border border-tertiary/30 flex items-center justify-center shadow-[1px_1px_0px_#6E3511] press"
+            className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface border border-tertiary/30 flex items-center justify-center shadow-[1px_1px_0px_var(--pt-shadow)] press"
             title="Minimize"
           >
             <span className="material-symbols-outlined text-base">close_fullscreen</span>
@@ -1277,7 +1277,7 @@ function GroupVideoStage({
           <button
             type="button"
             onClick={onFullscreen}
-            className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface border border-tertiary/30 flex items-center justify-center shadow-[1px_1px_0px_#6E3511] press"
+            className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface border border-tertiary/30 flex items-center justify-center shadow-[1px_1px_0px_var(--pt-shadow)] press"
             title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
           >
             <span className="material-symbols-outlined text-base">
@@ -1371,12 +1371,12 @@ function GroupVideoStage({
 
         {/* Floating Docked Arcade Toolbar */}
         <div className="mt-2.5 flex-shrink-0 flex justify-center pb-1 w-full z-30">
-          <div className="bg-surface-container-high/95 backdrop-blur-md px-3.5 sm:px-4 py-2 rounded-2xl border-2 border-tertiary shadow-[3px_3px_0px_#6E3511] flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
+          <div className="bg-surface-container-high/95 backdrop-blur-md px-3.5 sm:px-4 py-2 rounded-2xl border-2 border-tertiary shadow-[3px_3px_0px_var(--pt-shadow)] flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
             {/* Mic */}
             <button
               type="button"
               onClick={onToggleMute}
-              className={`p-2.5 sm:p-3 rounded-xl border border-tertiary shadow-[2px_2px_0px_#6E3511] press ${
+              className={`p-2.5 sm:p-3 rounded-xl border border-tertiary shadow-[2px_2px_0px_var(--pt-shadow)] press ${
                 isMuted ? 'bg-error-container text-error' : 'bg-surface-container-lowest text-on-surface hover:bg-secondary-container/40'
               }`}
               title={isMuted ? 'Unmute Mic' : 'Mute Mic'}
@@ -1390,7 +1390,7 @@ function GroupVideoStage({
             <button
               type="button"
               onClick={onToggleVideo}
-              className={`p-2.5 sm:p-3 rounded-xl border border-tertiary shadow-[2px_2px_0px_#6E3511] press ${
+              className={`p-2.5 sm:p-3 rounded-xl border border-tertiary shadow-[2px_2px_0px_var(--pt-shadow)] press ${
                 isVideoOff ? 'bg-error-container text-error' : 'bg-surface-container-lowest text-on-surface hover:bg-secondary-container/40'
               }`}
               title={isVideoOff ? 'Turn Camera On' : 'Turn Camera Off'}
@@ -1404,7 +1404,7 @@ function GroupVideoStage({
             <button
               type="button"
               onClick={onToggleScreenShare}
-              className={`p-2.5 sm:p-3 rounded-xl border border-tertiary shadow-[2px_2px_0px_#6E3511] press ${
+              className={`p-2.5 sm:p-3 rounded-xl border border-tertiary shadow-[2px_2px_0px_var(--pt-shadow)] press ${
                 isScreenSharing ? 'bg-primary text-surface-container font-bold' : 'bg-surface-container-lowest text-on-surface hover:bg-secondary-container/40'
               }`}
               title={isScreenSharing ? 'Stop Screen Share' : 'Share Screen'}
@@ -1419,7 +1419,7 @@ function GroupVideoStage({
               <button
                 type="button"
                 onClick={onSwitchCamera}
-                className="p-2.5 sm:p-3 rounded-xl border border-tertiary bg-surface-container-lowest text-on-surface shadow-[2px_2px_0px_#6E3511] hover:bg-secondary-container/40 press"
+                className="p-2.5 sm:p-3 rounded-xl border border-tertiary bg-surface-container-lowest text-on-surface shadow-[2px_2px_0px_var(--pt-shadow)] hover:bg-secondary-container/40 press"
                 title="Switch Camera"
               >
                 <span className="material-symbols-outlined text-[20px]">flip_camera_ios</span>
@@ -1427,7 +1427,7 @@ function GroupVideoStage({
             )}
 
             {/* Live Reactions */}
-            <div className="hidden sm:flex items-center bg-surface-container-lowest px-2 py-1 rounded-xl border border-tertiary gap-1 shadow-[1px_1px_0px_#6E3511]">
+            <div className="hidden sm:flex items-center bg-surface-container-lowest px-2 py-1 rounded-xl border border-tertiary gap-1 shadow-[1px_1px_0px_var(--pt-shadow)]">
               {['❤️', '👍', '🍄', '🔥', '⭐'].map((emoji) => (
                 <button
                   key={emoji}
@@ -1445,7 +1445,7 @@ function GroupVideoStage({
             <button
               type="button"
               onClick={onFullscreen}
-              className="p-2.5 sm:p-3 rounded-xl border border-tertiary bg-surface-container-lowest text-on-surface shadow-[2px_2px_0px_#6E3511] hover:bg-secondary-container/40 press"
+              className="p-2.5 sm:p-3 rounded-xl border border-tertiary bg-surface-container-lowest text-on-surface shadow-[2px_2px_0px_var(--pt-shadow)] hover:bg-secondary-container/40 press"
               title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
             >
               <span className="material-symbols-outlined text-[20px]">
@@ -1457,7 +1457,7 @@ function GroupVideoStage({
             <button
               type="button"
               onClick={onLeave}
-              className="px-4 sm:px-5 py-2.5 rounded-xl bg-error text-on-error font-mono text-label-sm font-bold border-2 border-tertiary shadow-[3px_3px_0px_#6E3511] hover:brightness-105 active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-1.5 press"
+              className="px-4 sm:px-5 py-2.5 rounded-xl bg-error text-on-error font-mono text-label-sm font-bold border-2 border-tertiary shadow-[3px_3px_0px_var(--pt-shadow)] hover:brightness-105 active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-1.5 press"
             >
               <span className="material-symbols-outlined text-[20px]">call_end</span>
               <span>LEAVE ROOM CALL</span>
@@ -1555,7 +1555,7 @@ function VideoTile({
       className={`relative w-full h-full min-h-[160px] sm:min-h-[220px] rounded-2xl border-2 overflow-hidden bg-surface-container-lowest flex items-center justify-center transition-all ${
         isSpeaking
           ? 'border-primary ring-2 ring-primary shadow-[0_0_16px_rgba(77,208,225,0.45)] speaking-tile'
-          : 'border-tertiary shadow-[3px_3px_0px_#6E3511]'
+          : 'border-tertiary shadow-[3px_3px_0px_var(--pt-shadow)]'
       }`}
     >
       {/* CRT Scanline effect */}
@@ -1584,7 +1584,7 @@ function VideoTile({
               className={`p-1 rounded-2xl border-2 ${
                 isSpeaking
                   ? 'border-primary bg-secondary-container ring-2 ring-primary animate-pulse'
-                  : 'border-tertiary bg-surface-container shadow-[2px_2px_0px_#6E3511]'
+                  : 'border-tertiary bg-surface-container shadow-[2px_2px_0px_var(--pt-shadow)]'
               }`}
             >
               <Avatar src={getUserAvatar(participant.user)} alt={displayName} size={80} ring={false} />
@@ -1611,7 +1611,7 @@ function VideoTile({
 
       {/* Top Video Tile Badge */}
       <div className="absolute top-2 inset-x-2 flex items-center justify-between z-20 pointer-events-none">
-        <div className="flex items-center gap-1 bg-[#221a0e]/85 text-[#feeeda] px-2 py-0.5 rounded border border-[#6E3511]/40 font-mono text-[10px] backdrop-blur-sm shadow-[1px_1px_0px_#6E3511]">
+        <div className="flex items-center gap-1 bg-[#221a0e]/85 text-[#feeeda] px-2 py-0.5 rounded border border-brown/40 font-mono text-[10px] backdrop-blur-sm shadow-[1px_1px_0px_var(--pt-shadow)]">
           <span className={`w-1.5 h-1.5 rounded-none ${isSpeaking ? 'bg-primary animate-ping' : !isMuted ? 'bg-primary' : 'bg-outline'}`} />
           <span className="font-bold truncate">{isSelf ? 'YOU' : `@${username}`}</span>
         </div>
@@ -1640,7 +1640,7 @@ function VideoTile({
                 <span className="material-symbols-outlined text-[14px]">more_vert</span>
               </button>
               {showMenu && (
-                <div className="absolute right-0 top-7 w-36 bg-surface-container-high border-2 border-tertiary rounded-xl shadow-[3px_3px_0px_#6E3511] p-1 flex flex-col gap-1 z-30 animate-fade-in text-left">
+                <div className="absolute right-0 top-7 w-36 bg-surface-container-high border-2 border-tertiary rounded-xl shadow-[3px_3px_0px_var(--pt-shadow)] p-1 flex flex-col gap-1 z-30 animate-fade-in text-left">
                   <button
                     type="button"
                     onClick={() => {

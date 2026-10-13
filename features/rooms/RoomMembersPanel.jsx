@@ -361,13 +361,21 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
         {/* Identity & Details */}
         <div className="p-3 pt-2">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-surface border-2 border-[#6E3511] shadow-pixel-xs p-0.5 shrink-0 overflow-hidden relative">
+            <div className="w-12 h-12 rounded-xl bg-surface border-2 border-brown shadow-pixel-xs p-0.5 shrink-0 overflow-hidden relative">
               {conversation.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={conversation.avatarUrl} alt="" className="w-full h-full object-cover rounded-lg" />
+                <img
+                  src={conversation.avatarUrl}
+                  alt={conversation.name ? `${conversation.name} crest` : 'Room crest'}
+                  className="w-full h-full object-cover rounded-lg"
+                />
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={avatarSrc(conversation.avatarId || 'avatar-06')} alt="" className="w-full h-full object-cover rounded-lg pixelated" />
+                <img
+                  src={avatarSrc(conversation.avatarId || 'avatar-06')}
+                  alt={conversation.name ? `${conversation.name} crest` : 'Room crest'}
+                  className="w-full h-full object-cover rounded-lg pixelated"
+                />
               )}
               <span className="absolute bottom-0.5 right-0.5 w-2.5 h-2.5 bg-primary-container border border-surface rounded-none" />
             </div>
@@ -522,7 +530,7 @@ export function RoomMembersPanel({ conversation, currentUser, onChanged }) {
 
         {/* Search Input */}
         <div className="relative">
-          <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-tertiary/50 text-[15px]">
+          <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-tertiary text-[15px]">
             search
           </span>
           <input
@@ -816,7 +824,7 @@ function MemberItem({
 
   const roleBadgeStyle = {
     Owner: {
-      cls: 'bg-[#844721] text-[#FCECD8] border-[#331100]',
+      cls: 'bg-tertiary text-on-tertiary border-on-tertiary-fixed',
       icon: 'star',
     },
     Admin: {

@@ -1,17 +1,3 @@
-/**
- * Notification Center Modal & Drawer (features/notifications/NotificationCenterModal.jsx)
- *
- * Responsibility:
- * Dedicated notification management view supporting categorized filtering, date-based grouping,
- * instant read/unread actions, single dismiss, bulk mark-all-as-read, and validated navigation.
- *
- * CONNECTED MODULES:
- * - Services: frontend/services/notificationService.js
- * - Sockets: frontend/lib/socket.js
- * - UI: frontend/components/ui
- * - Avatars: frontend/lib/avatars.js
- */
-
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -29,7 +15,6 @@ const TABS = [
   { id: 'groups', label: 'Groups', icon: 'forum' },
   { id: 'calls', label: 'Calls', icon: 'call' },
 ];
-
 export function NotificationCenterModal({ isOpen, onClose, onCountChange }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('all');
@@ -163,22 +148,33 @@ export function NotificationCenterModal({ isOpen, onClose, onCountChange }) {
   const handleNotificationClick = async (notification) => {
     // Mark as read if unread
     if (!notification.isRead) {
-      handleMarkAsRead({ stopPropagation: () => {} }, notification);
+      const id = notification._id || notification.id;
+      try {
+        await notificationService.markRead(id);
+        setNotifications((prev) =>
+          prev.map((n) => (String(n._id || n.id) === String(id) ? { ...n, isRead: true } : n))
+        );
+      } catch {}
     }
 
     onClose();
 
-    // Canonical navigation
+    // Derived navigation guard for direct chat or group IDs.
+    // The current UI exposes notification actions directly on the row, so a click that
+    // targets a conversation/group should open the relevant corridor instead of falling
+    // back to the dashboard like a generic social notification does.
     const { targetType, targetId, category } = notification;
-    if (targetType === 'conversation' && targetId) {
-      router.push(`/chat?conversationId=${targetId}`);
-    } else if (targetType === 'group' && targetId) {
-      router.push(`/chat?conversationId=${targetId}`);
-    } else if (targetType === 'profile' && targetId) {
-      router.push(`/profile?userId=${targetId}`);
+    const isConversationTarget = targetType === 'conversation' || targetType === 'group';
+    const isProfileTarget = targetType === 'profile' && targetId;
+    const isSocialFallback = category === 'social';
+
+    if (isConversationTarget && targetId) {
+      router.push(`/chat?conversationId=${encodeURIComponent(targetId)}`);
+    } else if (isProfileTarget) {
+      router.push(`/profile?userId=${encodeURIComponent(targetId)}`);
     } else if (targetType === 'settings') {
       router.push('/settings');
-    } else if (category === 'social') {
+    } else if (isSocialFallback) {
       router.push('/profile');
     } else {
       router.push('/dashboard');
@@ -309,7 +305,7 @@ export function NotificationCenterModal({ isOpen, onClose, onCountChange }) {
             </div>
           ) : notifications.length === 0 ? (
             <div className="py-16 text-center">
-              <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-surface-container text-tertiary/60 flex items-center justify-center border-[1.5px] border-tertiary/20 shadow-pixel-sm">
+              <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-surface-container text-tertiary flex items-center justify-center border-[1.5px] border-tertiary/20 shadow-pixel-sm">
                 <span className="material-symbols-outlined text-[28px]">notifications_off</span>
               </div>
               <p className="font-display font-bold text-on-surface text-title-sm mb-1">No notifications</p>
@@ -434,7 +430,7 @@ function NotificationRow({ notification, onClick, onMarkRead, onDelete }) {
         )}
         <button
           type="button"
-          onClick={onDelete}
+          onClick={(e) => onDelete(e, notification)}
           className="w-7 h-7 flex items-center justify-center rounded-md text-tertiary hover:text-error hover:bg-error/10 transition-colors cursor-pointer"
           title="Dismiss notification"
           aria-label="Delete notification"

@@ -475,7 +475,7 @@ export function ConversationSidebar() {
       <div className="p-4 flex flex-col gap-3 overflow-y-auto flex-1 min-h-0">
         {/* Search Input */}
         <div className="relative">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-tertiary/60 text-[18px]">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-tertiary text-[18px]">
             {query.startsWith('#') ? 'tag' : 'search'}
           </span>
           <Input
@@ -487,7 +487,7 @@ export function ConversationSidebar() {
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary/60 hover:text-tertiary text-xs p-1"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary hover:text-tertiary text-xs p-1"
               aria-label="Clear search"
             >
               <span className="material-symbols-outlined text-[16px]">close</span>
@@ -569,6 +569,7 @@ export function ConversationSidebar() {
                         </div>
                       </Link>
                       <button
+                        type="button"
                         onClick={() => startDirectFromSearch(u.id || u._id)}
                         className="px-2.5 py-1 bg-primary-container text-surface-container font-mono text-[11px] font-bold rounded border border-tertiary hover:bg-primary transition-all shrink-0 cursor-pointer"
                       >
@@ -745,7 +746,7 @@ export function ConversationSidebar() {
                             <button
                               type="button"
                               onClick={() => handleRelockFolder(sectionId)}
-                              className="p-1 hover:text-primary text-tertiary/70 transition-colors"
+                              className="p-1 hover:text-primary text-tertiary transition-colors"
                               title="Lock folder now"
                               aria-label="Lock folder now"
                             >
@@ -985,10 +986,18 @@ export function ConversationSidebar() {
                       <div className="w-10 h-10 rounded-lg bg-surface border border-tertiary overflow-hidden shrink-0">
                         {group.avatarUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={group.avatarUrl} alt="" className="w-full h-full object-cover" />
+                          <img
+                            src={group.avatarUrl}
+                            alt={group.name ? `${group.name} lounge avatar` : 'Room avatar'}
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={avatarSrc(group.avatarId || 'avatar-06')} alt="" className="w-full h-full pixelated" />
+                          <img
+                            src={avatarSrc(group.avatarId || 'avatar-06')}
+                            alt={group.name ? `${group.name} lounge avatar` : 'Room avatar'}
+                            className="w-full h-full pixelated"
+                          />
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -1063,7 +1072,7 @@ function FolderContextMenu({ section, onRename, onManageLock, onRemoveLock, onDe
           e.stopPropagation();
           setOpen((prev) => !prev);
         }}
-        className="p-1 hover:text-on-surface text-tertiary/70 rounded hover:bg-surface transition-colors"
+        className="p-1 hover:text-on-surface text-tertiary rounded hover:bg-surface transition-colors"
         title="Folder options"
         aria-label={`Options for folder ${section.name}`}
         aria-expanded={open}
@@ -1251,7 +1260,7 @@ function CreateFolderModal({ open, onClose, onCreated }) {
                   <button
                     type="button"
                     onClick={() => setShowPasscode((p) => !p)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary/70 hover:text-tertiary text-xs"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary hover:text-tertiary text-xs"
                     tabIndex={-1}
                   >
                     <span className="material-symbols-outlined text-[16px]">
@@ -1389,7 +1398,7 @@ function UnlockFolderModal({ open, section, onClose, onUnlocked }) {
             <button
               type="button"
               onClick={() => setShowPasscode((p) => !p)}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary/70 hover:text-tertiary text-xs"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary hover:text-tertiary text-xs"
               tabIndex={-1}
             >
               <span className="material-symbols-outlined text-[16px]">
@@ -1512,7 +1521,7 @@ function ManageLockModal({ open, section, mode, onClose, onUpdated }) {
                 <button
                   type="button"
                   onClick={() => setShowPasscode((p) => !p)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary/70 hover:text-tertiary text-xs"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary hover:text-tertiary text-xs"
                   tabIndex={-1}
                 >
                   <span className="material-symbols-outlined text-[16px]">

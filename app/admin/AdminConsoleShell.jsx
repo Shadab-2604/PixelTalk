@@ -212,7 +212,7 @@ function AdminLoginGate({ onLogin, onLogout }) {
           <Link href="/" className="hover:text-tertiary transition-colors flex items-center gap-1">
             <span className="material-symbols-outlined text-xs">arrow_back</span> Return to Lounge
           </Link>
-          <span className="text-[10px] text-tertiary/60 font-bold uppercase">ENV Protected</span>
+          <span className="text-[10px] text-tertiary font-bold uppercase">ENV Protected</span>
         </div>
       </div>
     </div>

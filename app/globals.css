@@ -5,6 +5,16 @@
  * Global stylesheet defining Tailwind CSS directives, the Google Fonts Pixelify Sans typography,
  * custom pixel border utilities, dither patterns, and CSS custom property theme tokens.
  *
+ * THEME ARCHITECTURE:
+ * Every design-system color is expressed as a CSS custom property in rgb-channel form
+ * (e.g. `--pt-primary: 66 96 16`) so Tailwind utilities can apply opacity modifiers
+ * (`bg-primary/40` → `rgb(var(--pt-primary) / 0.4)`).
+ * - `:root`   → Light Mode (PixelTalk cream/green identity, the original palette)
+ * - `.dark`   → Dark Mode (PixelTalk "Night Shift" brown/green palette)
+ * The `dark` class is toggled on <html> by the pre-paint script in app/layout.jsx and
+ * kept in sync by frontend/hooks/useTheme.js. No component reads these variables directly;
+ * they only use Tailwind token utilities (bg-surface-container, text-on-surface, ...).
+ *
  * Layer:
  * Frontend / Global Styles
  */
@@ -15,8 +25,232 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+ * THEME TOKENS — LIGHT MODE (default)
+ * ============================================================ */
 :root {
+  color-scheme: light;
+
   --pt-brown: #6e3511;
+
+  /* Surfaces */
+  --pt-surface: 255 248 243;
+  --pt-surface-dim: 231 216 196;
+  --pt-surface-bright: 255 248 243;
+  --pt-surface-container-lowest: 255 255 255;
+  --pt-surface-container-low: 255 242 226;
+  --pt-surface-container: 252 236 216;
+  --pt-surface-container-high: 246 230 210;
+  --pt-surface-container-highest: 240 224 205;
+  --pt-surface-variant: 240 224 205;
+  --pt-on-surface: 34 26 14;
+  --pt-on-surface-variant: 68 72 59;
+  --pt-inverse-surface: 56 47 34;
+  --pt-inverse-on-surface: 254 238 218;
+  /* 105 110 95 (#696E5F): darkened from #747969 so `text-outline` timestamps,
+     hints and other muted text clear 4.5:1 on both white cards and cream surfaces */
+  --pt-outline: 105 110 95;
+  --pt-outline-variant: 196 200 183;
+  --pt-surface-tint: 73 103 24;
+
+  /* Primary (brand green) */
+  --pt-primary: 66 96 16;
+  --pt-on-primary: 255 255 255;
+  /* 79 109 36 (#4F6D24): darkened from #597928 so cream button labels clear 4.5:1 */
+  --pt-primary-container: 79 109 36;
+  --pt-on-primary-container: 223 255 173;
+  --pt-inverse-primary: 174 211 118;
+
+  /* Secondary (leaf green) */
+  --pt-secondary: 78 102 41;
+  --pt-on-secondary: 255 255 255;
+  --pt-secondary-container: 208 237 161;
+  --pt-on-secondary-container: 84 108 47;
+
+  /* Tertiary (earth brown) */
+  --pt-tertiary: 132 71 33;
+  --pt-on-tertiary: 255 255 255;
+  --pt-tertiary-container: 162 94 55;
+  --pt-on-tertiary-container: 255 241 236;
+
+  /* Error */
+  --pt-error: 186 26 26;
+  --pt-on-error: 255 255 255;
+  --pt-error-container: 255 218 214;
+  --pt-on-error-container: 147 0 10;
+
+  /* Brand accents (stable across themes) */
+  --pt-brown-rgb: 110 53 17;
+  --pt-grass: 145 172 103;
+  --pt-amberpix: 223 160 53;
+  --pt-brick: 184 74 57;
+
+  /* Fixed pastel chips (deliberately theme-invariant) */
+  --pt-primary-fixed: 201 239 143;
+  --pt-primary-fixed-dim: 174 211 118;
+  --pt-on-primary-fixed: 18 31 0;
+  --pt-on-primary-fixed-variant: 50 79 0;
+  --pt-secondary-fixed: 208 237 161;
+  --pt-secondary-fixed-dim: 180 208 135;
+  --pt-on-secondary-fixed: 18 31 0;
+  --pt-on-secondary-fixed-variant: 55 77 19;
+  --pt-tertiary-fixed: 255 219 202;
+  --pt-tertiary-fixed-dim: 255 182 143;
+  --pt-on-tertiary-fixed: 51 17 0;
+  --pt-on-tertiary-fixed-variant: 112 55 19;
+
+  /* Semantic aliases (single-purpose tokens for new code) */
+  --background: rgb(var(--pt-surface-container));
+  --foreground: rgb(var(--pt-on-surface));
+  --surface-elevated: rgb(var(--pt-surface-container-lowest));
+  --surface-muted: rgb(var(--pt-surface-container-high));
+  --surface-hover: rgb(var(--pt-surface-variant));
+  --text-primary: rgb(var(--pt-on-surface));
+  --text-secondary: rgb(var(--pt-on-surface-variant));
+  --text-muted: rgb(var(--pt-outline));
+  --border: rgb(var(--pt-outline-variant));
+  --border-strong: #6e3511;
+  --primary-foreground: rgb(var(--pt-on-primary));
+  --secondary-foreground: rgb(var(--pt-on-secondary));
+  --link: rgb(var(--pt-primary));
+  --focus-ring: #426010;
+  --success: rgb(var(--pt-primary-container));
+  --success-foreground: rgb(var(--pt-on-primary-container));
+  --warning: rgb(var(--pt-amberpix));
+  --warning-foreground: #331100;
+  --error-foreground: rgb(var(--pt-error));
+  --input-background: rgb(var(--pt-surface));
+  --input-border: rgb(var(--pt-outline-variant));
+  --placeholder: rgb(var(--pt-outline-variant));
+  --overlay: rgba(34, 26, 14, 0.6);
+  --popover-background: rgb(var(--pt-surface-container-lowest));
+  --popover-foreground: rgb(var(--pt-on-surface));
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: rgba(110, 53, 17, 0.25);
+  --scrollbar-thumb-hover: rgba(110, 53, 17, 0.45);
+
+  /* Pixel shadow / strong border colors */
+  --pt-shadow: #6e3511;
+  --pt-shadow-terracotta: #844721;
+  --pt-shadow-accent: #426010;
+  --pt-shadow-error: #ba1a1a;
+  --pt-shadow-soft: rgba(110, 53, 17, 0.15);
+  --pt-shadow-accent-soft: rgba(66, 96, 16, 0.15);
+
+  /* Textured backgrounds */
+  --pt-grid-line: rgba(132, 71, 33, 0.04);
+  --pt-dither-dot: rgba(110, 53, 17, 0.08);
+  --pt-dither-dot-strong: rgba(110, 53, 17, 0.12);
+  --pt-range-thumb: #597928;
+  --pt-range-thumb-border: #6e3511;
+  --pt-speak-a: #597928;
+  --pt-speak-b: #91ac67;
+  --pt-speak-glow-a: #d0eda1;
+  --pt-speak-glow-b: #597928;
+}
+
+/* ============================================================
+ * THEME TOKENS — DARK MODE (PixelTalk Night Shift)
+ * ============================================================ */
+.dark {
+  color-scheme: dark;
+
+  /* Surfaces — darker page, lighter elevated cards */
+  --pt-surface: 41 29 23;
+  --pt-surface-dim: 28 17 11;
+  --pt-surface-bright: 63 50 43;
+  --pt-surface-container-lowest: 63 50 43;
+  --pt-surface-container-low: 52 39 33;
+  --pt-surface-container: 28 17 11;
+  --pt-surface-container-high: 37 25 19;
+  --pt-surface-container-highest: 22 12 7;
+  --pt-surface-variant: 52 39 33;
+  --pt-on-surface: 245 222 212;
+  --pt-on-surface-variant: 196 201 181;
+  --pt-inverse-surface: 232 216 204;
+  --pt-inverse-on-surface: 41 29 23;
+  --pt-outline: 141 147 129;
+  --pt-outline-variant: 141 130 117;
+  --pt-surface-tint: 116 157 54;
+
+  /* Primary — vivid night green; "on" colors go dark for contrast */
+  --pt-primary: 168 213 102;
+  --pt-on-primary: 22 36 11;
+  /* 133 176 69 (#85B045): brightened from #749D36 so small green labels on
+     elevated cards clear 4.5:1 while dark text on the green still clears it too */
+  --pt-primary-container: 133 176 69;
+  --pt-on-primary-container: 15 27 6;
+  --pt-inverse-primary: 66 96 16;
+
+  /* Secondary */
+  --pt-secondary: 180 208 135;
+  --pt-on-secondary: 28 43 16;
+  --pt-secondary-container: 58 77 28;
+  --pt-on-secondary-container: 201 230 163;
+
+  /* Tertiary — warm tan so brown-identity borders/labels stay readable */
+  --pt-tertiary: 224 168 126;
+  --pt-on-tertiary: 59 26 8;
+  --pt-tertiary-container: 147 83 47;
+  --pt-on-tertiary-container: 255 219 202;
+
+  /* Error — Night Shift reference values */
+  --pt-error: 255 180 171;
+  --pt-on-error: 105 0 0;
+  --pt-error-container: 147 0 10;
+  --pt-on-error-container: 255 218 214;
+
+  /* Brand accents */
+  --pt-brown-rgb: 216 154 115;
+
+  /* Semantic aliases */
+  --background: rgb(var(--pt-surface-container));
+  --foreground: rgb(var(--pt-on-surface));
+  --surface-elevated: rgb(var(--pt-surface-container-lowest));
+  --surface-muted: rgb(var(--pt-surface-container-high));
+  --surface-hover: rgb(var(--pt-surface-variant));
+  --text-primary: rgb(var(--pt-on-surface));
+  --text-secondary: rgb(var(--pt-on-surface-variant));
+  --text-muted: rgb(var(--pt-outline));
+  --border: rgb(var(--pt-outline-variant));
+  --border-strong: #a25e37;
+  --primary-foreground: rgb(var(--pt-on-primary));
+  --secondary-foreground: rgb(var(--pt-on-secondary));
+  --link: rgb(var(--pt-primary));
+  --focus-ring: #a8d566;
+  --success: rgb(var(--pt-primary-container));
+  --success-foreground: rgb(var(--pt-on-primary-container));
+  --warning: rgb(var(--pt-amberpix));
+  --warning-foreground: #160c07;
+  --error-foreground: rgb(var(--pt-error));
+  --input-background: rgb(var(--pt-surface));
+  --input-border: rgb(var(--pt-outline-variant));
+  --placeholder: rgb(var(--pt-outline-variant));
+  --overlay: rgba(0, 0, 0, 0.65);
+  --popover-background: rgb(var(--pt-surface-container-lowest));
+  --popover-foreground: rgb(var(--pt-on-surface));
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: rgba(216, 154, 115, 0.28);
+  --scrollbar-thumb-hover: rgba(216, 154, 115, 0.5);
+
+  /* Pixel shadows go near-black so offset edges still read on dark surfaces */
+  --pt-shadow: #0b0603;
+  --pt-shadow-terracotta: #0b0603;
+  --pt-shadow-accent: #749d36;
+  --pt-shadow-error: #93000a;
+  --pt-shadow-soft: rgba(0, 0, 0, 0.45);
+  --pt-shadow-accent-soft: rgba(168, 213, 102, 0.18);
+
+  /* Textured backgrounds — faint warm grid on dark */
+  --pt-grid-line: rgba(245, 222, 212, 0.04);
+  --pt-dither-dot: rgba(216, 154, 115, 0.08);
+  --pt-dither-dot-strong: rgba(216, 154, 115, 0.12);
+  --pt-range-thumb: #a8d566;
+  --pt-range-thumb-border: #0b0603;
+  --pt-speak-a: #749d36;
+  --pt-speak-b: #a8d566;
+  --pt-speak-glow-a: rgba(168, 213, 102, 0.35);
+  --pt-speak-glow-b: #749d36;
 }
 
 *,
@@ -52,6 +286,24 @@ body {
 body {
   @apply bg-surface-container text-on-surface antialiased;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- Visible keyboard focus (theme-aware) ---- */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ---- Respect reduced-motion preferences globally ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ---- Responsive Dynamic Viewport Utilities ---- */
@@ -96,21 +348,21 @@ body {
 /* ---- Pixel grid textures (from the Stitch pages) ---- */
 .bg-pixel-grid {
   background-size: 24px 24px;
-  background-image: linear-gradient(to right, rgba(132, 71, 33, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(132, 71, 33, 0.04) 1px, transparent 1px);
+  background-image: linear-gradient(to right, var(--pt-grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--pt-grid-line) 1px, transparent 1px);
 }
 .pixel-dither-pattern {
-  background-image: radial-gradient(rgba(110, 53, 17, 0.08) 1px, transparent 1px);
+  background-image: radial-gradient(var(--pt-dither-dot) 1px, transparent 1px);
   background-size: 8px 8px;
 }
 .pixel-grid-bg {
-  background-image: radial-gradient(rgba(110, 53, 17, 0.12) 1.5px, transparent 1.5px);
+  background-image: radial-gradient(var(--pt-dither-dot-strong) 1.5px, transparent 1.5px);
   background-size: 16px 16px;
 }
 .pixel-dither-banner {
   background: linear-gradient(135deg, #d0eda1 0%, #aed376 40%, #597928 100%);
-  background-image: linear-gradient(45deg, rgba(66, 96, 16, 0.15) 25%, transparent 25%, transparent 75%, rgba(66, 96, 16, 0.15) 75%, rgba(66, 96, 16, 0.15)),
-    linear-gradient(45deg, rgba(66, 96, 16, 0.15) 25%, transparent 25%, transparent 75%, rgba(66, 96, 16, 0.15) 75%, rgba(66, 96, 16, 0.15));
+  background-image: linear-gradient(45deg, rgba(66, 96, 16, 0.15) 25%, transparent 25%, transparent 75%, rgba(66, 96, 16, 0.15) 75%, rgba(66, 96, 16, 0.15) 75%),
+    linear-gradient(45deg, rgba(66, 96, 16, 0.15) 25%, transparent 25%, transparent 75%, rgba(66, 96, 16, 0.15) 75%, rgba(66, 96, 16, 0.15) 75%);
   background-size: 12px 12px;
   background-position: 0 0, 6px 6px;
 }
@@ -146,19 +398,19 @@ input[type='range']::-webkit-slider-thumb {
   height: 18px;
   width: 14px;
   border-radius: 2px;
-  background: #597928;
-  border: 2px solid #6e3511;
+  background: var(--pt-range-thumb);
+  border: 2px solid var(--pt-range-thumb-border);
   cursor: pointer;
-  box-shadow: 1px 1px 0px #6e3511;
+  box-shadow: 1px 1px 0px var(--pt-range-thumb-border);
 }
 input[type='range']::-moz-range-thumb {
   height: 18px;
   width: 14px;
   border-radius: 2px;
-  background: #597928;
-  border: 2px solid #6e3511;
+  background: var(--pt-range-thumb);
+  border: 2px solid var(--pt-range-thumb-border);
   cursor: pointer;
-  box-shadow: 1px 1px 0px #6e3511;
+  box-shadow: 1px 1px 0px var(--pt-range-thumb-border);
 }
 
 /* ---- Pixel avatar rendering + custom scrollbars ---- */
@@ -170,19 +422,20 @@ input[type='range']::-moz-range-thumb {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--scrollbar-track);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(110, 53, 17, 0.25);
+  background: var(--scrollbar-thumb);
   border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(110, 53, 17, 0.45);
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* ---- Pulsing pixel typing dots ---- */
 @keyframes pixel-bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
     opacity: 0.4;
   }
@@ -211,13 +464,14 @@ input[type='range']::-moz-range-thumb {
   background-size: 100% 4px;
 }
 @keyframes pulse-speak {
-  0%, 100% {
-    border-color: #597928;
-    box-shadow: 0 0 0 2px #d0eda1;
+  0%,
+  100% {
+    border-color: var(--pt-speak-a);
+    box-shadow: 0 0 0 2px var(--pt-speak-glow-a);
   }
   50% {
-    border-color: #91ac67;
-    box-shadow: 0 0 0 4px #597928;
+    border-color: var(--pt-speak-b);
+    box-shadow: 0 0 0 4px var(--pt-speak-glow-b);
   }
 }
 .speaking-tile {
@@ -232,5 +486,3 @@ input[type='range']::-moz-range-thumb {
 .floating-reaction-1 { animation: float-reaction 3s infinite 0.2s ease-out; }
 .floating-reaction-2 { animation: float-reaction 2.8s infinite 1.1s ease-out; }
 .floating-reaction-3 { animation: float-reaction 3.2s infinite 2.0s ease-out; }
-
-

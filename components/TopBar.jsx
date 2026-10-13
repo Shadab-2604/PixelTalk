@@ -51,7 +51,7 @@ export function TopBar({ title, adminBadge = false, onToggleSidebar, showSidebar
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="lg:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary-container text-surface-container border-[1.5px] border-tertiary shadow-[2px_2px_0_0_#6E3511] flex items-center justify-center press active:translate-x-0.5 active:translate-y-0.5 cursor-pointer flex-shrink-0"
+            className="lg:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary-container text-surface-container border-[1.5px] border-tertiary shadow-[2px_2px_0_0_var(--pt-shadow)] flex items-center justify-center press active:translate-x-0.5 active:translate-y-0.5 cursor-pointer flex-shrink-0"
             title="Open navigation menu"
             aria-label="Toggle navigation menu"
           >

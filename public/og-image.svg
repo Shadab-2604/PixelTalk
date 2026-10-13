@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" fill="none">
+  <!-- Background with retro pixel border -->
+  <rect width="1200" height="630" fill="#F8F4EC"/>
+  <rect x="12" y="12" width="1176" height="606" stroke="#6E3511" stroke-width="12" fill="none"/>
+  
+  <!-- Subtle Dot Grid -->
+  <pattern id="pixel-dot" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
+    <rect x="0" y="0" width="2" height="2" fill="#6E3511" opacity="0.12"/>
+  </pattern>
+  <rect x="24" y="24" width="1152" height="582" fill="url(#pixel-dot)"/>
+
+  <!-- Brand Mark -->
+  <g transform="translate(80, 75)">
+    <!-- Speech bubble icon -->
+    <rect x="0" y="0" width="70" height="70" rx="14" fill="#597928" stroke="#6E3511" stroke-width="4"/>
+    <rect x="18" y="32" width="6" height="16" fill="#FCECD8" rx="1"/>
+    <rect x="28" y="22" width="6" height="26" fill="#FCECD8" rx="1"/>
+    <rect x="38" y="28" width="6" height="20" fill="#FCECD8" rx="1"/>
+    <rect x="48" y="18" width="6" height="30" fill="#FCECD8" rx="1"/>
+    
+    <!-- Title -->
+    <text x="90" y="44" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="36" fill="#6E3511" letter-spacing="2">PIXELTALK</text>
+    <text x="90" y="66" font-family="'Space Mono', monospace" font-weight="700" font-size="16" fill="#597928">EST. 2025 • RETRO MESSENGER</text>
+  </g>
+
+  <!-- Tag Pill -->
+  <g transform="translate(850, 85)">
+    <rect x="0" y="0" width="270" height="48" rx="8" fill="#597928" stroke="#6E3511" stroke-width="3"/>
+    <text x="135" y="30" font-family="'Space Mono', monospace" font-weight="800" font-size="16" fill="#F8F4EC" text-anchor="middle" letter-spacing="1">REAL-TIME • 0MS CHAT</text>
+  </g>
+
+  <!-- Main Headline -->
+  <g transform="translate(80, 240)">
+    <text x="0" y="60" font-family="'Plus Jakarta Sans', sans-serif" font-weight="900" font-size="76" fill="#2A170B" letter-spacing="-2">A little pixel.</text>
+    <text x="0" y="145" font-family="'Plus Jakarta Sans', sans-serif" font-weight="900" font-size="76" fill="#597928" letter-spacing="-2">A lot of talk.</text>
+    <text x="0" y="210" font-family="'Plus Jakarta Sans', sans-serif" font-weight="600" font-size="28" fill="#6E3511">Low-noise community lounges, frictionless text, and tactile 8-bit visuals.</text>
+  </g>
+
+  <!-- Footer Line -->
+  <line x1="80" y1="520" x2="1120" y2="520" stroke="#6E3511" stroke-width="2" stroke-opacity="0.25"/>
+  <text x="80" y="560" font-family="'Space Mono', monospace" font-weight="800" font-size="20" fill="#6E3511">pixel-talk-qofh.vercel.app</text>
+  <text x="1120" y="560" font-family="'Space Mono', monospace" font-weight="700" font-size="16" fill="#597928" text-anchor="end">Encrypted Direct Messaging • Themed Lounges • Open Community</text>
+</svg>

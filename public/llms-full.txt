@@ -1,0 +1,51 @@
+# PixelTalk — Full Technical Documentation & LLM Specification
+
+## Project Overview
+PixelTalk is a full-stack, real-time messaging application marrying nostalgic 8-bit retro aesthetics with modern production-grade web infrastructure. Designed to eliminate distraction and social-media algorithmic exhaustion, PixelTalk delivers low-noise communication with instant message delivery, end-to-end conversation isolation, and community lounges.
+
+## System Architecture
+
+### 1. Frontend (Next.js 14 App Router)
+- **Framework**: Next.js 14.2 with React 18
+- **Styling**: Tailwind CSS with custom pixel design tokens (terracotta #6E3511, moss green #597928, cream background #F8F4EC, sharp pixel drop-shadows)
+- **Typography**: Space Grotesk, Space Mono, Pixelify Sans, Plus Jakarta Sans
+- **Real-Time Client**: Socket.IO client (4.7) with automatic reconnection and heartbeat
+- **Calling**: WebRTC RTCPeerConnection with STUN fallback
+- **State Management**: React Context providers for Auth, Sockets, Notifications, Calls, and Themes
+
+### 2. Backend (Node.js Express + Socket.IO)
+- **Runtime**: Node.js 20+
+- **HTTP Server**: Express 4 with Helmet, Cookie-Parser, CORS strict origin allowlist
+- **Database**: MongoDB 8 (Mongoose ODM) with connection pooling and schema sanitization
+- **Caching & Ephemeral Presence**: Redis Cloud (ioredis / node-redis) with key expiration
+- **Email Delivery**: Brevo HTTPS REST API for transactional OTP verification codes
+- **Media Storage**: Cloudinary secure upload storage with magic byte MIME inspection
+
+### 3. Security Hardening
+- **Authentication**: JWT stored in HttpOnly, SameSite=Lax, Secure cookies
+- **Password Hashing**: bcrypt with 12 salt rounds
+- **NoSQL Injection Defense**: Recursive query sanitizer stripping `$` operators and dotted paths
+- **SSRF Prevention**: IP validation rejecting RFC1918 private, link-local, and cloud metadata ranges
+- **CSRF Defense**: Origin guard middleware enforcing matching Host and Referer headers
+- **Rate Limiting**: Sliding window rate limits on authentication and OTP endpoints
+
+## Route Hierarchy & SEO Metadata
+- `/` — Landing page and player login with animated pixel landscapes and OTP password recovery
+- `/register` — Account registration with 6-digit email OTP verification
+- `/signup` — Alternate streamlined registration gateway
+- `/about` — Platform philosophy, history, and community manifesto
+- `/privacy` — Privacy policy, telemetry disclaimers, and data protection practices
+- `/terms` — Terms of service, acceptable use, and code of conduct
+- `/dashboard` — Authenticated player hub with recent inboxes and active rooms
+- `/chat` — Direct messaging lobby with conversation switcher and search
+- `/chat/[conversationId]` — 1-on-1 real-time conversation thread with typing states
+- `/rooms` — Community discovery directory for themed public and private lounges
+- `/rooms/[conversationId]` — Room lounge with member rosters and voice calling
+- `/settings` — Account preferences, theme modes, sound toggles, and security
+- `/profile/[username]` — Public player identity card with bio and badges
+- `/admin` — Restricted platform administration console with strict access controls
+
+## Contact & Governance
+- Domain: https://pixel-talk-qofh.vercel.app
+- Team: PixelTalk Labs
+- Support: support@pixeltalk.dev

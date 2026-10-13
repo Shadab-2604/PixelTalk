@@ -301,7 +301,11 @@ export default function RoomPage() {
               <span className="material-symbols-outlined text-[20px]">arrow_back</span>
             </button>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={avatarSrc(conversation?.avatarId || 'avatar-06')} alt="" className="w-10 h-10 rounded-lg bg-surface-container border-2 border-tertiary pixelated shadow-pixel-sm-solid shrink-0" />
+            <img
+              src={avatarSrc(conversation?.avatarId || 'avatar-06')}
+              alt={conversation?.name ? `${conversation.name} room avatar` : 'Room avatar'}
+              className="w-10 h-10 rounded-lg bg-surface-container border-2 border-tertiary pixelated shadow-pixel-sm-solid shrink-0"
+            />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h1 className="font-display text-headline-sm font-bold text-on-surface tracking-tight truncate">{conversation?.name || 'Room'}</h1>
@@ -333,7 +337,7 @@ export default function RoomPage() {
                   type="button"
                   onClick={() => startGroupCall({ conversationId, isVideo: false, conversationName: conversation.name })}
                   disabled={callState !== 'IDLE'}
-                  className="p-2 rounded-lg bg-surface-container hover:bg-secondary-container/50 text-on-surface border-[1.5px] border-[#6E3511]/30 shadow-[1.5px_1.5px_0px_rgba(110,53,17,0.2)] hover:border-[#6E3511] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center transition-all disabled:opacity-40"
+                  className="p-2 rounded-lg bg-surface-container hover:bg-secondary-container/50 text-on-surface border-[1.5px] border-brown/30 shadow-[1.5px_1.5px_0px_var(--pt-shadow-soft)] hover:border-brown active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center transition-all disabled:opacity-40"
                   title="Start Group Voice Call"
                   aria-label="Start Group Voice Call"
                 >
@@ -343,7 +347,7 @@ export default function RoomPage() {
                   type="button"
                   onClick={() => startGroupCall({ conversationId, isVideo: true, conversationName: conversation.name })}
                   disabled={callState !== 'IDLE'}
-                  className="p-2 rounded-lg bg-surface-container hover:bg-secondary-container/50 text-on-surface border-[1.5px] border-[#6E3511]/30 shadow-[1.5px_1.5px_0px_rgba(110,53,17,0.2)] hover:border-[#6E3511] active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center transition-all disabled:opacity-40"
+                  className="p-2 rounded-lg bg-surface-container hover:bg-secondary-container/50 text-on-surface border-[1.5px] border-brown/30 shadow-[1.5px_1.5px_0px_var(--pt-shadow-soft)] hover:border-brown active:translate-x-0.5 active:translate-y-0.5 flex items-center justify-center transition-all disabled:opacity-40"
                   title="Start Group Video Call"
                   aria-label="Start Group Video Call"
                 >
@@ -370,9 +374,9 @@ export default function RoomPage() {
 
         {/* Live Active Group Call Banner */}
         {activeGroupCalls[String(conversationId)] && (
-          <div className="bg-secondary-container/95 border-b-2 border-primary/40 px-4 py-2.5 flex items-center justify-between gap-3 shadow-[0_2px_0px_0px_rgba(66,96,16,0.15)] animate-fade-in shrink-0">
+          <div className="bg-secondary-container/95 border-b-2 border-primary/40 px-4 py-2.5 flex items-center justify-between gap-3 shadow-[0_2px_0px_0px_var(--pt-shadow-accent-soft)] animate-fade-in shrink-0">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-primary text-surface-container flex items-center justify-center border border-tertiary shadow-[1px_1px_0px_#6E3511] shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-primary text-surface-container flex items-center justify-center border border-tertiary shadow-[1px_1px_0px_var(--pt-shadow)] shrink-0">
                 <span className="material-symbols-outlined text-[18px] animate-pulse">
                   {activeGroupCalls[String(conversationId)].callType === 'video' ? 'videocam' : 'call'}
                 </span>
@@ -403,7 +407,7 @@ export default function RoomPage() {
                 })
               }
               disabled={callState !== 'IDLE'}
-              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-surface-container font-mono text-[11px] font-bold border border-tertiary shadow-[2px_2px_0px_#6E3511] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-1.5 shrink-0 press disabled:opacity-50"
+              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-surface-container font-mono text-[11px] font-bold border border-tertiary shadow-[2px_2px_0px_var(--pt-shadow)] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-1.5 shrink-0 press disabled:opacity-50"
             >
               <span className="material-symbols-outlined text-[16px]">login</span>
               <span>

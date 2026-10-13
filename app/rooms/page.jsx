@@ -29,6 +29,7 @@ import { avatarSrc } from '@/lib/avatars';
 import { timeAgo } from '@/lib/format';
 import { Badge, Avatar, EmptyState, PrimaryButton, Input, ErrorText } from '@/components/ui';
 import { CreateRoomModal } from '@/features/rooms/CreateRoomModal';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 
 export default function RoomsIndexPage() {
   useRequireAuth();
@@ -52,6 +53,7 @@ export default function RoomsIndexPage() {
   return (
     <AppShell sidebar={<><ConversationSidebar /><SidebarFooter /></>}>
       <div className="p-6 lg:p-8 bg-surface-container/60">
+        <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Rooms' }]} className="mb-4" />
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="font-display text-headline-lg font-bold text-on-surface">Rooms</h1>
@@ -72,7 +74,11 @@ export default function RoomsIndexPage() {
               <Link key={g._id} href={`/rooms/${g._id}`}>
                 <article className="bg-surface-container-lowest border-[1.5px] border-tertiary/30 hover:border-tertiary rounded-xl p-4 shadow-pixel-sm transition-all flex items-center gap-3.5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={g.avatarUrl || avatarSrc(g.avatarId || 'avatar-06')} alt="" className="w-11 h-11 rounded-lg border-[1.5px] border-tertiary object-cover pixelated" />
+                  <img
+                    src={g.avatarUrl || avatarSrc(g.avatarId || 'avatar-06')}
+                    alt={g.name ? `${g.name} room crest` : 'Room crest'}
+                    className="w-11 h-11 rounded-lg border-[1.5px] border-tertiary object-cover pixelated"
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-display text-headline-sm font-bold text-on-surface truncate">{g.name}</h3>
@@ -81,7 +87,7 @@ export default function RoomsIndexPage() {
                     <p className="font-body-sm text-body-sm text-on-surface-variant truncate">{g.description || 'No description'}</p>
                     <p className="font-mono text-label-sm text-tertiary mt-0.5">{g.members?.length || 0} players • {timeAgo(g.updatedAt)}</p>
                   </div>
-                  <span className="material-symbols-outlined text-tertiary/40">arrow_forward</span>
+                  <span className="material-symbols-outlined text-tertiary">arrow_forward</span>
                 </article>
               </Link>
             ))}

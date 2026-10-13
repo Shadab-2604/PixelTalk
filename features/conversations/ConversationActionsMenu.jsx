@@ -164,6 +164,9 @@ export function ConversationActionsMenu({
       if (unreadCount > 0) {
         await messageService.markRead(conversationId);
         onToggledRead?.(0);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('pixeltalk:conversation_read', { detail: { conversationId } }));
+        }
       } else {
         await messageService.markUnread(conversationId);
         onToggledRead?.(1);

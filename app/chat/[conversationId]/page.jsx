@@ -84,7 +84,13 @@ export default function ChatPage() {
         setConversation(c.conversation);
         setMessages(m.messages || []);
         setNextCursor(m.nextCursor);
-        messageService.markRead(conversationId).catch(() => {});
+        messageService.markRead(conversationId)
+          .then(() => {
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('pixeltalk:conversation_read', { detail: { conversationId } }));
+            }
+          })
+          .catch(() => {});
       })
       .catch((err) => !cancelled && setError(err.message))
       .finally(() => !cancelled && setLoading(false));
@@ -101,6 +107,9 @@ export default function ChatPage() {
 
     socket.emit('join_conversation', { conversationId });
     socket.emit('mark_read', { conversationId });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('pixeltalk:conversation_read', { detail: { conversationId } }));
+    }
 
     const onNewMessage = (p) => {
       if (String(p.message.conversationId) !== String(conversationId)) return;
@@ -111,6 +120,10 @@ export default function ChatPage() {
 
       if (String(senderId) !== String(myId)) {
         socket.emit('mark_read', { conversationId });
+        messageService.markRead(conversationId).catch(() => {});
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('pixeltalk:conversation_read', { detail: { conversationId } }));
+        }
 
         const isMuted = Array.isArray(user?.mutedConversations) &&
           user.mutedConversations.some((id) => String(id?._id || id) === String(conversationId));

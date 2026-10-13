@@ -116,7 +116,13 @@ export function ConversationSidebar() {
   const load = async () => {
     try {
       const data = await conversationService.list();
-      setConvos(data.conversations || []);
+      let list = data.conversations || [];
+      if (activeConversationId) {
+        list = list.map((c) =>
+          String(c._id) === String(activeConversationId) ? { ...c, unreadCount: 0 } : c
+        );
+      }
+      setConvos(list);
       loadInvitations();
       loadSections();
     } catch (err) {
@@ -125,6 +131,18 @@ export function ConversationSidebar() {
       setLoading(false);
     }
   };
+
+  // When activeConversationId changes or is loaded, immediately zero out unread badge
+  useEffect(() => {
+    if (!activeConversationId) return;
+    setConvos((prev) => {
+      const idx = prev.findIndex((c) => String(c._id) === String(activeConversationId));
+      if (idx === -1 || !prev[idx]?.unreadCount) return prev;
+      return prev.map((c, i) =>
+        i === idx ? { ...c, unreadCount: 0 } : c
+      );
+    });
+  }, [activeConversationId]);
 
   const toggleCollapse = (section) => {
     const sectionId = String(section._id);
@@ -212,12 +230,19 @@ export function ConversationSidebar() {
     const onAccountSwitched = () => {
       load();
     };
+    const onConvoRead = (e) => {
+      const cid = e?.detail?.conversationId;
+      if (!cid) return;
+      handleConversationReadToggled(cid, 0);
+    };
     document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('pixeltalk:account_switched', onAccountSwitched);
+    window.addEventListener('pixeltalk:conversation_read', onConvoRead);
     return () => {
       clearInterval(t);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('pixeltalk:account_switched', onAccountSwitched);
+      window.removeEventListener('pixeltalk:conversation_read', onConvoRead);
     };
   }, [user?._id]);
 
@@ -298,7 +323,18 @@ export function ConversationSidebar() {
       });
     };
 
+    const onMessageRead = (payload) => {
+      if (!payload || !payload.conversationId) return;
+      const convoId = String(payload.conversationId);
+      const myId = String(user?._id || user?.id || '');
+      if (!payload.userId || String(payload.userId) === myId) {
+        handleConversationReadToggled(convoId, 0);
+      }
+    };
+
     socket.on('new_message', onNewMessage);
+    socket.on('message_read', onMessageRead);
+    socket.on('conversation_read', onMessageRead);
     socket.on('chat_cleared', onChatCleared);
     socket.on('chat_deleted', onChatDeleted);
     socket.on('group_invitation_received', onInvitation);
@@ -306,6 +342,8 @@ export function ConversationSidebar() {
     socket.on('typing_stop', onTypingStop);
     return () => {
       socket.off('new_message', onNewMessage);
+      socket.off('message_read', onMessageRead);
+      socket.off('conversation_read', onMessageRead);
       socket.off('chat_cleared', onChatCleared);
       socket.off('chat_deleted', onChatDeleted);
       socket.off('group_invitation_received', onInvitation);
@@ -1636,7 +1674,11 @@ function ConversationRow({
 
   return (
     <div className="group relative flex items-center rounded-lg bg-surface-container-lowest/80 border border-tertiary/20 hover:border-tertiary transition-all shadow-pixel-sm hover:bg-surface-container-lowest">
-      <Link href={conversationHref(c)} className="flex items-center gap-2.5 p-2 flex-1 min-w-0">
+      <Link
+        href={conversationHref(c)}
+        onClick={() => onToggledRead?.(c._id, 0)}
+        className="flex items-center gap-2.5 p-2 flex-1 min-w-0"
+      >
         <Avatar
           src={c.type === 'group' && c.avatarUrl ? c.avatarUrl : avatarSrc(conversationAvatarId(c, user))}
           alt={conversationLabel(c, user)}

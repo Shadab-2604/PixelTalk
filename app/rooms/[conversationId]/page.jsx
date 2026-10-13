@@ -82,7 +82,13 @@ export default function RoomPage() {
       setConversation(c.conversation);
       setMessages(m.messages || []);
       setNextCursor(m.nextCursor);
-      messageService.markRead(conversationId).catch(() => {});
+      messageService.markRead(conversationId)
+        .then(() => {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('pixeltalk:conversation_read', { detail: { conversationId } }));
+          }
+        })
+        .catch(() => {});
     } catch (err) {
       if (err.status === 403) setNotMember(true);
       else setError(err.message);
@@ -103,6 +109,9 @@ export default function RoomPage() {
     socketRef.current = socket;
     socket.emit('join_conversation', { conversationId });
     socket.emit('mark_read', { conversationId });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('pixeltalk:conversation_read', { detail: { conversationId } }));
+    }
     socket.emit('call:group_get_active', { conversationId });
 
     const onNewMessage = (p) => {
@@ -112,6 +121,10 @@ export default function RoomPage() {
       setMessages((prev) => (prev.some((x) => x._id === msg._id) ? prev : [...prev, msg]));
       if (String(senderId) !== String(user?._id || user?.id)) {
         socket.emit('mark_read', { conversationId });
+        messageService.markRead(conversationId).catch(() => {});
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('pixeltalk:conversation_read', { detail: { conversationId } }));
+        }
         const isMuted = (user?.mutedConversations || []).some((id) => String(id?._id || id) === String(conversationId));
         const shouldVibrate = (user?.vibrateConversations || []).some((id) => String(id?._id || id) === String(conversationId));
         const mode = user?.preferences?.notificationMode || 'normal';
